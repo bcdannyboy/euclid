@@ -30,7 +30,7 @@ The data term is computed from quantized residuals.
 Euclid uses a fixed-step mid-tread quantizer with step $\Delta>0$:
 
 $$
-q(x) = \operatorname{round}_{\text{half-up}}\!\left(\frac{x}{\Delta}\right) \in \mathbb{Z}.
+q(x) = \mathrm{round}_{\text{half-up}}\!\left(\frac{x}{\Delta}\right) \in \mathbb{Z}.
 $$
 
 Residual indices are
@@ -40,7 +40,7 @@ $r_t = q(y_t - \hat y_t)$.
 
 - Zigzag integer map:
 $$
-\operatorname{zigzag}(z)=
+\mathrm{zigzag}(z)=
 \begin{cases}
 2z & z\ge 0\\
 -2z-1 & z<0
@@ -53,14 +53,14 @@ $$
 
 Then
 $$
-L_{\text{data}} = \ell(T) + \sum_{t=1}^T \ell(\operatorname{zigzag}(r_t)).
+L_{\text{data}} = \ell(T) + \sum_{t=1}^T \ell(\mathrm{zigzag}(r_t)).
 $$
 
 ### 2.3 Reference description and gain
 
 Reference description bits are computed on the quantized observed sequence itself (same quantizer and code family):
 $$
-L_{\text{ref}} = \ell(T) + \sum_{t=1}^T \ell(\operatorname{zigzag}(q(y_t))).
+L_{\text{ref}} = \ell(T) + \sum_{t=1}^T \ell(\mathrm{zigzag}(q(y_t))).
 $$
 
 Description gain:

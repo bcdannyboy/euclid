@@ -1,0 +1,5 @@
+request_id: phase05-descriptive-vs-predictive-disagreement
+dataset_csv: descriptive-vs-predictive-disagreement-series.csv
+cutoff_available_at: null
+quantization_step: "0.5"
+minimum_description_gain_bits: 0.0

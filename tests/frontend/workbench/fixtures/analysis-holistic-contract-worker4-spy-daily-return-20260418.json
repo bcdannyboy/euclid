@@ -1,0 +1,481 @@
+{
+  "analysis_version": "worker4-regression-2026-04-18",
+  "analysis_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return/analysis.json",
+  "workspace_root": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return",
+  "request": {
+    "symbol": "SPY",
+    "target_id": "daily_return",
+    "start_date": "2021-04-18",
+    "end_date": "2026-04-18",
+    "include_probabilistic": true,
+    "include_benchmark": true
+  },
+  "dataset": {
+    "symbol": "SPY",
+    "target": {
+      "id": "daily_return",
+      "label": "Daily Return",
+      "description": "Predict the close-to-close fractional return for each day.",
+      "y_axis_label": "Return",
+      "recommended": true,
+      "recommended_reason": "Better default for interpretable descriptive equations because it makes level persistence explicit instead of hiding it inside raw prices.",
+      "analysis_note": "Daily returns are the recommended default for analytical inspection. They make drift and persistence weaker, so descriptive fits have to earn their structure."
+    },
+    "rows": 4,
+    "stats": {
+      "latest_value": 0.010842409100832118,
+      "latest_event_time": "2021-04-23T00:00:00Z"
+    },
+    "date_range": {
+      "start": "2021-04-20T00:00:00Z",
+      "end": "2021-04-23T00:00:00Z"
+    },
+    "dataset_csv": "__FIXTURE_DATASET_CSV__",
+    "series": [
+      {
+        "event_time": "2021-04-20T00:00:00Z",
+        "available_at": "2021-04-20T21:00:00Z",
+        "observed_value": -0.007321596300667088,
+        "open": 413.91,
+        "high": 415.09,
+        "low": 410.59,
+        "close": 412.17,
+        "volume": 81851800,
+        "previous_close": 415.21
+      },
+      {
+        "event_time": "2021-04-21T00:00:00Z",
+        "available_at": "2021-04-21T21:00:00Z",
+        "observed_value": 0.00946211514666273,
+        "open": 411.51,
+        "high": 416.29,
+        "low": 411.36,
+        "close": 416.07,
+        "volume": 66793000,
+        "previous_close": 412.17
+      },
+      {
+        "event_time": "2021-04-22T00:00:00Z",
+        "available_at": "2021-04-22T21:00:00Z",
+        "observed_value": -0.009133078568510089,
+        "open": 415.89,
+        "high": 416.78,
+        "low": 411.13,
+        "close": 412.27,
+        "volume": 97582800,
+        "previous_close": 416.07
+      },
+      {
+        "event_time": "2021-04-23T00:00:00Z",
+        "available_at": "2021-04-23T21:00:00Z",
+        "observed_value": 0.010842409100832118,
+        "open": 412.87,
+        "high": 418.25,
+        "low": 412.79,
+        "close": 416.74,
+        "volume": 73209200,
+        "previous_close": 412.27
+      }
+    ]
+  },
+  "operator_point": {
+    "status": "completed",
+    "selected_family": "linear_trend",
+    "result_mode": "abstention_only_publication",
+    "replay_verification": "verified",
+    "confirmatory_primary_score": 0.010761,
+    "publication": {
+      "status": "abstained",
+      "headline": "Operator replay verified a candidate, but the point lane did not clear publication gates.",
+      "reason_codes": [
+        "robustness_failed",
+        "perturbation_protocol_failed"
+      ]
+    },
+    "abstention": {
+      "abstention_id": "operator_abstention_v1",
+      "abstention_type": "robustness_failed",
+      "blocked_ceiling": "descriptive_only",
+      "reason_codes": [
+        "robustness_failed",
+        "perturbation_protocol_failed"
+      ]
+    },
+    "comparison": {
+      "comparison_class_status": "comparable",
+      "candidate_beats_baseline": true,
+      "baseline_id": "constant_baseline"
+    },
+    "scorecard": {
+      "descriptive_status": "blocked_robustness_failed",
+      "predictive_status": "not_requested",
+      "predictive_reason_codes": [
+        "predictive_not_requested"
+      ],
+      "descriptive_reason_codes": [
+        "robustness_failed",
+        "perturbation_protocol_failed"
+      ]
+    },
+    "equation": {
+      "label": "y(t) = 0.000072 + 0.000001*t",
+      "structure_signature": "linear_trend:intercept=7.2e-05,slope=1e-06",
+      "parameter_summary": {
+        "intercept": 7.2e-05,
+        "slope": 1e-06
+      },
+      "curve": [
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "fitted_value": 7.2e-05
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "fitted_value": 7.3e-05
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "fitted_value": 7.4e-05
+        },
+        {
+          "event_time": "2021-04-23T00:00:00Z",
+          "fitted_value": 7.5e-05
+        }
+      ],
+      "family_id": "linear_trend"
+    },
+    "chart": {
+      "actual_series": [
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "observed_value": -0.007321596300667088
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "observed_value": 0.00946211514666273
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "observed_value": -0.009133078568510089
+        },
+        {
+          "event_time": "2021-04-23T00:00:00Z",
+          "observed_value": 0.010842409100832118
+        }
+      ],
+      "equation_curve": [
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "fitted_value": 7.2e-05
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "fitted_value": 7.3e-05
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "fitted_value": 7.4e-05
+        },
+        {
+          "event_time": "2021-04-23T00:00:00Z",
+          "fitted_value": 7.5e-05
+        }
+      ]
+    },
+    "manifest_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return/manifests/operator-point.yaml",
+    "output_root": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return/runs/point",
+    "search_scope": {
+      "scope_kind": "narrow_release_surface",
+      "headline": "Operator point lane only searched the current-release surface (constant, drift, linear_trend, seasonal_naive).",
+      "workflow_id": "euclid_current_release_candidate",
+      "search_class": "bounded_heuristic",
+      "proposal_limit": null,
+      "family_ids": [
+        "constant",
+        "drift",
+        "linear_trend",
+        "seasonal_naive"
+      ]
+    },
+    "publishable": false
+  },
+  "benchmark": {
+    "status": "completed",
+    "track_summary": {
+      "abstention_mode": "no_publishable_winner",
+      "replay_verification_status": "verified",
+      "forecast_object_type": "point",
+      "score_law": "mean_absolute_error"
+    },
+    "descriptive_fit_status": {
+      "status": "absent_no_admissible_candidate",
+      "headline": "Benchmark-local search found no admissible descriptive equation for this target, so the overview should not pretend the operator line is a fit.",
+      "reason_codes": [],
+      "submitters_abstained": 4
+    },
+    "portfolio_selection": {
+      "status": "abstained",
+      "winner_submitter_id": null,
+      "winner_candidate_id": null,
+      "selection_explanation": null,
+      "selection_explanation_raw": null,
+      "compared_finalists": [],
+      "decision_trace": [
+        {
+          "step": "collect_submitter_finalists",
+          "family_finalists": {},
+          "non_admitted_families": [
+            "analytic_backend",
+            "recursive_spectral_backend",
+            "algorithmic_search_backend"
+          ]
+        },
+        {
+          "step": "select_portfolio_winner",
+          "selected_backend_family": null,
+          "selected_candidate_id": null
+        }
+      ]
+    },
+    "submitters": [
+      {
+        "submitter_id": "analytic_backend",
+        "status": "abstained",
+        "selected_candidate_id": null,
+        "selected_candidate_metrics": {}
+      },
+      {
+        "submitter_id": "recursive_spectral_backend",
+        "status": "abstained",
+        "selected_candidate_id": null,
+        "selected_candidate_metrics": {}
+      },
+      {
+        "submitter_id": "algorithmic_search_backend",
+        "status": "abstained",
+        "selected_candidate_id": null,
+        "selected_candidate_metrics": {}
+      },
+      {
+        "submitter_id": "portfolio_orchestrator",
+        "status": "abstained",
+        "selected_candidate_id": null,
+        "selected_candidate_metrics": {}
+      }
+    ],
+    "report_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return/benchmark-root/reports/predictive_generalization/fmp_spy_benchmark.md",
+    "task_result_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return/benchmark-root/results/predictive_generalization/fmp_spy_benchmark/benchmark-task-result.json",
+    "telemetry_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T154949Z-spy-daily-return/benchmark-root/results/predictive_generalization/fmp_spy_benchmark/performance-telemetry.json"
+  },
+  "probabilistic": {
+    "distribution": {
+      "status": "failed"
+    },
+    "quantile": {
+      "status": "failed"
+    },
+    "interval": {
+      "status": "failed"
+    },
+    "event_probability": {
+      "status": "failed"
+    }
+  },
+  "holistic_equation": null,
+  "claim_class": null,
+  "gap_report": [
+    "operator_not_publishable",
+    "no_backend_joint_claim",
+    "requires_exact_sample_closure"
+  ],
+  "would_have_abstained_because": [
+    "robustness_failed",
+    "perturbation_protocol_failed"
+  ],
+  "not_holistic_because": [
+    "No validated deterministic-plus-probabilistic joint claim was published."
+  ],
+  "predictive_law": null,
+  "publishable": false,
+  "change_atlas": {
+    "status": "completed",
+    "headline": "Forecast change projection is only available when the active target is raw price levels.",
+    "metrics": [
+      {
+        "id": "delta",
+        "label": "Delta",
+        "short_label": "Delta",
+        "y_axis_label": "Delta"
+      },
+      {
+        "id": "return",
+        "label": "Return",
+        "short_label": "Return",
+        "y_axis_label": "Return"
+      },
+      {
+        "id": "log_return",
+        "label": "Log Return",
+        "short_label": "Log Return",
+        "y_axis_label": "Log Return"
+      }
+    ],
+    "horizons": [
+      1
+    ],
+    "historical": {
+      "delta": {
+        "1": {
+          "horizon": 1,
+          "sample_size": 3,
+          "latest_value": 4.470000000000027,
+          "latest_origin_time": "2021-04-22T00:00:00Z",
+          "latest_available_at": "2021-04-23T21:00:00Z",
+          "mean": 1.523333333333331,
+          "stdev": 3.7713510694297536,
+          "min": -3.8000000000000114,
+          "max": 4.470000000000027,
+          "quantiles": [
+            {
+              "level": 0.1,
+              "value": -2.2600000000000136
+            },
+            {
+              "level": 0.5,
+              "value": 3.8999999999999773
+            },
+            {
+              "level": 0.9,
+              "value": 4.356000000000018
+            }
+          ],
+          "histogram": [
+            {
+              "lower": -3.8000000000000114,
+              "upper": -1.7325000000000017,
+              "count": 1
+            },
+            {
+              "lower": -1.7325000000000017,
+              "upper": 0.33500000000000796,
+              "count": 0
+            },
+            {
+              "lower": 0.33500000000000796,
+              "upper": 2.4025000000000176,
+              "count": 0
+            },
+            {
+              "lower": 2.4025000000000176,
+              "upper": 4.470000000000027,
+              "count": 2
+            }
+          ]
+        }
+      },
+      "return": {
+        "1": {
+          "horizon": 1,
+          "sample_size": 3,
+          "latest_value": 0.010842409100832118,
+          "latest_origin_time": "2021-04-22T00:00:00Z",
+          "latest_available_at": "2021-04-23T21:00:00Z",
+          "mean": 0.003723815226328253,
+          "stdev": 0.009108643930860168,
+          "min": -0.009133078568510089,
+          "max": 0.010842409100832118,
+          "quantiles": [
+            {
+              "level": 0.1,
+              "value": -0.0054140398254755254
+            },
+            {
+              "level": 0.5,
+              "value": 0.00946211514666273
+            },
+            {
+              "level": 0.9,
+              "value": 0.010566350309998241
+            }
+          ],
+          "histogram": [
+            {
+              "lower": -0.009133078568510089,
+              "upper": -0.004139206651174537,
+              "count": 1
+            },
+            {
+              "lower": -0.004139206651174537,
+              "upper": 0.0008546652661610143,
+              "count": 0
+            },
+            {
+              "lower": 0.0008546652661610143,
+              "upper": 0.005848537183496566,
+              "count": 0
+            },
+            {
+              "lower": 0.005848537183496566,
+              "upper": 0.010842409100832118,
+              "count": 2
+            }
+          ]
+        }
+      },
+      "log_return": {
+        "1": {
+          "horizon": 1,
+          "sample_size": 3,
+          "latest_value": 0.010784051628062957,
+          "latest_origin_time": "2021-04-22T00:00:00Z",
+          "latest_available_at": "2021-04-23T21:00:00Z",
+          "mean": 0.003675546846029231,
+          "stdev": 0.009103844600552184,
+          "min": -0.009175040822362123,
+          "max": 0.010784051628062957,
+          "quantiles": [
+            {
+              "level": 0.1,
+              "value": -0.0054565067114123265
+            },
+            {
+              "level": 0.5,
+              "value": 0.00941762973238686
+            },
+            {
+              "level": 0.9,
+              "value": 0.010510767248927737
+            }
+          ],
+          "histogram": [
+            {
+              "lower": -0.009175040822362123,
+              "upper": -0.004185267709755853,
+              "count": 1
+            },
+            {
+              "lower": -0.004185267709755853,
+              "upper": 0.0008045054028504167,
+              "count": 0
+            },
+            {
+              "lower": 0.0008045054028504167,
+              "upper": 0.005794278515456686,
+              "count": 0
+            },
+            {
+              "lower": 0.005794278515456686,
+              "upper": 0.010784051628062957,
+              "count": 2
+            }
+          ]
+        }
+      }
+    },
+    "forecast": {
+      "support": "historical_only",
+      "headline": "Forecast change projection is only available when the active target is raw price levels.",
+      "lanes": {}
+    }
+  }
+}

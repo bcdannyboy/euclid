@@ -1,0 +1,185 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: mechanistic_evidence_insufficiency_bundle
+scenario_id: mechanistic-evidence-insufficiency
+scenario_class: negative_publication
+required_modules:
+  - external_evidence_ingestion
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - mechanistic_evidence
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - mechanistic_lane_policy_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/mechanistic-evidence.yaml
+  - schemas/contracts/claim-lanes.yaml
+required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  - boundary_specific_external_evidence
+anchor_artifacts:
+  - docs/examples/extension-lane-publication-fixtures.md
+  - fixtures/canonical/math/mechanistically-compatible-hypothesis.yaml
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: candidate_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: predictively_supported
+  forecast_object_type: point
+  abstention_type: null
+  failure_effect: downgrade_to_predictively_supported
+  catalog_scope: internal
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_validation_scope
+  - state: meaning_bound
+    produced_artifact_refs:
+      - schema_name: claim_card_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_claim_card
+  - state: replay_bundle_assembled
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_reproducibility_bundle
+  - state: replay_verified
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_reproducibility_bundle
+  - state: candidate_publication_selected
+    produced_artifact_refs:
+      - schema_name: run_result_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_run_result
+  - state: publication_record_written
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_publication_record
+  - state: publication_completed
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_publication_record
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: mechanistic_evidence_insufficiency_validation_scope
+    module_id: candidate_fitting
+    body:
+      scope_id: mechanistic_evidence_insufficiency_scope
+      scenario_id: mechanistic-evidence-insufficiency
+      claim_lane: predictively_supported
+      forecast_object_type: point
+      catalog_scope: internal
+      anchor_artifact_paths:
+        - docs/examples/extension-lane-publication-fixtures.md
+        - fixtures/canonical/math/mechanistically-compatible-hypothesis.yaml
+  - schema_name: prediction_artifact_manifest@1.1.0
+    object_id: mechanistic_evidence_insufficiency_prediction_artifact
+    module_id: evaluation
+    body:
+      prediction_artifact_id: mechanistic_evidence_insufficiency_prediction_artifact
+      forecast_object_type: point
+  - schema_name: mechanistic_lane_policy_manifest@1.0.0
+    object_id: mechanistic_evidence_insufficiency_mechanistic_policy
+    module_id: mechanistic_evidence
+    body:
+      policy_id: mechanistic_evidence_insufficiency_mechanistic_policy
+      required_external_evidence_classes:
+        - boundary_specific_external_evidence
+      lower_claim_lane_required: predictively_supported
+      failed_requirement_ids:
+        - external_evidence_bundle
+        - evidence_independence_attestation
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: mechanistic_evidence_insufficiency_scorecard
+    module_id: scoring
+    body:
+      scorecard_id: mechanistic_evidence_insufficiency_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_validation_scope
+      descriptive_status: passed
+      descriptive_reason_codes: []
+      predictive_status: passed
+      predictive_reason_codes: []
+      mechanistic_lane_policy_ref:
+        schema_name: mechanistic_lane_policy_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_mechanistic_policy
+      mechanistic_requirement_status: downgraded_to_predictive_only
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: mechanistic_evidence_insufficiency_claim_card
+    module_id: claims
+    body:
+      claim_id: mechanistic_evidence_insufficiency_claim_card
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_validation_scope
+      scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_scorecard
+      claim_lane: predictively_supported
+      forecast_object_type: point
+      prediction_artifact_ref:
+        schema_name: prediction_artifact_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_prediction_artifact
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: mechanistic_evidence_insufficiency_reproducibility_bundle
+    module_id: replay
+    body:
+      bundle_id: mechanistic_evidence_insufficiency_reproducibility_bundle
+      required_manifest_refs:
+        - schema_name: claim_card_manifest@1.1.0
+          object_id: mechanistic_evidence_insufficiency_claim_card
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_run_result
+      replay_verification_status: verified
+      failure_reason_codes: []
+  - schema_name: run_result_manifest@1.1.0
+    object_id: mechanistic_evidence_insufficiency_run_result
+    module_id: catalog_publishing
+    body:
+      run_id: mechanistic_evidence_insufficiency_run
+      result_mode: candidate_publication
+      primary_scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_scorecard
+      primary_claim_card_ref:
+        schema_name: claim_card_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_claim_card
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_reproducibility_bundle
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: mechanistic_evidence_insufficiency_publication_record
+    module_id: catalog_publishing
+    body:
+      publication_id: mechanistic_evidence_insufficiency_publication_record
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: mechanistic_evidence_insufficiency_run_result
+      catalog_scope: internal
+      publication_mode: candidate_publication
+      replay_verification_status: verified
+      comparator_exposure_status: satisfied
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: mechanistic_evidence_insufficiency_reproducibility_bundle
+      published_at: '2026-04-12T00:00:00Z'

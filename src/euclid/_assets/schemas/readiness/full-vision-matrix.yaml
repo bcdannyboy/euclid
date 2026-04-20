@@ -1,0 +1,1179 @@
+version: 1
+kind: full_vision_matrix
+scope_authority_refs:
+- docs/system.md
+- docs/system.md
+benchmark_governed_outcome_vocabulary:
+  abstention_modes:
+  - calibrated_or_abstain
+  - honest_abstention
+  - no_publishable_winner
+  - structural_miss
+  insufficiency_reason_codes:
+  - external_evidence_insufficient
+  - mechanistic_evidence_insufficient
+  - robustness_floor_failed
+  - codelength_comparability_failed
+  rules:
+  - Benchmark-governed rows must distinguish typed abstention modes from non-closing insufficiency reasons.
+  - A benchmark task may prove semantic behavior only for a row whose runtime surface is explicitly represented in this matrix.
+rows:
+- row_id: reducer_family:algorithmic
+  capability_type: reducer_family
+  capability_id: algorithmic
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: reducer_family:analytic
+  capability_type: reducer_family
+  capability_id: analytic
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: reducer_family:recursive
+  capability_type: reducer_family
+  capability_id: recursive
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: reducer_family:spectral
+  capability_type: reducer_family
+  capability_id: spectral
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: composition_operator:additive_residual
+  capability_type: composition_operator
+  capability_id: additive_residual
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: composition_operator:piecewise
+  capability_type: composition_operator
+  capability_id: piecewise
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: composition_operator:regime_conditioned
+  capability_type: composition_operator
+  capability_id: regime_conditioned
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: composition_operator:shared_plus_local_decomposition
+  capability_type: composition_operator
+  capability_id: shared_plus_local_decomposition
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: forecast_object_type:distribution
+  capability_type: forecast_object_type
+  capability_id: distribution
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/modeling-pipeline.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: forecast_object_type:event_probability
+  capability_type: forecast_object_type
+  capability_id: event_probability
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/modeling-pipeline.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: forecast_object_type:interval
+  capability_type: forecast_object_type
+  capability_id: interval
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/modeling-pipeline.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: forecast_object_type:point
+  capability_type: forecast_object_type
+  capability_id: point
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/modeling-pipeline.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: forecast_object_type:quantile
+  capability_type: forecast_object_type
+  capability_id: quantile
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/modeling-pipeline.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: run_support_object:codelength_policy_object
+  capability_type: run_support_object
+  capability_id: codelength_policy_object
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: run_support_object:observation_model_object
+  capability_type: run_support_object
+  capability_id: observation_model_object
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: run_support_object:quantization_object
+  capability_type: run_support_object
+  capability_id: quantization_object
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: run_support_object:reference_description_object
+  capability_type: run_support_object
+  capability_id: reference_description_object
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: run_support_object:target_transform_object
+  capability_type: run_support_object
+  capability_id: target_transform_object
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: admissibility_rule:codelength_comparability
+  capability_type: admissibility_rule
+  capability_id: codelength_comparability
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: admissibility_rule:composition_closure
+  capability_type: admissibility_rule
+  capability_id: composition_closure
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: admissibility_rule:family_membership
+  capability_type: admissibility_rule
+  capability_id: family_membership
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: admissibility_rule:observation_model_compatibility
+  capability_type: admissibility_rule
+  capability_id: observation_model_compatibility
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: admissibility_rule:valid_state_semantics
+  capability_type: admissibility_rule
+  capability_id: valid_state_semantics
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: search_class:bounded_heuristic
+  capability_type: search_class
+  capability_id: bounded_heuristic
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: search_class:equality_saturation_heuristic
+  capability_type: search_class
+  capability_id: equality_saturation_heuristic
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: search_class:exact_finite_enumeration
+  capability_type: search_class
+  capability_id: exact_finite_enumeration
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: search_class:stochastic_heuristic
+  capability_type: search_class
+  capability_id: stochastic_heuristic
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/search-core.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: evidence_lane:boundary_specific_external_evidence
+  capability_type: evidence_lane
+  capability_id: boundary_specific_external_evidence
+  binding_status: boundary_only
+  runtime_surface: false
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - governance_spec
+- row_id: evidence_lane:descriptive_compression
+  capability_type: evidence_lane
+  capability_id: descriptive_compression
+  binding_status: retained
+  runtime_surface: false
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - golden_regression
+  - governance_spec
+- row_id: evidence_lane:predictive_generalization
+  capability_type: evidence_lane
+  capability_id: predictive_generalization
+  binding_status: retained
+  runtime_surface: false
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - governance_spec
+- row_id: evidence_lane:readiness_and_closure
+  capability_type: evidence_lane
+  capability_id: readiness_and_closure
+  binding_status: retained
+  runtime_surface: false
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+  - replay
+  - governance_spec
+- row_id: evidence_lane:replay_verification
+  capability_type: evidence_lane
+  capability_id: replay_verification
+  binding_status: retained
+  runtime_surface: false
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - replay
+  - governance_spec
+- row_id: evidence_lane:robustness
+  capability_type: evidence_lane
+  capability_id: robustness
+  binding_status: retained
+  runtime_surface: false
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - golden_regression
+- row_id: lifecycle_artifact:abstention
+  capability_type: lifecycle_artifact
+  capability_id: abstention
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:calibration_result
+  capability_type: lifecycle_artifact
+  capability_id: calibration_result
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:candidate_spec
+  capability_type: lifecycle_artifact
+  capability_id: candidate_spec
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:canonicalization_policy
+  capability_type: lifecycle_artifact
+  capability_id: canonicalization_policy
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:catalog_entry
+  capability_type: lifecycle_artifact
+  capability_id: catalog_entry
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+  - packaging_install
+- row_id: lifecycle_artifact:causal_availability_window
+  capability_type: lifecycle_artifact
+  capability_id: causal_availability_window
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:claim_card
+  capability_type: lifecycle_artifact
+  capability_id: claim_card
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:claim_card_or_abstention
+  capability_type: lifecycle_artifact
+  capability_id: claim_card_or_abstention
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:comparison_universe
+  capability_type: lifecycle_artifact
+  capability_id: comparison_universe
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:dataset_lineage_snapshot
+  capability_type: lifecycle_artifact
+  capability_id: dataset_lineage_snapshot
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:dataset_snapshot
+  capability_type: lifecycle_artifact
+  capability_id: dataset_snapshot
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:evaluation_event_log
+  capability_type: lifecycle_artifact
+  capability_id: evaluation_event_log
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:evaluation_plan
+  capability_type: lifecycle_artifact
+  capability_id: evaluation_plan
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:evidence_independence_attestation
+  capability_type: lifecycle_artifact
+  capability_id: evidence_independence_attestation
+  binding_status: boundary_only
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: lifecycle_artifact:external_evidence_bundle
+  capability_type: lifecycle_artifact
+  capability_id: external_evidence_bundle
+  binding_status: boundary_only
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: lifecycle_artifact:feature_materialization_report
+  capability_type: lifecycle_artifact
+  capability_id: feature_materialization_report
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:feature_view
+  capability_type: lifecycle_artifact
+  capability_id: feature_view
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:freeze_event
+  capability_type: lifecycle_artifact
+  capability_id: freeze_event
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:frontier
+  capability_type: lifecycle_artifact
+  capability_id: frontier
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:frozen_shortlist
+  capability_type: lifecycle_artifact
+  capability_id: frozen_shortlist
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:lifecycle_gate_decision
+  capability_type: lifecycle_artifact
+  capability_id: lifecycle_gate_decision
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:mechanistic_evidence_dossier
+  capability_type: lifecycle_artifact
+  capability_id: mechanistic_evidence_dossier
+  binding_status: boundary_only
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: lifecycle_artifact:observation_record
+  capability_type: lifecycle_artifact
+  capability_id: observation_record
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:point_score_result
+  capability_type: lifecycle_artifact
+  capability_id: point_score_result
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:prediction_artifact
+  capability_type: lifecycle_artifact
+  capability_id: prediction_artifact
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:predictive_gate_policy
+  capability_type: lifecycle_artifact
+  capability_id: predictive_gate_policy
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:publication_record
+  capability_type: lifecycle_artifact
+  capability_id: publication_record
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+  - packaging_install
+- row_id: lifecycle_artifact:reducer_artifact
+  capability_type: lifecycle_artifact
+  capability_id: reducer_artifact
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:rejected_diagnostics
+  capability_type: lifecycle_artifact
+  capability_id: rejected_diagnostics
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:replay_verification_report
+  capability_type: lifecycle_artifact
+  capability_id: replay_verification_report
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:reproducibility_bundle
+  capability_type: lifecycle_artifact
+  capability_id: reproducibility_bundle
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:robustness_report
+  capability_type: lifecycle_artifact
+  capability_id: robustness_report
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:run_manifest
+  capability_type: lifecycle_artifact
+  capability_id: run_manifest
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:run_result
+  capability_type: lifecycle_artifact
+  capability_id: run_result
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+  - packaging_install
+- row_id: lifecycle_artifact:scorecard
+  capability_type: lifecycle_artifact
+  capability_id: scorecard
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:search_budget
+  capability_type: lifecycle_artifact
+  capability_id: search_budget
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:search_plan
+  capability_type: lifecycle_artifact
+  capability_id: search_plan
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:shared_plus_local_aggregation_table
+  capability_type: lifecycle_artifact
+  capability_id: shared_plus_local_aggregation_table
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: lifecycle_artifact:shared_plus_local_decomposition_policy
+  capability_type: lifecycle_artifact
+  capability_id: shared_plus_local_decomposition_policy
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: lifecycle_artifact:source_digest
+  capability_type: lifecycle_artifact
+  capability_id: source_digest
+  binding_status: boundary_only
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - benchmark_semantic
+  - replay
+- row_id: lifecycle_artifact:split_manifest
+  capability_type: lifecycle_artifact
+  capability_id: split_manifest
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: lifecycle_artifact:time_safety_audit
+  capability_type: lifecycle_artifact
+  capability_id: time_safety_audit
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+- row_id: benchmark_track:adversarial_honesty
+  capability_type: benchmark_track
+  capability_id: adversarial_honesty
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_track:predictive_generalization
+  capability_type: benchmark_track
+  capability_id: predictive_generalization
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_track:rediscovery
+  capability_type: benchmark_track
+  capability_id: rediscovery
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:algorithmic_backend
+  capability_type: benchmark_surface
+  capability_id: algorithmic_backend
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:composition_operator_semantics
+  capability_type: benchmark_surface
+  capability_id: composition_operator_semantics
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:mechanistic_lane
+  capability_type: benchmark_surface
+  capability_id: mechanistic_lane
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:external_evidence_ingestion
+  capability_type: benchmark_surface
+  capability_id: external_evidence_ingestion
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:portfolio_orchestration
+  capability_type: benchmark_surface
+  capability_id: portfolio_orchestration
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:probabilistic_forecast_surface
+  capability_type: benchmark_surface
+  capability_id: probabilistic_forecast_surface
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:retained_core_release
+  capability_type: benchmark_surface
+  capability_id: retained_core_release
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:search_class_honesty
+  capability_type: benchmark_surface
+  capability_id: search_class_honesty
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:shared_plus_local_decomposition
+  capability_type: benchmark_surface
+  capability_id: shared_plus_local_decomposition
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: benchmark_surface:robustness_lane
+  capability_type: benchmark_surface
+  capability_id: robustness_lane
+  binding_status: extension_surface
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/benchmarks-readiness.md
+  - docs/benchmarks-readiness.md
+  minimum_closing_evidence_classes:
+  - benchmark_semantic
+  - replay
+- row_id: operator_runtime_surface:operator_replay
+  capability_type: operator_runtime_surface
+  capability_id: operator_replay
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+  - packaging_install
+- row_id: operator_runtime_surface:operator_run
+  capability_type: operator_runtime_surface
+  capability_id: operator_run
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - semantic_runtime
+  - replay
+  - packaging_install
+- row_id: clean_install_surface:benchmark_execution
+  capability_type: clean_install_surface
+  capability_id: benchmark_execution
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: clean_install_surface:determinism_same_seed
+  capability_type: clean_install_surface
+  capability_id: determinism_same_seed
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: clean_install_surface:operator_replay
+  capability_type: clean_install_surface
+  capability_id: operator_replay
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: clean_install_surface:operator_run
+  capability_type: clean_install_surface
+  capability_id: operator_run
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: clean_install_surface:packaged_notebook_smoke
+  capability_type: clean_install_surface
+  capability_id: packaged_notebook_smoke
+  binding_status: compatibility_only
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: clean_install_surface:performance_runtime_smoke
+  capability_type: clean_install_surface
+  capability_id: performance_runtime_smoke
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: clean_install_surface:release_status
+  capability_type: clean_install_surface
+  capability_id: release_status
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  minimum_closing_evidence_classes:
+  - packaging_install
+- row_id: replay_surface:operator_native_replay
+  capability_type: replay_surface
+  capability_id: operator_native_replay
+  binding_status: retained
+  runtime_surface: true
+  governing_doc_refs:
+  - docs/system.md
+  - docs/system.md
+  - docs/modeling-pipeline.md
+  minimum_closing_evidence_classes:
+  - replay

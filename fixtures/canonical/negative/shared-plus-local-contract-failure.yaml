@@ -1,0 +1,108 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: shared_plus_local_contract_failure_bundle
+scenario_id: shared-plus-local-contract-failure
+scenario_class: blocked_publication
+required_modules:
+  - shared_plus_local_decomposition
+  - split_planning
+  - evaluation_governance
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - shared_plus_local_decomposition_policy_manifest@1.0.0
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - run_result_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/shared-plus-local-evaluation.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+required_evidence_classes:
+  - predictive_generalization
+  - replay_verification
+anchor_artifacts:
+  - docs/examples/blocked-and-invalid-fixtures.md
+  - docs/examples/extension-lane-publication-fixtures.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: publication_blocked
+  terminal_lifecycle_state: publication_blocked
+  claim_lane: null
+  forecast_object_type: point
+  abstention_type: null
+  failure_effect: shared_plus_local_publication_blocked_by_missing_entity_weights_or_unseen_entity_policy
+  reason_codes:
+    - shared_plus_local_decomposition_deferred_from_scope
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: shared_plus_local_contract_failure_validation_scope
+  - state: meaning_bound
+    produced_artifact_refs:
+      - schema_name: scorecard_manifest@1.1.0
+        object_id: shared_plus_local_contract_failure_scorecard
+  - state: publication_blocked
+    produced_artifact_refs:
+      - schema_name: run_result_manifest@1.1.0
+        object_id: shared_plus_local_contract_failure_run_result
+artifacts:
+  - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+    object_id: shared_plus_local_contract_failure_policy
+    module_id: shared_plus_local_decomposition
+    body:
+      policy_id: shared_plus_local_contract_failure_policy
+      binding_status: deferred_non_binding
+      publication_status: forbidden_in_v1
+      unseen_entity_policy: forbidden_in_v1
+      request_resolution:
+        status: blocked
+        reason_code: shared_plus_local_decomposition_deferred_from_scope
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: shared_plus_local_contract_failure_validation_scope
+    module_id: candidate_fitting
+    body:
+      scope_id: shared_plus_local_contract_failure_scope
+      scenario_id: shared-plus-local-contract-failure
+      claim_lane: null
+      forecast_object_type: point
+      deferred_scope_refs:
+        - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+          object_id: shared_plus_local_contract_failure_policy
+      anchor_artifact_paths:
+        - docs/examples/blocked-and-invalid-fixtures.md
+        - docs/examples/extension-lane-publication-fixtures.md
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: shared_plus_local_contract_failure_scorecard
+    module_id: scoring
+    body:
+      scorecard_id: shared_plus_local_contract_failure_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: shared_plus_local_contract_failure_validation_scope
+      shared_plus_local_policy_ref:
+        schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+        object_id: shared_plus_local_contract_failure_policy
+      descriptive_status: blocked
+      predictive_status: blocked
+      blocking_reason_codes:
+        - shared_plus_local_decomposition_deferred_from_scope
+  - schema_name: run_result_manifest@1.1.0
+    object_id: shared_plus_local_contract_failure_run_result
+    module_id: catalog_publishing
+    body:
+      run_id: shared_plus_local_contract_failure_run
+      result_mode: publication_blocked
+      primary_scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: shared_plus_local_contract_failure_scorecard
+      blocked_policy_ref:
+        schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+        object_id: shared_plus_local_contract_failure_policy
+      blocking_reason_codes:
+        - shared_plus_local_decomposition_deferred_from_scope

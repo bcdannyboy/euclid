@@ -1,0 +1,19 @@
+request_id: phase06-probabilistic-distribution-demo
+dataset_csv: probabilistic-trend-series.csv
+cutoff_available_at: null
+quantization_step: "0.5"
+minimum_description_gain_bits: -2.0
+min_train_size: 3
+horizon: 2
+search:
+  class: exact_finite_enumeration
+  family_ids:
+    - analytic_lag1_affine
+  seed: "0"
+  proposal_limit: 1
+  seasonal_period: 4
+probabilistic:
+  forecast_object_type: distribution
+  primary_score: continuous_ranked_probability_score
+  calibration_thresholds:
+    max_ks_distance: 1.0

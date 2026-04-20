@@ -1,0 +1,77 @@
+version: 1
+kind: predictive_evidence_policies
+owners:
+  - id: predictive_governance_council
+    display_name: Predictive Governance Council
+global_rules:
+  confirmatory_test_selection: deterministic_from_comparison_regime
+  holdout_reuse_policy: single_use_without_reusable_holdout_mechanism
+  confirmatory_pair_freeze_rule: exactly_one_candidate_and_baseline_before_confirmatory_access
+  shared_plus_local_interaction: delegated_to_shared_plus_local_evaluation_rules
+comparison_regimes:
+  - comparison_regime_id: unconditional_model_pair
+    owner_ref: predictive_governance_council
+    comparison_object_kind: model_pair
+    comparison_objective: unconditional_mean_loss
+    allowed_forecast_object_types:
+      - point
+      - distribution
+      - interval
+      - quantile
+      - event_probability
+    pairwise_test_id: diebold_mariano
+    loss_differential_mode: declared_primary_score_difference
+    conditioning_requirement: none
+  - comparison_regime_id: conditional_model_pair
+    owner_ref: predictive_governance_council
+    comparison_object_kind: model_pair
+    comparison_objective: conditional_mean_loss_given_state
+    allowed_forecast_object_types:
+      - point
+      - distribution
+      - interval
+      - quantile
+      - event_probability
+    pairwise_test_id: giacomini_white_conditional_predictive_ability
+    loss_differential_mode: declared_primary_score_difference
+    conditioning_requirement: typed_conditioning_information_required
+many_model_adjustments:
+  - adjustment_id: none
+    owner_ref: predictive_governance_council
+    activation_rule: single_confirmatory_comparison_universe_element
+  - adjustment_id: hansen_spa
+    owner_ref: predictive_governance_council
+    activation_rule: unconditional_many_model_correction_bound_before_holdout
+  - adjustment_id: fresh_replication_only
+    owner_ref: predictive_governance_council
+    activation_rule: original_holdout_cannot_support_honest_many_model_correction
+predictive_gate_policies:
+  - policy_id: point_predictive_gate
+    owner_ref: predictive_governance_council
+    allowed_forecast_object_types:
+      - point
+    required_time_safety_statuses:
+      - verified
+    required_confirmatory_statuses:
+      - clean
+      - replicated
+    minimum_outer_improvement_rule: nonnegative_mean_primary_score_improvement
+    minimum_holdout_improvement_rule: nonnegative_mean_primary_score_improvement
+    pairwise_confirmation_rule: declared_pairwise_test_passes
+    requires_calibration_pass: false
+  - policy_id: probabilistic_predictive_gate
+    owner_ref: predictive_governance_council
+    allowed_forecast_object_types:
+      - distribution
+      - interval
+      - quantile
+      - event_probability
+    required_time_safety_statuses:
+      - verified
+    required_confirmatory_statuses:
+      - clean
+      - replicated
+    minimum_outer_improvement_rule: nonnegative_mean_primary_score_improvement
+    minimum_holdout_improvement_rule: nonnegative_mean_primary_score_improvement
+    pairwise_confirmation_rule: declared_pairwise_test_passes
+    requires_calibration_pass: true

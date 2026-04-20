@@ -1,0 +1,104 @@
+{
+  "catalog_entry": {
+    "abstention_ref": null,
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_ad5fe1ab0d76bbf781b7",
+    "comparator_exposure_status": "satisfied",
+    "forecast_object_type": "distribution",
+    "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_53968a5768f3970267c8",
+    "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_5769338f3c07eaeb262d",
+    "publication_mode": "candidate_publication",
+    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_866e14be4d25746965eb",
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_729a528b70e05d6b636a"
+  },
+  "claim": {
+    "allowed_interpretation_codes": [
+      "historical_structure_summary"
+    ],
+    "claim_type": "descriptive_only",
+    "predictive_support_status": "blocked"
+  },
+  "comparison": {
+    "baseline_id": "analytic_intercept",
+    "baseline_primary_score": 234.697244153655,
+    "candidate_beats_baseline": true,
+    "candidate_primary_score": 167.419594695841,
+    "comparison_class_status": "comparable",
+    "paired_comparison_records": [
+      {
+        "candidate_primary_score": 167.419594695841,
+        "comparator_id": "analytic_intercept",
+        "comparator_kind": "baseline",
+        "comparator_primary_score": 234.697244153655,
+        "comparison_status": "comparable",
+        "failure_reason_code": null,
+        "mean_loss_differential": 67.277649457814,
+        "practical_significance_margin": 0.0,
+        "practical_significance_status": "candidate_better_than_margin",
+        "primary_score_delta": 67.277649457814,
+        "score_result_ref": {
+          "object_id": "probabilistic_score_result_manifest_f02a082b5ad4ab9997eb",
+          "schema_name": "probabilistic_score_result_manifest@1.0.0"
+        }
+      }
+    ],
+    "score_delta": 67.277649457814
+  },
+  "forecast_object_type": "distribution",
+  "publication_mode": "candidate_publication",
+  "replay": {
+    "artifact_hash_roles": [
+      "dataset_snapshot",
+      "feature_view",
+      "search_plan",
+      "evaluation_plan",
+      "run_result",
+      "candidate_or_abstention",
+      "scorecard",
+      "prediction_artifact",
+      "validation_scope",
+      "robustness_report",
+      "score_result",
+      "calibration_result"
+    ],
+    "bundle_ref": "reproducibility_bundle_manifest@1.0.0:phase06-probabilistic-distribution-calibration-failure-demo_bundle",
+    "replay_verification_status": "verified",
+    "required_manifest_refs": [
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_89f2ef49bf546e77be37",
+      "scorecard_manifest@1.1.0:scorecard_manifest_866e14be4d25746965eb",
+      "claim_card_manifest@1.1.0:claim_card_manifest_ad5fe1ab0d76bbf781b7",
+      "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_2c7334da708955c6a216",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_729a528b70e05d6b636a",
+      "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_5769338f3c07eaeb262d",
+      "calibration_result_manifest@1.0.0:calibration_result_manifest_53968a5768f3970267c8"
+    ],
+    "stage_order": [
+      "dataset_snapshot_frozen",
+      "feature_view_materialized",
+      "search_plan_frozen",
+      "evaluation_plan_frozen",
+      "comparison_universe_resolved",
+      "evaluation_event_log_written",
+      "evaluation_governance_resolved",
+      "scorecard_resolved",
+      "publication_decision_resolved",
+      "run_result_assembled"
+    ],
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_729a528b70e05d6b636a"
+  },
+  "request_id": "phase06-probabilistic-distribution-calibration-failure-demo",
+  "run_result_ref": "run_result_manifest@1.1.0:phase06-probabilistic-distribution-calibration-failure-demo_run_result",
+  "scorecard": {
+    "descriptive_status": "passed",
+    "predictive_reason_codes": [
+      "calibration_failed"
+    ],
+    "predictive_status": "blocked"
+  },
+  "summary_refs": {
+    "abstention_ref": null,
+    "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_53968a5768f3970267c8",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_ad5fe1ab0d76bbf781b7",
+    "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_2c7334da708955c6a216",
+    "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_5769338f3c07eaeb262d"
+  }
+}

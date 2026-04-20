@@ -1,0 +1,188 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: probabilistic_gate_failure_bundle
+scenario_id: probabilistic-gate-failure
+scenario_class: negative_publication
+required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - calibration_result_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - probabilistic_score_policy_manifest
+  - distribution_calibration_policy_manifest
+required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+anchor_artifacts:
+  - docs/search-core.md
+  - docs/modeling-pipeline.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: candidate_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: descriptive_only
+  forecast_object_type: distribution
+  abstention_type: null
+  failure_effect: probabilistic_predictive_gate_blocks_upgrade_but_preserves_typed_evaluation_evidence
+  catalog_scope: internal
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: probabilistic_gate_failure_validation_scope
+  - state: meaning_bound
+    produced_artifact_refs:
+      - schema_name: claim_card_manifest@1.1.0
+        object_id: probabilistic_gate_failure_claim_card
+  - state: replay_bundle_assembled
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: probabilistic_gate_failure_reproducibility_bundle
+  - state: replay_verified
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: probabilistic_gate_failure_reproducibility_bundle
+  - state: candidate_publication_selected
+    produced_artifact_refs:
+      - schema_name: run_result_manifest@1.1.0
+        object_id: probabilistic_gate_failure_run_result
+  - state: publication_record_written
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: probabilistic_gate_failure_publication_record
+  - state: publication_completed
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: probabilistic_gate_failure_publication_record
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: probabilistic_gate_failure_validation_scope
+    module_id: candidate_fitting
+    body:
+      scope_id: probabilistic_gate_failure_scope
+      scenario_id: probabilistic-gate-failure
+      claim_lane: descriptive_only
+      forecast_object_type: distribution
+      catalog_scope: internal
+      anchor_artifact_paths:
+        - docs/search-core.md
+        - docs/modeling-pipeline.md
+  - schema_name: prediction_artifact_manifest@1.1.0
+    object_id: probabilistic_gate_failure_prediction_artifact
+    module_id: evaluation
+    body:
+      prediction_artifact_id: probabilistic_gate_failure_prediction_artifact
+      forecast_object_type: distribution
+  - schema_name: calibration_result_manifest@1.0.0
+    object_id: probabilistic_gate_failure_calibration_result
+    module_id: probabilistic_evaluation
+    body:
+      result_id: probabilistic_gate_failure_calibration_result
+      prediction_artifact_ref:
+        schema_name: prediction_artifact_manifest@1.1.0
+        object_id: probabilistic_gate_failure_prediction_artifact
+      status: failed
+      failure_reason_codes:
+        - conditional_predictive_ability_required
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: probabilistic_gate_failure_scorecard
+    module_id: scoring
+    body:
+      scorecard_id: probabilistic_gate_failure_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: probabilistic_gate_failure_validation_scope
+      calibration_result_ref:
+        schema_name: calibration_result_manifest@1.0.0
+        object_id: probabilistic_gate_failure_calibration_result
+      descriptive_status: passed
+      descriptive_reason_codes: []
+      predictive_status: blocked
+      predictive_reason_codes:
+        - conditional_predictive_ability_required
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: probabilistic_gate_failure_claim_card
+    module_id: claims
+    body:
+      claim_id: probabilistic_gate_failure_claim_card
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: probabilistic_gate_failure_validation_scope
+      scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: probabilistic_gate_failure_scorecard
+      claim_lane: descriptive_only
+      forecast_object_type: distribution
+      prediction_artifact_ref:
+        schema_name: prediction_artifact_manifest@1.1.0
+        object_id: probabilistic_gate_failure_prediction_artifact
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: probabilistic_gate_failure_reproducibility_bundle
+    module_id: replay
+    body:
+      bundle_id: probabilistic_gate_failure_reproducibility_bundle
+      required_manifest_refs:
+        - schema_name: claim_card_manifest@1.1.0
+          object_id: probabilistic_gate_failure_claim_card
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: probabilistic_gate_failure_run_result
+      replay_verification_status: verified
+      failure_reason_codes: []
+  - schema_name: run_result_manifest@1.1.0
+    object_id: probabilistic_gate_failure_run_result
+    module_id: catalog_publishing
+    body:
+      run_id: probabilistic_gate_failure_run
+      result_mode: candidate_publication
+      primary_scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: probabilistic_gate_failure_scorecard
+      primary_claim_card_ref:
+        schema_name: claim_card_manifest@1.1.0
+        object_id: probabilistic_gate_failure_claim_card
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: probabilistic_gate_failure_reproducibility_bundle
+      prediction_artifact_refs:
+        - schema_name: prediction_artifact_manifest@1.1.0
+          object_id: probabilistic_gate_failure_prediction_artifact
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: probabilistic_gate_failure_publication_record
+    module_id: catalog_publishing
+    body:
+      publication_id: probabilistic_gate_failure_publication_record
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: probabilistic_gate_failure_run_result
+      catalog_scope: internal
+      publication_mode: candidate_publication
+      replay_verification_status: verified
+      comparator_exposure_status: satisfied
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: probabilistic_gate_failure_reproducibility_bundle
+      published_at: '2026-04-12T00:00:00Z'

@@ -1,0 +1,74 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: illegal_ref_shape_bundle
+scenario_id: illegal-ref-shape
+scenario_class: invalid_fixture
+required_modules:
+  - manifest_registry
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - claim_card_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/reference-types.yaml
+  - schemas/contracts/schema-registry.yaml
+required_evidence_classes: []
+anchor_artifacts:
+  - docs/contracts-manifests.md
+  - tests/unit/contracts/test_refs.py
+expected_outcome:
+  validator_disposition: must_reject
+  publication_mode: none
+  terminal_lifecycle_state: not_applicable_fixture_rejected
+  claim_lane: null
+  forecast_object_type: null
+  abstention_type: null
+  failure_effect: typed_ref_validation_fails_before_lifecycle_entry
+validator_errors:
+  - error_code: invalid_typed_ref_shape
+    message: claim_card scorecard_ref.object_id must be a string, not a sequence
+    field_path: body.scorecard_ref.object_id
+    artifact_ref:
+      schema_name: claim_card_manifest@1.1.0
+      object_id: illegal_ref_shape_claim_card
+  - error_code: invalid_typed_ref_shape
+    message: publication_record run_result_ref.object_id must be a string, not a nested object
+    field_path: body.run_result_ref.object_id
+    artifact_ref:
+      schema_name: publication_record_manifest@1.1.0
+      object_id: illegal_ref_shape_publication_record
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: illegal_ref_shape_validation_scope
+    module_id: manifest_registry
+    body:
+      scope_id: illegal_ref_shape_scope
+      scenario_id: illegal-ref-shape
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: illegal_ref_shape_claim_card
+    module_id: claims
+    body:
+      claim_id: illegal_ref_shape_claim_card
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: illegal_ref_shape_validation_scope
+      scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id:
+          - malformed
+          - sequence
+      claim_lane: descriptive_only
+      forecast_object_type: point
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: illegal_ref_shape_publication_record
+    module_id: catalog_publishing
+    body:
+      publication_id: illegal_ref_shape_publication_record
+      publication_mode: candidate_publication
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id:
+          invalid: nested-object

@@ -1,0 +1,22 @@
+fixture_family_id: phase08_adversarial_honesty
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/phase08/adversarial_honesty/random-walk-canary-series.csv
+- fixtures/runtime/phase08/adversarial_honesty/near-persistence-canary-series.csv
+- fixtures/runtime/phase08/adversarial_honesty/interpolation-bait-canary-series.csv
+- fixtures/runtime/phase08/adversarial_honesty/row-index-leakage-canary-series.csv
+- fixtures/runtime/phase08/adversarial_honesty/sample-wide-closure-canary-series.csv
+series_count: 5
+entity_count: 1
+evidence_bundle_refs:
+- benchmarks/tasks/adversarial_honesty/random-walk-canary.yaml
+- benchmarks/tasks/adversarial_honesty/near-persistence-canary.yaml
+- benchmarks/tasks/adversarial_honesty/interpolation-bait-canary.yaml
+- benchmarks/tasks/adversarial_honesty/row-index-leakage-canary.yaml
+- benchmarks/tasks/adversarial_honesty/sample-wide-closure-canary.yaml
+diversity_axes:
+- false_holistic_prevention
+- leakage
+- interpolation_bait
+- near_persistence
+- sample_wide_closure

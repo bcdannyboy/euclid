@@ -1,0 +1,4 @@
+baseline_id: leakage_safe_naive
+baseline_family: honesty_guardrail
+policy:
+  rule: lag_only_last_value

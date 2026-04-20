@@ -1,0 +1,5 @@
+request_id: prototype-demo
+dataset_csv: prototype-series.csv
+cutoff_available_at: null
+quantization_step: "0.5"
+minimum_description_gain_bits: 0.0

@@ -1,0 +1,70 @@
+version: 1
+kind: euclid_certification_evidence_contract
+status: frozen_contract
+authority_snapshot_id: euclid-authority-2026-04-15-b
+closure_map_id: euclid-closure-map-2026-04-15-v1
+traceability_id: euclid-traceability-2026-04-15-v1
+master_plan_ref: docs/README.md
+scope_ids:
+- current_release
+- full_vision
+- shipped_releasable
+required_bundle_fields:
+- evidence_bundle_id
+- scope_id
+- authority_snapshot_id
+- command_contract_id
+- closure_map_id
+- traceability_id
+- fixture_spec_id
+- producer_command_id
+- generated_at_utc
+- input_manifest_digests
+- source_tree_digest_or_wheel_digest
+- dirty_state_or_build_toolchain
+rules:
+- current_release, full_vision, and shipped_releasable require separate evidence bundles.
+- Repo-checkout evidence and clean-install evidence are not interchangeable.
+- Evidence is stale if any referenced authority document, manifest digest, fixture spec, closure map, traceability ledger, or command contract changes.
+- Shared provenance may close multiple rows only when the closure map declares it explicitly.
+bundles:
+- evidence_bundle_id: current_release_repo_checkout_bundle
+  scope_id: current_release
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+  command_contract_id: euclid-certification-commands-v1
+  closure_map_id: euclid-closure-map-2026-04-15-v1
+  traceability_id: euclid-traceability-2026-04-15-v1
+  fixture_spec_id: euclid-certification-fixtures-v1
+  producer_command_id: current_release_suite
+  generated_at_utc: runtime_generated
+  input_manifest_digests:
+  - benchmarks/suites/current-release.yaml:runtime_sha256
+  source_tree_digest_or_wheel_digest: repo_checkout_digest
+  dirty_state_or_build_toolchain: repo_checkout_dirty_state
+- evidence_bundle_id: full_vision_repo_checkout_bundle
+  scope_id: full_vision
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+  command_contract_id: euclid-certification-commands-v1
+  closure_map_id: euclid-closure-map-2026-04-15-v1
+  traceability_id: euclid-traceability-2026-04-15-v1
+  fixture_spec_id: euclid-certification-fixtures-v1
+  producer_command_id: full_vision_suite
+  generated_at_utc: runtime_generated
+  input_manifest_digests:
+  - benchmarks/suites/full-vision.yaml:runtime_sha256
+  - examples/full_vision_run.yaml:runtime_sha256
+  source_tree_digest_or_wheel_digest: repo_checkout_digest
+  dirty_state_or_build_toolchain: repo_checkout_dirty_state
+- evidence_bundle_id: shipped_releasable_clean_install_bundle
+  scope_id: shipped_releasable
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+  command_contract_id: euclid-certification-commands-v1
+  closure_map_id: euclid-closure-map-2026-04-15-v1
+  traceability_id: euclid-traceability-2026-04-15-v1
+  fixture_spec_id: euclid-certification-fixtures-v1
+  producer_command_id: clean_install_certification
+  generated_at_utc: runtime_generated
+  input_manifest_digests:
+  - build/certification/wheels:runtime_directory_digest
+  source_tree_digest_or_wheel_digest: wheel_digest
+  dirty_state_or_build_toolchain: python3.11+build

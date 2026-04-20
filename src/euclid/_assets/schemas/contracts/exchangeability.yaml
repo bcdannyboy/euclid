@@ -1,0 +1,17 @@
+version: 1
+kind: exchangeability_contracts
+owners:
+  - id: exchangeability_contract_owner
+    display_name: Exchangeability Contract Owner
+global_rules:
+  exchangeability_is_never_implicit: true
+  out_of_panel_transport_requires_separate_policy: true
+contracts:
+  - schema_name: exchangeability_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    admissible_scope: declared_entity_panel_only
+    required_fields:
+      - entity_panel
+      - equivalence_basis
+      - failure_modes
+    violation_effect: cross_entity_publication_blocked

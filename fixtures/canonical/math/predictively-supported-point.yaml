@@ -1,0 +1,47 @@
+version: 1
+kind: canonical_math_fixture
+fixture_id: predictively_supported_point
+claim_lane: predictively_supported
+forecast_object_type: point
+primary_score: squared_error
+comparison_regime_id: unconditional_model_pair
+adjustment_id: none
+predictive_gate_policy_id: point_predictive_gate
+time_safety_status: verified
+confirmatory_status: clean
+admitted_data_object:
+  object_id: point_forecast_panel
+  entity_index_set:
+    - entity_a
+  order_relation: event_time_total_order
+  coded_target_domain: real_line
+target_transform_object:
+  object_id: identity_target_transform
+  transform_id: identity
+quantization_object:
+  object_id: fixed_step_mid_tread_quantization
+  quantization_mode: fixed_step_mid_tread
+observation_model_object:
+  object_id: point_observation_model
+  forecast_object_type: point
+  support: real_line
+reference_description_object:
+  object_id: point_reference_description
+  reference_family: seasonal_naive
+codelength_policy_object:
+  object_id: additive_codelength_policy
+  code_unit: bits
+reducer_object:
+  object_id: recursive_additive_residual_reducer
+  reducer_family: recursive
+  composition_operator: additive_residual
+  observation_model_object_ref: point_observation_model
+  codelength_policy_object_ref: additive_codelength_policy
+descriptive_admissibility_object:
+  object_id: point_predictive_descriptive_admissibility
+  data_object_ref: point_forecast_panel
+  reducer_object_ref: recursive_additive_residual_reducer
+  reference_description_object_ref: point_reference_description
+  codelength_policy_object_ref: additive_codelength_policy
+  failure_abstention_type: no_admissible_reducer
+  status: admissible

@@ -1,0 +1,15 @@
+source_id,series_id,event_time,available_at,observed_value,revision_id
+fixture-source,interpolation_bait_canary_demo,2026-01-01T00:00:00Z,2026-01-02T00:00:00Z,0.0,0
+fixture-source,interpolation_bait_canary_demo,2026-01-02T00:00:00Z,2026-01-03T00:00:00Z,1.1,0
+fixture-source,interpolation_bait_canary_demo,2026-01-03T00:00:00Z,2026-01-04T00:00:00Z,1.9,0
+fixture-source,interpolation_bait_canary_demo,2026-01-04T00:00:00Z,2026-01-05T00:00:00Z,3.2,0
+fixture-source,interpolation_bait_canary_demo,2026-01-05T00:00:00Z,2026-01-06T00:00:00Z,4.1,0
+fixture-source,interpolation_bait_canary_demo,2026-01-06T00:00:00Z,2026-01-07T00:00:00Z,6.0,0
+fixture-source,interpolation_bait_canary_demo,2026-01-07T00:00:00Z,2026-01-08T00:00:00Z,6.4,0
+fixture-source,interpolation_bait_canary_demo,2026-01-08T00:00:00Z,2026-01-09T00:00:00Z,8.9,0
+fixture-source,interpolation_bait_canary_demo,2026-01-09T00:00:00Z,2026-01-10T00:00:00Z,8.7,0
+fixture-source,interpolation_bait_canary_demo,2026-01-10T00:00:00Z,2026-01-11T00:00:00Z,11.8,0
+fixture-source,interpolation_bait_canary_demo,2026-01-11T00:00:00Z,2026-01-12T00:00:00Z,10.2,0
+fixture-source,interpolation_bait_canary_demo,2026-01-12T00:00:00Z,2026-01-13T00:00:00Z,14.9,0
+fixture-source,interpolation_bait_canary_demo,2026-01-13T00:00:00Z,2026-01-14T00:00:00Z,11.3,0
+fixture-source,interpolation_bait_canary_demo,2026-01-14T00:00:00Z,2026-01-15T00:00:00Z,18.1,0

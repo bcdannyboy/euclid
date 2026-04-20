@@ -1,0 +1,20 @@
+version: 1
+vocabulary: scope_axes
+title: Scope Axes
+closed: true
+source_doc_refs:
+  - README.md
+  - docs/search-core.md
+  - docs/modeling-pipeline.md
+entries:
+  - id: entity_scope
+    binding_status: retained
+    allowed_values:
+      - single_entity_only
+    description: Scope axis constraining retained claims and comparisons to one entity at a time.
+  - id: horizon_scope
+    binding_status: retained
+    allowed_values:
+      - single_horizon
+      - multi_horizon_simplex_weighted
+    description: Scope axis constraining predictive artifacts to a single horizon or a declared simplex-weighted multi-horizon panel.

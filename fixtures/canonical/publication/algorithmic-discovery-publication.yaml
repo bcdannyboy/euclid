@@ -1,0 +1,406 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: algorithmic_discovery_publication_bundle
+scenario_id: algorithmic-discovery-publication
+scenario_class: positive_publication
+required_modules:
+- algorithmic_dsl
+- candidate_fitting
+- catalog_publishing
+- claims
+- evaluation
+- evaluation_governance
+- gate_lifecycle
+- probabilistic_evaluation
+- replay
+- robustness
+- scoring
+- search_planning
+- split_planning
+- timeguard
+required_schema_families:
+- algorithmic_dsl_manifest@1.1.0
+- algorithmic_frontier_policy_manifest@1.0.0
+- algorithmic_search_policy_manifest@1.0.0
+- calibration_result_manifest@1.0.0
+- claim_card_manifest@1.1.0
+- comparison_universe_manifest@1.0.0
+- distribution_calibration_policy_manifest@1.0.0
+- evaluation_event_log_manifest@1.0.0
+- evaluation_governance_manifest@1.1.0
+- evaluation_plan_manifest@1.1.0
+- prediction_artifact_manifest@1.1.0
+- predictive_gate_policy_manifest@1.1.0
+- probabilistic_score_policy_manifest@1.0.0
+- publication_record_manifest@1.1.0
+- readiness_judgment_manifest@1.0.0
+- reducer_artifact_manifest@1.0.0
+- reproducibility_bundle_manifest@1.0.0
+- robustness_report_manifest@1.1.0
+- run_result_manifest@1.1.0
+- schema_lifecycle_integration_closure_manifest@1.0.0
+- scope_ledger_manifest@1.0.0
+- scorecard_manifest@1.1.0
+- search_plan_manifest@1.0.0
+- validation_scope_manifest@1.0.0
+required_contract_families:
+- schemas/contracts/algorithmic-dsl.yaml
+- schemas/contracts/search-classes.yaml
+- schemas/contracts/rewrite-guarantees.yaml
+- schemas/contracts/search-frontier.yaml
+required_evidence_classes:
+- descriptive_compression
+- predictive_generalization
+- robustness
+- replay_verification
+- readiness_and_closure
+anchor_artifacts:
+- fixtures/canonical/math/predictively-supported-distribution.yaml
+- docs/search-core.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: candidate_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: predictively_supported
+  forecast_object_type: distribution
+  abstention_type: null
+  catalog_scope: internal
+lifecycle_trace:
+- state: publication_requested
+  produced_artifact_refs:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: algorithmic_discovery_publication_validation_scope
+- state: meaning_bound
+  produced_artifact_refs:
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: algorithmic_discovery_publication_claim_card
+- state: replay_bundle_assembled
+  produced_artifact_refs:
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: algorithmic_discovery_publication_reproducibility_bundle
+- state: replay_verified
+  produced_artifact_refs:
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: algorithmic_discovery_publication_reproducibility_bundle
+- state: candidate_publication_selected
+  produced_artifact_refs:
+  - schema_name: run_result_manifest@1.1.0
+    object_id: algorithmic_discovery_publication_run_result
+- state: publication_record_written
+  produced_artifact_refs:
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: algorithmic_discovery_publication_publication_record
+- state: catalog_projected
+  produced_artifact_refs:
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: algorithmic_discovery_publication_publication_record
+- state: publication_completed
+  produced_artifact_refs:
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: algorithmic_discovery_publication_publication_record
+artifacts:
+- schema_name: validation_scope_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_validation_scope
+  module_id: candidate_fitting
+  body:
+    scope_id: algorithmic_discovery_publication_scope
+    scenario_id: algorithmic-discovery-publication
+    claim_lane: predictively_supported
+    forecast_object_type: distribution
+    catalog_scope: internal
+    anchor_artifact_paths:
+    - fixtures/canonical/math/predictively-supported-distribution.yaml
+    - docs/search-core.md
+- schema_name: scope_ledger_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_scope_ledger
+  module_id: search_planning
+  body:
+    ledger_id: algorithmic_discovery_publication_scope_ledger
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_validation_scope
+    binding_status: retained_scope
+- schema_name: search_plan_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_search_plan
+  module_id: search_planning
+  body:
+    plan_id: algorithmic_discovery_publication_search_plan
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_validation_scope
+    search_class: frozen_candidate_replay
+- schema_name: evaluation_plan_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_evaluation_plan
+  module_id: evaluation_governance
+  body:
+    plan_id: algorithmic_discovery_publication_evaluation_plan
+    search_plan_ref:
+      schema_name: search_plan_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_search_plan
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_validation_scope
+- schema_name: comparison_universe_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_comparison_universe
+  module_id: evaluation_governance
+  body:
+    universe_id: algorithmic_discovery_publication_comparison_universe
+    primary_comparator_class: simplest_admissible_comparator
+    strongest_predictive_comparator_class: strongest_predictive_comparator
+    strongest_non_symbolic_comparator_class: strongest_non_symbolic_comparator
+- schema_name: evaluation_event_log_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_evaluation_event_log
+  module_id: evaluation
+  body:
+    event_log_id: algorithmic_discovery_publication_evaluation_event_log
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_evaluation_plan
+    terminal_state: publication_completed
+- schema_name: evaluation_governance_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_evaluation_governance
+  module_id: evaluation_governance
+  body:
+    governance_id: algorithmic_discovery_publication_evaluation_governance
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_evaluation_plan
+    comparison_universe_ref:
+      schema_name: comparison_universe_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_comparison_universe
+- schema_name: readiness_judgment_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_readiness_judgment
+  module_id: catalog_publishing
+  body:
+    judgment_id: algorithmic_discovery_publication_readiness_judgment
+    final_verdict: ready
+    catalog_scope: internal
+- schema_name: schema_lifecycle_integration_closure_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_schema_lifecycle_closure
+  module_id: gate_lifecycle
+  body:
+    closure_id: algorithmic_discovery_publication_schema_lifecycle_closure
+    status: passed
+- schema_name: probabilistic_score_policy_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_score_policy
+  module_id: scoring
+  body:
+    policy_id: algorithmic_discovery_publication_score_policy
+    forecast_object_type: distribution
+    primary_score: log_score
+- schema_name: distribution_calibration_policy_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_calibration_policy
+  module_id: evaluation_governance
+  body:
+    policy_id: algorithmic_discovery_publication_calibration_policy
+    forecast_object_type: distribution
+    calibration_mode: required
+- schema_name: calibration_result_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_calibration_result
+  module_id: probabilistic_evaluation
+  body:
+    result_id: algorithmic_discovery_publication_calibration_result
+    calibration_policy_ref:
+      schema_name: distribution_calibration_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_calibration_policy
+    status: passed
+- schema_name: predictive_gate_policy_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_predictive_gate_policy
+  module_id: evaluation_governance
+  body:
+    policy_id: algorithmic_discovery_publication_predictive_gate_policy
+    forecast_object_type: distribution
+    required_time_safety_status: verified
+    required_confirmatory_status: replicated
+- schema_name: prediction_artifact_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_prediction_artifact
+  module_id: evaluation
+  body:
+    prediction_artifact_id: algorithmic_discovery_publication_prediction_artifact
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_evaluation_plan
+    forecast_object_type: distribution
+- schema_name: algorithmic_dsl_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_algorithmic_dsl
+  module_id: algorithmic_dsl
+  body:
+    dsl_id: algorithmic_discovery_publication_algorithmic_dsl
+    canonical_fragment: first_order_loop_free_recursion_free_exact_rational_single_entity_causal
+- schema_name: algorithmic_search_policy_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_algorithmic_search_policy
+  module_id: algorithmic_dsl
+  body:
+    policy_id: algorithmic_discovery_publication_algorithmic_search_policy
+    dsl_manifest_ref:
+      schema_name: algorithmic_dsl_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_algorithmic_dsl
+    search_mode: heuristic_duplicate_screen_only
+- schema_name: algorithmic_frontier_policy_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_algorithmic_frontier_policy
+  module_id: algorithmic_dsl
+  body:
+    policy_id: algorithmic_discovery_publication_algorithmic_frontier_policy
+    search_policy_ref:
+      schema_name: algorithmic_search_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_algorithmic_search_policy
+    frontier_id: algorithmic_stage_frontier
+- schema_name: reducer_artifact_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_reducer_artifact
+  module_id: candidate_fitting
+  body:
+    artifact_id: algorithmic_discovery_publication_reducer_artifact
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_validation_scope
+    math_fixture_path: fixtures/canonical/math/predictively-supported-distribution.yaml
+- schema_name: robustness_report_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_robustness_report
+  module_id: robustness
+  body:
+    report_id: algorithmic_discovery_publication_robustness_report
+    reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_reducer_artifact
+    evidence_classes:
+    - descriptive_compression
+    - predictive_generalization
+    - robustness
+- schema_name: scorecard_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_scorecard
+  module_id: scoring
+  body:
+    scorecard_id: algorithmic_discovery_publication_scorecard
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_validation_scope
+    robustness_report_refs:
+    - schema_name: robustness_report_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_robustness_report
+    evidence_classes:
+    - descriptive_compression
+    - predictive_generalization
+    - robustness
+    - replay_verification
+    - readiness_and_closure
+    probabilistic_score_policy_ref:
+      schema_name: probabilistic_score_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_score_policy
+    calibration_policy_ref:
+      schema_name: distribution_calibration_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_calibration_policy
+    calibration_result_ref:
+      schema_name: calibration_result_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_calibration_result
+    predictive_gate_policy_ref:
+      schema_name: predictive_gate_policy_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_predictive_gate_policy
+    algorithmic_search_policy_ref:
+      schema_name: algorithmic_search_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_algorithmic_search_policy
+    algorithmic_frontier_policy_ref:
+      schema_name: algorithmic_frontier_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_algorithmic_frontier_policy
+- schema_name: claim_card_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_claim_card
+  module_id: claims
+  body:
+    claim_id: algorithmic_discovery_publication_claim_card
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_validation_scope
+    scorecard_ref:
+      schema_name: scorecard_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_scorecard
+    claim_lane: predictively_supported
+    forecast_object_type: distribution
+    prediction_artifact_ref:
+      schema_name: prediction_artifact_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_prediction_artifact
+    algorithmic_dsl_ref:
+      schema_name: algorithmic_dsl_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_algorithmic_dsl
+- schema_name: reproducibility_bundle_manifest@1.0.0
+  object_id: algorithmic_discovery_publication_reproducibility_bundle
+  module_id: replay
+  body:
+    bundle_id: algorithmic_discovery_publication_reproducibility_bundle
+    search_plan_ref:
+      schema_name: search_plan_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_search_plan
+    evaluation_event_log_ref:
+      schema_name: evaluation_event_log_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_evaluation_event_log
+    reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_reducer_artifact
+    replay_verification_status: verified
+- schema_name: run_result_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_run_result
+  module_id: catalog_publishing
+  body:
+    run_id: algorithmic_discovery_publication_run
+    scope_ledger_ref:
+      schema_name: scope_ledger_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_scope_ledger
+    search_plan_ref:
+      schema_name: search_plan_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_search_plan
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_evaluation_plan
+    comparison_universe_ref:
+      schema_name: comparison_universe_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_comparison_universe
+    evaluation_event_log_ref:
+      schema_name: evaluation_event_log_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_evaluation_event_log
+    evaluation_governance_ref:
+      schema_name: evaluation_governance_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_evaluation_governance
+    result_mode: candidate_publication
+    primary_reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_reducer_artifact
+    primary_scorecard_ref:
+      schema_name: scorecard_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_scorecard
+    primary_claim_card_ref:
+      schema_name: claim_card_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_claim_card
+    robustness_report_refs:
+    - schema_name: robustness_report_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_robustness_report
+    reproducibility_bundle_ref:
+      schema_name: reproducibility_bundle_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_reproducibility_bundle
+    prediction_artifact_refs:
+    - schema_name: prediction_artifact_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_prediction_artifact
+    deferred_scope_policy_refs:
+    - schema_name: algorithmic_search_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_algorithmic_search_policy
+    - schema_name: algorithmic_frontier_policy_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_algorithmic_frontier_policy
+- schema_name: publication_record_manifest@1.1.0
+  object_id: algorithmic_discovery_publication_publication_record
+  module_id: catalog_publishing
+  body:
+    publication_id: algorithmic_discovery_publication_publication_record
+    run_result_ref:
+      schema_name: run_result_manifest@1.1.0
+      object_id: algorithmic_discovery_publication_run_result
+    catalog_scope: internal
+    publication_mode: candidate_publication
+    replay_verification_status: verified
+    comparator_exposure_status: satisfied
+    reproducibility_bundle_ref:
+      schema_name: reproducibility_bundle_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_reproducibility_bundle
+    readiness_judgment_ref:
+      schema_name: readiness_judgment_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_readiness_judgment
+    schema_lifecycle_integration_closure_ref:
+      schema_name: schema_lifecycle_integration_closure_manifest@1.0.0
+      object_id: algorithmic_discovery_publication_schema_lifecycle_closure
+    published_at: '2026-04-12T00:00:00Z'

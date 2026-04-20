@@ -1,0 +1,818 @@
+version: 1
+kind: implementation_sequence
+sequence_id: euclid_python_implementation_sequence@1.0.0
+source_module_registry: schemas/contracts/module-registry.yaml
+ordering_rule: dependency_topology_then_layer_order
+implementation_layers:
+  - layer_id: registration_and_intake
+    title: Registration and intake
+    modules:
+      - manifest_registry
+      - external_evidence_ingestion
+      - ingestion
+  - layer_id: freeze_and_planning
+    title: Freeze and planning
+    modules:
+      - snapshotting
+      - timeguard
+      - features
+      - split_planning
+      - search_planning
+      - evaluation_governance
+  - layer_id: candidate_realization
+    title: Candidate realization
+    modules:
+      - algorithmic_dsl
+      - shared_plus_local_decomposition
+      - candidate_fitting
+  - layer_id: evidence_production
+    title: Evidence production
+    modules:
+      - evaluation
+      - probabilistic_evaluation
+      - scoring
+      - robustness
+      - mechanistic_evidence
+  - layer_id: meaning_replay_and_publication
+    title: Meaning, replay, and publication
+    modules:
+      - gate_lifecycle
+      - claims
+      - replay
+      - catalog_publishing
+evidence_policy:
+  modules_without_direct_math_refs_use_architecture_and_contract_refs: true
+  schema_names_must_match_schema_registry: true
+  fixture_refs_must_be_listed_in_fixture_coverage: true
+  test_refs_must_point_to_live_regression_files: true
+module_sequence:
+  - module: manifest_registry
+    sequence_index: 1
+    layer_id: registration_and_intake
+    depends_on: []
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/contracts-manifests.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+      schema_names:
+        - lineage_edge@1.0.0
+        - run_manifest@1.0.0
+        - schema_registry_manifest@1.0.0
+        - scope_ledger_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/illegal-ref-shape.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_contract_graph.py
+        - tests/spec_compiler/test_contract_graph_fixtures.py
+        - tests/spec_compiler/test_module_registry.py
+        - tests/spec_compiler/test_schema_registry.py
+  - module: external_evidence_ingestion
+    sequence_index: 2
+    layer_id: registration_and_intake
+    depends_on:
+      - manifest_registry
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/mechanistic-evidence.yaml
+      schema_names: []
+      fixture_refs:
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: ingestion
+    sequence_index: 3
+    layer_id: registration_and_intake
+    depends_on:
+      - manifest_registry
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+      schema_names:
+        - observation_record@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/illegal-time-access.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: snapshotting
+    sequence_index: 4
+    layer_id: freeze_and_planning
+    depends_on:
+      - manifest_registry
+      - ingestion
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+      schema_names:
+        - dataset_snapshot_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/illegal-time-access.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: timeguard
+    sequence_index: 5
+    layer_id: freeze_and_planning
+    depends_on:
+      - snapshotting
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+      schema_names:
+        - time_safety_audit_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/illegal-time-access.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_fixture_closure_compiler.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: features
+    sequence_index: 6
+    layer_id: freeze_and_planning
+    depends_on:
+      - snapshotting
+      - timeguard
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+      schema_names:
+        - feature_spec@1.0.0
+        - feature_view_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/illegal-time-access.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_contract_graph.py
+        - tests/spec_compiler/test_fixture_closure_compiler.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: split_planning
+    sequence_index: 7
+    layer_id: freeze_and_planning
+    depends_on:
+      - snapshotting
+      - timeguard
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+      schema_names:
+        - evaluation_plan_manifest@1.1.0
+      fixture_refs:
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/illegal-time-access.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: search_planning
+    sequence_index: 8
+    layer_id: freeze_and_planning
+    depends_on:
+      - split_planning
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/search-core.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/search-classes.yaml
+        - schemas/contracts/search-frontier.yaml
+        - schemas/contracts/rewrite-guarantees.yaml
+        - schemas/contracts/composition-semantics.yaml
+        - schemas/contracts/reference-types.yaml
+      schema_names:
+        - canonicalization_policy_manifest@1.0.0
+        - freeze_event_manifest@1.0.0
+        - frontier_manifest@1.0.0
+        - frozen_shortlist_manifest@1.0.0
+        - rejected_diagnostics_manifest@1.0.0
+        - search_ledger_manifest@1.0.0
+        - search_plan_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/unresolved-scope-violation.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_contract_graph_fixtures.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: evaluation_governance
+    sequence_index: 9
+    layer_id: freeze_and_planning
+    depends_on:
+      - split_planning
+      - search_planning
+    canonical_doc_refs:
+      - docs/contracts-manifests.md
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/evaluation-governance.yaml
+        - schemas/contracts/reference-types.yaml
+        - schemas/contracts/enum-registry.yaml
+      schema_names:
+        - baseline_registry_manifest@1.1.0
+        - comparison_universe_manifest@1.0.0
+        - evaluation_event_log_manifest@1.0.0
+        - evaluation_governance_manifest@1.1.0
+        - forecast_comparison_policy_manifest@1.1.0
+        - predictive_gate_policy_manifest@1.1.0
+      fixture_refs:
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: algorithmic_dsl
+    sequence_index: 10
+    layer_id: candidate_realization
+    depends_on:
+      - search_planning
+      - features
+    canonical_doc_refs:
+      - docs/system.md
+    evidence:
+      math_refs:
+        - docs/search-core.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/algorithmic-dsl.yaml
+        - schemas/contracts/search-classes.yaml
+        - schemas/contracts/search-frontier.yaml
+        - schemas/contracts/rewrite-guarantees.yaml
+        - schemas/contracts/composition-semantics.yaml
+        - schemas/contracts/reference-types.yaml
+      schema_names:
+        - algorithmic_dsl_manifest@1.1.0
+        - algorithmic_frontier_policy_manifest@1.0.0
+        - algorithmic_search_policy_manifest@1.0.0
+        - canonical_serialization_manifest@1.0.0
+        - dsl_rewrite_system_manifest@1.0.0
+        - dsl_semantics_manifest@1.0.0
+        - observational_equivalence_suite_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/unresolved-scope-violation.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_architecture.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_module_registry.py
+        - tests/spec_compiler/test_schema_registry.py
+        - tests/spec_compiler/test_search_dsl_composition_semantics.py
+  - module: shared_plus_local_decomposition
+    sequence_index: 11
+    layer_id: candidate_realization
+    depends_on:
+      - split_planning
+      - search_planning
+      - features
+    canonical_doc_refs:
+      - docs/system.md
+    evidence:
+      math_refs:
+        - docs/search-core.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/composition-semantics.yaml
+        - schemas/contracts/shared-plus-local-evaluation.yaml
+      schema_names:
+        - shared_plus_local_decomposition_policy_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/unresolved-scope-violation.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_architecture.py
+        - tests/spec_compiler/test_canonical_math_core.py
+        - tests/spec_compiler/test_canonical_math_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_module_registry.py
+        - tests/spec_compiler/test_schema_registry.py
+        - tests/spec_compiler/test_search_dsl_composition_semantics.py
+  - module: candidate_fitting
+    sequence_index: 12
+    layer_id: candidate_realization
+    depends_on:
+      - search_planning
+      - features
+      - algorithmic_dsl
+      - shared_plus_local_decomposition
+    canonical_doc_refs:
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/search-core.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/reference-types.yaml
+      schema_names:
+        - base_measure_policy_manifest@1.0.0
+        - candidate_spec@1.0.0
+        - candidate_state_manifest@1.0.0
+        - canonical_structure_code_manifest@1.0.0
+        - codelength_policy_manifest@1.1.0
+        - observation_model_manifest@1.1.0
+        - reducer_artifact_manifest@1.0.0
+        - reference_description_policy_manifest@1.1.0
+        - target_transform_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_contract_graph_fixtures.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: evaluation
+    sequence_index: 13
+    layer_id: evidence_production
+    depends_on:
+      - candidate_fitting
+      - split_planning
+      - evaluation_governance
+      - timeguard
+    canonical_doc_refs:
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/scoring.yaml
+        - schemas/contracts/evaluation-governance.yaml
+      schema_names:
+        - prediction_artifact_manifest@1.1.0
+      fixture_refs:
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/illegal-time-access.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_architecture.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_math_source_map.py
+        - tests/spec_compiler/test_module_registry.py
+        - tests/spec_compiler/test_schema_registry.py
+  - module: probabilistic_evaluation
+    sequence_index: 14
+    layer_id: evidence_production
+    depends_on:
+      - candidate_fitting
+      - split_planning
+      - evaluation_governance
+      - timeguard
+      - shared_plus_local_decomposition
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/scoring.yaml
+        - schemas/contracts/calibration.yaml
+        - schemas/contracts/evaluation-governance.yaml
+        - schemas/contracts/shared-plus-local-evaluation.yaml
+      schema_names: []
+      fixture_refs:
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_fixture_closure_compiler.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: scoring
+    sequence_index: 15
+    layer_id: evidence_production
+    depends_on:
+      - evaluation
+      - probabilistic_evaluation
+      - evaluation_governance
+    canonical_doc_refs:
+      - docs/contracts-manifests.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/scoring.yaml
+        - schemas/contracts/calibration.yaml
+        - schemas/contracts/evaluation-governance.yaml
+      schema_names:
+        - calibration_contract_manifest@1.0.0
+        - calibration_result_manifest@1.0.0
+        - point_score_policy_manifest@1.0.0
+        - point_score_result_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_math_source_map.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: robustness
+    sequence_index: 16
+    layer_id: evidence_production
+    depends_on:
+      - candidate_fitting
+      - evaluation_governance
+    canonical_doc_refs:
+      - docs/system.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/robustness.yaml
+        - schemas/contracts/evaluation-governance.yaml
+        - schemas/contracts/reference-types.yaml
+      schema_names:
+        - leakage_canary_manifest@1.0.0
+        - leakage_canary_result_manifest@1.0.0
+        - null_protocol_manifest@1.1.0
+        - perturbation_protocol_manifest@1.1.0
+        - retention_metric_manifest@1.0.0
+        - robustness_report_manifest@1.1.0
+        - surrogate_generator_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_claim_output_semantics.py
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_math_source_map.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: mechanistic_evidence
+    sequence_index: 17
+    layer_id: evidence_production
+    depends_on:
+      - external_evidence_ingestion
+      - evaluation
+      - probabilistic_evaluation
+    canonical_doc_refs:
+      - docs/search-core.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/mechanistic-evidence.yaml
+        - schemas/contracts/evaluation-governance.yaml
+      schema_names:
+        - mechanistic_lane_policy_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_architecture.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_evidence_law_semantics.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: gate_lifecycle
+    sequence_index: 18
+    layer_id: meaning_replay_and_publication
+    depends_on:
+      - scoring
+      - robustness
+      - mechanistic_evidence
+      - evaluation_governance
+    canonical_doc_refs:
+      - docs/system.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/run-lifecycle.yaml
+        - schemas/contracts/candidate-state-machine.yaml
+        - schemas/contracts/publication-lifecycle.yaml
+      schema_names:
+        - scorecard_manifest@1.1.0
+      fixture_refs:
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/illegal-time-access.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_claim_output_semantics.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: claims
+    sequence_index: 19
+    layer_id: meaning_replay_and_publication
+    depends_on:
+      - gate_lifecycle
+    canonical_doc_refs:
+      - docs/system.md
+    evidence:
+      math_refs:
+        - docs/modeling-pipeline.md
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/claim-lanes.yaml
+        - schemas/contracts/abstention-types.yaml
+        - schemas/contracts/reference-types.yaml
+        - schemas/contracts/candidate-state-machine.yaml
+        - schemas/contracts/publication-lifecycle.yaml
+      schema_names:
+        - abstention_manifest@1.1.0
+        - claim_card_manifest@1.1.0
+        - validation_scope_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/illegal-ref-shape.yaml
+        - fixtures/canonical/invalid/unresolved-scope-violation.yaml
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_claim_output_semantics.py
+        - tests/spec_compiler/test_contract_graph.py
+        - tests/spec_compiler/test_contract_graph_fixtures.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: replay
+    sequence_index: 20
+    layer_id: meaning_replay_and_publication
+    depends_on:
+      - manifest_registry
+      - gate_lifecycle
+      - claims
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/reference-types.yaml
+        - schemas/contracts/run-lifecycle.yaml
+        - schemas/contracts/publication-lifecycle.yaml
+      schema_names:
+        - reproducibility_bundle_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/illegal-ref-shape.yaml
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/illegal-time-access.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_contract_graph.py
+        - tests/spec_compiler/test_contract_graph_fixtures.py
+        - tests/spec_compiler/test_fixture_closure_compiler.py
+        - tests/spec_compiler/test_lifecycle_contracts.py
+        - tests/spec_compiler/test_module_registry.py
+  - module: catalog_publishing
+    sequence_index: 21
+    layer_id: meaning_replay_and_publication
+    depends_on:
+      - claims
+      - replay
+    canonical_doc_refs:
+      - docs/system.md
+      - docs/search-core.md
+    evidence:
+      math_refs: []
+      contract_refs:
+        - schemas/contracts/module-registry.yaml
+        - schemas/contracts/schema-registry.yaml
+        - schemas/contracts/publication-lifecycle.yaml
+        - schemas/contracts/run-lifecycle.yaml
+      schema_names:
+        - dsl_search_closure_manifest@1.0.0
+        - mdl_observation_closure_manifest@1.0.0
+        - nulls_stability_leakage_closure_manifest@1.0.0
+        - predictive_governance_closure_manifest@1.0.0
+        - publication_record_manifest@1.1.0
+        - readiness_judgment_manifest@1.0.0
+        - run_result_manifest@1.1.0
+        - schema_lifecycle_integration_closure_manifest@1.0.0
+        - scoring_calibration_closure_manifest@1.0.0
+        - worked_example_set_manifest@1.0.0
+        - worked_examples_closure_manifest@1.0.0
+      fixture_refs:
+        - fixtures/canonical/invalid/illegal-ref-shape.yaml
+        - fixtures/canonical/negative/abstention-only-publication.yaml
+        - fixtures/canonical/negative/failed-predictive-promotion.yaml
+        - fixtures/canonical/negative/inadmissible-candidate.yaml
+        - fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+        - fixtures/canonical/negative/probabilistic-gate-failure.yaml
+        - fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+        - fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+        - fixtures/canonical/publication/descriptive-publication.yaml
+        - fixtures/canonical/publication/mechanistic-publication.yaml
+        - fixtures/canonical/publication/predictive-publication-point.yaml
+        - fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+        - fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+        - fixtures/canonical/publication/probabilistic-publication-interval.yaml
+        - fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+        - fixtures/canonical/publication/shared-plus-local-publication.yaml
+      test_refs:
+        - tests/spec_compiler/test_canonical_failure_fixtures.py
+        - tests/spec_compiler/test_canonical_publication_fixtures.py
+        - tests/spec_compiler/test_canonical_spine.py
+        - tests/spec_compiler/test_compiler_build.py
+        - tests/spec_compiler/test_fixture_closure_compiler.py
+        - tests/spec_compiler/test_module_registry.py

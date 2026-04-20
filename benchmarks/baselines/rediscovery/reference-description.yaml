@@ -1,0 +1,5 @@
+baseline_id: reference_description
+baseline_family: benchmark_reference_description
+policy:
+  objective: descriptive_guardrail
+

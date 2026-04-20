@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "kind": "module_ownership",
+  "owners": [
+    {
+      "id": "control_plane",
+      "display_name": "Control Plane"
+    },
+    {
+      "id": "evaluation_team",
+      "display_name": "Evaluation Team"
+    }
+  ],
+  "contracts": [
+    {
+      "module": "manifest_registry",
+      "owner": "control_plane",
+      "claim_lane": "descriptive_only",
+      "reducer_families": [
+        "analytic"
+      ],
+      "composition_operators": [
+        "piecewise"
+      ],
+      "forecast_object_types": [
+        "point"
+      ],
+      "evidence_classes": [
+        "descriptive_compression"
+      ],
+      "abstention_types": [
+        "no_admissible_reducer"
+      ],
+      "scope_axes": [
+        "entity_scope"
+      ]
+    }
+  ]
+}

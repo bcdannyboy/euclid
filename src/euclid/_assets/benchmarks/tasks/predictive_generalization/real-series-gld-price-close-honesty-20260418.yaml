@@ -1,0 +1,70 @@
+task_id: real_series_gld_price_close_honesty_20260418
+track_id: predictive_generalization
+task_family: real_series_honesty_regression
+regime_tags:
+  - real_series
+  - market_data
+  - semantic_regression
+  - single_entity
+  - price_level
+dataset_ref: fixtures/runtime/phase08/real_series/gld-price-close-20260418/gld-price-close.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-17T21:00:00Z'
+generator_status: unknown_real_world
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: rolling_origin
+  initial_window: 30
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.02
+budget_policy:
+  wall_clock_seconds: 90
+  candidate_limit: 32
+baseline_registry:
+  - baseline_id: naive_last_value
+    manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
+  - baseline_id: seasonal_naive
+    manifest_path: benchmarks/baselines/predictive_generalization/seasonal-naive.yaml
+submitter_registry:
+  - submitter_id: analytic_backend
+  - submitter_id: recursive_spectral_backend
+  - submitter_id: algorithmic_search_backend
+  - submitter_id: portfolio_orchestrator
+seed_policy:
+  seed: 0
+  restarts: 0
+adversarial_tags:
+  - real_series_regression
+  - top_line_honesty
+  - descriptive_non_abstention
+  - posthoc_symbolic_synthesis_ban
+abstention_policy:
+  allow_abstention: true
+  expected_mode: no_publishable_winner
+forbidden_shortcuts:
+  - leak_future_observations
+  - sample_exact_closure
+  - posthoc_symbolic_synthesis
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+origin_policy:
+  policy_id: rolling_origin
+  min_origins: 6
+horizon_policy:
+  horizons:
+    - 1
+baseline_comparison_policy:
+  paired_test: diebold_mariano
+  require_margin_win: true
+fixture_spec_id: euclid-certification-fixtures-v1
+fixture_family_id: real_series_honesty_regressions

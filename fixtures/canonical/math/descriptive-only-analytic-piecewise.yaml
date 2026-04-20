@@ -1,0 +1,40 @@
+version: 1
+kind: canonical_math_fixture
+fixture_id: descriptive_only_analytic_piecewise
+claim_lane: descriptive_only
+admitted_data_object:
+  object_id: single_entity_series
+  entity_index_set:
+    - entity_a
+  order_relation: event_time_total_order
+  coded_target_domain: real_line
+target_transform_object:
+  object_id: identity_target_transform
+  transform_id: identity
+quantization_object:
+  object_id: fixed_step_mid_tread_quantization
+  quantization_mode: fixed_step_mid_tread
+observation_model_object:
+  object_id: gaussian_point_observation_model
+  forecast_object_type: point
+  support: real_line
+reference_description_object:
+  object_id: iid_reference_description
+  reference_family: iid_gaussian
+codelength_policy_object:
+  object_id: additive_codelength_policy
+  code_unit: bits
+reducer_object:
+  object_id: analytic_piecewise_reducer
+  reducer_family: analytic
+  composition_operator: piecewise
+  observation_model_object_ref: gaussian_point_observation_model
+  codelength_policy_object_ref: additive_codelength_policy
+descriptive_admissibility_object:
+  object_id: analytic_piecewise_descriptive_admissibility
+  data_object_ref: single_entity_series
+  reducer_object_ref: analytic_piecewise_reducer
+  reference_description_object_ref: iid_reference_description
+  codelength_policy_object_ref: additive_codelength_policy
+  failure_abstention_type: no_admissible_reducer
+  status: admissible

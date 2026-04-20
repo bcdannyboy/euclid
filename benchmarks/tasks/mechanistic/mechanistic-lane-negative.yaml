@@ -1,0 +1,53 @@
+task_id: mechanistic_lane_negative_demo
+track_id: predictive_generalization
+task_family: mechanistic_lane_negative
+regime_tags:
+  - mechanistic_lane
+  - external_evidence_required
+dataset_ref: fixtures/runtime/mechanistic/mechanistic-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-01-06T00:00:00Z'
+generator_status: unknown_real_world
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: walk_forward
+  initial_window: 3
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.01
+budget_policy:
+  wall_clock_seconds: 60
+  candidate_limit: 4
+baseline_registry:
+  - baseline_id: reference_description
+    manifest_path: benchmarks/baselines/rediscovery/reference-description.yaml
+submitter_registry:
+  - submitter_id: analytic_backend
+seed_policy:
+  seed: 13
+  restarts: 0
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+adversarial_tags:
+  - mechanistic_lane
+abstention_policy:
+  allow_abstention: true
+  expected_mode: structural_miss
+forbidden_shortcuts:
+  - raw_test_set_fit
+origin_policy:
+  origin_selection: declared_walk_forward_panel
+horizon_policy:
+  horizons:
+    - 1
+baseline_comparison_policy:
+  comparator_set: declared_registry_only

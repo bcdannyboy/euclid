@@ -1,0 +1,100 @@
+version: 2
+reference_workspace:
+  docs_root: docs
+  schema_roots:
+    - schemas/core
+    - schemas/contracts
+    - schemas/readiness
+  benchmark_root: benchmarks
+  test_roots:
+    - tests/unit
+    - tests/integration
+    - tests/benchmarks
+    - tests/golden
+    - tests/fixtures
+    - tests/perf
+entries:
+  - source: README.md
+    status: entrypoint
+    canonical_targets:
+      - docs/README.md
+      - docs/system.md
+      - docs/runtime-cli.md
+      - docs/modeling-pipeline.md
+      - docs/search-core.md
+      - docs/contracts-manifests.md
+      - docs/benchmarks-readiness.md
+      - docs/workbench.md
+      - docs/testing-truthfulness.md
+  - source: src/euclid/cli/__init__.py
+    status: certified_surface
+    canonical_targets:
+      - docs/runtime-cli.md
+  - source: src/euclid/operator_runtime/workflow.py
+    status: certified_surface
+    canonical_targets:
+      - docs/runtime-cli.md
+      - docs/modeling-pipeline.md
+  - source: src/euclid/operator_runtime/_compat_runtime.py
+    status: compatibility_surface
+    canonical_targets:
+      - docs/runtime-cli.md
+  - source: src/euclid/modules
+    status: modeling_surface
+    canonical_targets:
+      - docs/modeling-pipeline.md
+  - source: src/euclid/search
+    status: search_surface
+    canonical_targets:
+      - docs/search-core.md
+  - source: src/euclid/cir
+    status: search_surface
+    canonical_targets:
+      - docs/search-core.md
+  - source: src/euclid/reducers
+    status: search_surface
+    canonical_targets:
+      - docs/search-core.md
+  - source: src/euclid/adapters
+    status: search_surface
+    canonical_targets:
+      - docs/search-core.md
+  - source: src/euclid/math
+    status: search_surface
+    canonical_targets:
+      - docs/search-core.md
+  - source: src/euclid/contracts
+    status: authority_surface
+    canonical_targets:
+      - docs/contracts-manifests.md
+  - source: src/euclid/manifests
+    status: authority_surface
+    canonical_targets:
+      - docs/contracts-manifests.md
+  - source: src/euclid/benchmarks
+    status: authority_surface
+    canonical_targets:
+      - docs/benchmarks-readiness.md
+  - source: src/euclid/readiness
+    status: authority_surface
+    canonical_targets:
+      - docs/benchmarks-readiness.md
+  - source: src/euclid/release.py
+    status: authority_surface
+    canonical_targets:
+      - docs/runtime-cli.md
+      - docs/benchmarks-readiness.md
+      - docs/contracts-manifests.md
+  - source: tools/spec_compiler/compiler.py
+    status: truthfulness_surface
+    canonical_targets:
+      - docs/benchmarks-readiness.md
+      - docs/testing-truthfulness.md
+  - source: src/euclid/workbench
+    status: ui_surface
+    canonical_targets:
+      - docs/workbench.md
+  - source: tests
+    status: executable_reference
+    canonical_targets:
+      - docs/testing-truthfulness.md

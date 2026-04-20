@@ -1,0 +1,17 @@
+version: 1
+kind: unseen_entity_prediction_policies
+owners:
+  - id: unseen_entity_prediction_policy_owner
+    display_name: Unseen Entity Prediction Policy Owner
+global_rules:
+  unseen_entity_transport_is_never_inferred: true
+  shared_component_reuse_requires_declared_transport_rule: true
+contracts:
+  - schema_name: unseen_entity_prediction_policy_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    required_fields:
+      - fitted_entity_panel
+      - admissible_unseen_entity_scope
+      - shared_component_reuse_rule
+      - local_refit_rule
+    publication_rule: unseen_entity_claims_require_explicit_transport_semantics

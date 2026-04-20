@@ -1,0 +1,258 @@
+{
+  "workspace_root": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout",
+  "analysis_path": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/analysis.normalized.saved-payload.with.extra.long.filename.json",
+  "request": {
+    "symbol": "QQQ",
+    "target_id": "price_close",
+    "start_date": "2025-01-08",
+    "end_date": "2025-02-14",
+    "include_probabilistic": true,
+    "include_benchmark": true
+  },
+  "dataset": {
+    "symbol": "QQQ",
+    "rows": 4,
+    "stats": {
+      "latest_value": 503.6
+    },
+    "date_range": {
+      "start": "2025-01-08T00:00:00Z",
+      "end": "2025-01-13T00:00:00Z"
+    },
+    "target": {
+      "id": "price_close",
+      "label": "Price Close",
+      "description": "Predict the raw close level for each trading day.",
+      "y_axis_label": "Close",
+      "analysis_note": "Raw close targets are descriptive only and should not be confused with operator publication."
+    },
+    "dataset_csv": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/datasets/qqq-price-close-transformed-dataset-used-by-the-euclid-operator-runtime.csv",
+    "raw_history_json": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/datasets/qqq-raw-history-before-target-transform-and-normalization.json",
+    "series": [
+      {
+        "event_time": "2025-01-08T00:00:00Z",
+        "observed_value": 498.2
+      },
+      {
+        "event_time": "2025-01-09T00:00:00Z",
+        "observed_value": 500.4
+      },
+      {
+        "event_time": "2025-01-10T00:00:00Z",
+        "observed_value": 501.7
+      },
+      {
+        "event_time": "2025-01-13T00:00:00Z",
+        "observed_value": 503.6
+      }
+    ]
+  },
+  "operator_point": {
+    "status": "completed",
+    "selected_family": "analytic",
+    "replay_verification": "verified",
+    "confirmatory_primary_score": 0.81,
+    "publication": {
+      "status": "published",
+      "headline": "Analytic lag-1 affine remains the publishable point-lane candidate."
+    },
+    "comparison": {
+      "comparison_class_status": "eligible"
+    },
+    "scorecard": {
+      "descriptive_status": "published"
+    },
+    "equation": {
+      "label": "y(t) = 2.75 + 0.994*y(t-1)",
+      "structure_signature": "analytic:lag1_affine",
+      "parameter_summary": {
+        "intercept": 2.75,
+        "lag_coefficient": 0.994
+      },
+      "curve": [
+        {
+          "event_time": "2025-01-08T00:00:00Z",
+          "fitted_value": 498.2
+        },
+        {
+          "event_time": "2025-01-09T00:00:00Z",
+          "fitted_value": 499.961
+        },
+        {
+          "event_time": "2025-01-10T00:00:00Z",
+          "fitted_value": 501.158
+        },
+        {
+          "event_time": "2025-01-13T00:00:00Z",
+          "fitted_value": 502.439
+        }
+      ]
+    },
+    "prediction_rows": [
+      {
+        "event_time": "2025-01-13T00:00:00Z",
+        "prediction": 502.439,
+        "actual": 503.6
+      }
+    ],
+    "manifest_path": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/runs/operator/manifests/point-lane-manifest.with-a-very-long-stem.yaml",
+    "output_root": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/runs/operator/output/replayable-point-lane-output-root-with-extra-long-directory-segments"
+  },
+  "probabilistic": {
+    "distribution": {
+      "status": "completed",
+      "selected_family": "analytic",
+      "replay_verification": "verified",
+      "aggregated_primary_score": 0.56,
+      "evidence": {
+        "strength": "thin",
+        "sample_size": 4,
+        "origin_count": 2,
+        "horizon_count": 2,
+        "headline": "Distribution calibration passed, but only on smoke-sized evidence."
+      },
+      "calibration": {
+        "status": "passed",
+        "passed": true,
+        "gate_effect": "publishable",
+        "diagnostics": [
+          {
+            "diagnostic_id": "coverage",
+            "observed_coverage": 1.0
+          }
+        ]
+      },
+      "equation": {
+        "label": "Normal(location, scale)",
+        "structure_signature": "analytic:gaussian"
+      },
+      "chart": {
+        "forecast_bands": [
+          {
+            "lower": 496.0,
+            "upper": 500.1,
+            "realized_observation": 498.2
+          },
+          {
+            "lower": 498.4,
+            "upper": 501.9,
+            "realized_observation": 500.4
+          }
+        ]
+      }
+    }
+  },
+  "benchmark": {
+    "status": "completed",
+    "track_summary": {
+      "abstention_mode": "benchmark_local_selection"
+    },
+    "portfolio_selection": {
+      "winner_submitter_id": "analytic_backend",
+      "winner_candidate_id": "analytic_lag1_affine",
+      "selection_explanation": "Analytic backend wins on total code bits after descriptive-fit screening.",
+      "selection_explanation_raw": {
+        "selection_rule": "min_total_code_bits_then_max_description_gain",
+        "runner_up": {
+          "submitter_id": "algorithmic_search_backend"
+        }
+      },
+      "decision_trace": [
+        {
+          "step": "collect_submitter_finalists",
+          "family_finalists": {
+            "analytic_backend": "analytic_lag1_affine",
+            "algorithmic_search_backend": "enum_last_observation"
+          }
+        },
+        {
+          "step": "select_portfolio_winner",
+          "selected_backend_family": "analytic_backend",
+          "selected_candidate_id": "analytic_lag1_affine"
+        }
+      ]
+    },
+    "chart": {
+      "total_code_bits": [
+        {
+          "submitter_id": "analytic_backend",
+          "total_code_bits": 3642
+        },
+        {
+          "submitter_id": "algorithmic_search_backend",
+          "total_code_bits": 3666
+        }
+      ]
+    },
+    "submitters": [
+      {
+        "submitter_id": "analytic_backend",
+        "selected_candidate_id": "analytic_lag1_affine",
+        "backend_families": [
+          "analytic"
+        ],
+        "selected_candidate_metrics": {
+          "total_code_bits": 3642
+        }
+      },
+      {
+        "submitter_id": "algorithmic_search_backend",
+        "selected_candidate_id": "enum_last_observation",
+        "backend_families": [
+          "enumerated"
+        ],
+        "selected_candidate_metrics": {
+          "total_code_bits": 3666
+        }
+      }
+    ],
+    "manifest_path": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/runs/benchmark/manifests/benchmark-local-selection-manifest.with-an-intentionally-long-filename.yaml",
+    "report_path": "/tmp/euclid/saved/2026-04-16T165122Z-qqq-price-close-with-a-very-long-workspace-root-that-should-force-the-recent-analysis-preview-to-truncate-safely-without-overflowing-the-card-layout/reports/descriptive-fit-and-finalist-comparison-report.with-a-long-markdown-filename.md"
+  },
+  "descriptive_fit": {
+    "status": "completed",
+    "source": "benchmark_local_selection",
+    "submitter_id": "analytic_backend",
+    "candidate_id": "analytic_lag1_affine",
+    "family_id": "analytic",
+    "honesty_note": "Benchmark-local descriptive fit stays separate from the operator publication lane.",
+    "metrics": {
+      "total_code_bits": 3642
+    },
+    "semantic_audit": {
+      "classification": "descriptive_candidate",
+      "headline": "Descriptive fit is admissible and distinct from the operator publication lane.",
+      "relative_improvement_vs_naive_last_value": 0.14,
+      "delta_form_label": "Δy(t) = y(t)-y(t-1)",
+      "recommended_target_label": "Daily Return",
+      "recommended_target_reason": "Return targets communicate predictive generalization more honestly than raw levels."
+    },
+    "equation": {
+      "label": "y(t) = 2.75 + 0.994*y(t-1)",
+      "parameter_summary": {
+        "intercept": 2.75,
+        "lag_coefficient": 0.994
+      }
+    },
+    "chart": {
+      "equation_curve": [
+        {
+          "event_time": "2025-01-08T00:00:00Z",
+          "fitted_value": 498.2
+        },
+        {
+          "event_time": "2025-01-09T00:00:00Z",
+          "fitted_value": 499.961
+        },
+        {
+          "event_time": "2025-01-10T00:00:00Z",
+          "fitted_value": 501.158
+        },
+        {
+          "event_time": "2025-01-13T00:00:00Z",
+          "fitted_value": 502.439
+        }
+      ]
+    }
+  }
+}

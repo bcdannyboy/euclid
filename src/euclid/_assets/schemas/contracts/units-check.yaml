@@ -1,0 +1,13 @@
+version: 1
+kind: mechanistic_reentry_contract
+schema_name: units_check_manifest@1.0.0
+owners:
+  - id: units_check_contract_owner
+    display_name: Units Check Contract Owner
+contract:
+  requirement_id: units_consistency
+  meaning: declared mechanism terms must carry mutually compatible units
+  required_fields:
+    - mechanism_mapping_ref
+    - term_units
+  acceptance_rule: all mapped terms are covered by a compatible units assignment

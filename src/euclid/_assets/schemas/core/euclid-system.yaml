@@ -1,0 +1,102 @@
+version: 2
+project_name: Euclid
+canonical_doc_refs:
+  - README.md
+  - docs/README.md
+  - docs/system.md
+  - docs/runtime-cli.md
+  - docs/modeling-pipeline.md
+  - docs/search-core.md
+  - docs/contracts-manifests.md
+  - docs/benchmarks-readiness.md
+  - docs/workbench.md
+  - docs/testing-truthfulness.md
+vocabulary_refs:
+  reducer_families: schemas/core/reducer-families.yaml
+  composition_operators: schemas/core/composition-operators.yaml
+  claim_lanes: schemas/core/claim-lanes.yaml
+  forecast_object_types: schemas/core/forecast-object-types.yaml
+  evidence_classes: schemas/core/evidence-classes.yaml
+  abstention_types: schemas/core/abstention-types.yaml
+  scope_axes: schemas/core/scope-axes.yaml
+scope_statement: >-
+  Euclid is a mathematical forecasting system for ordered observations. It
+  freezes time-safe datasets, searches bounded model spaces, scores point and
+  probabilistic forecasts under explicit comparison geometry, attaches replay,
+  robustness, and evidence constraints, and publishes cautious claims or
+  abstentions instead of narrative-only conclusions.
+major_runtime_modules:
+  runtime_and_cli:
+    - cli
+    - operator_runtime
+    - control_plane
+    - storage
+    - artifacts
+    - runtime
+  modeling_pipeline:
+    - ingestion
+    - snapshotting
+    - timeguard
+    - features
+    - split_planning
+    - search_planning
+    - candidate_fitting
+    - evaluation
+    - probabilistic_evaluation
+    - scoring
+    - calibration
+    - evaluation_governance
+    - gate_lifecycle
+    - claims
+    - replay
+    - catalog_publishing
+  search_core:
+    - search
+    - cir
+    - reducers
+    - adapters
+    - algorithmic_dsl
+    - shared_plus_local_decomposition
+    - mechanistic_evidence
+  authority_and_readiness:
+    - contracts
+    - manifests
+    - benchmarks
+    - readiness
+    - release
+  workbench:
+    - workbench
+artifact_classes:
+  inputs:
+    - observation_record
+  data_state:
+    - dataset_snapshot
+    - feature_view
+    - time_safety_audit
+  plans_and_policies:
+    - search_plan
+    - evaluation_plan
+    - baseline_registry
+    - comparison_universe
+  candidate_search:
+    - candidate_spec
+    - reducer_artifact
+    - search_ledger
+    - frontier
+    - rejected_diagnostics
+    - frozen_shortlist
+  evaluation:
+    - prediction_artifact
+    - point_score_result
+    - calibration_result
+    - robustness_report
+    - scorecard
+  publication:
+    - claim_card
+    - abstention
+    - reproducibility_bundle
+    - run_result
+    - publication_record
+  governance:
+    - readiness_judgment
+    - closure_report

@@ -1,0 +1,18 @@
+version: 1
+vocabulary: claim_lanes
+title: Claim Lanes
+closed: true
+source_doc_refs:
+  - README.md
+  - docs/search-core.md
+  - docs/modeling-pipeline.md
+entries:
+  - id: descriptive_only
+    binding_status: retained
+    description: Claim lane for reducers that survive descriptive admissibility without predictive promotion.
+  - id: predictively_supported
+    binding_status: retained
+    description: Claim lane for reducers that survive the retained predictive governance and baseline-comparison protocol.
+  - id: mechanistically_compatible_hypothesis
+    binding_status: extension_surface
+    description: Deferred claim lane reserved for future mechanistic compatibility surfaces with independent external evidence contracts.

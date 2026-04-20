@@ -1,0 +1,5 @@
+source_id,series_id,event_time,available_at,observed_value,revision_id
+fixture-source,phase03-missing-target,2026-01-03T00:00:00Z,2026-01-03T06:00:00Z,13.0,0
+fixture-source,phase03-missing-target,2026-01-01T00:00:00Z,2026-01-02T06:00:00Z,,1
+fixture-source,phase03-missing-target,2026-01-01T00:00:00Z,2026-01-01T06:00:00Z,10.0,0
+fixture-source,phase03-missing-target,2026-01-02T00:00:00Z,2026-01-02T06:00:00Z,12.0,0

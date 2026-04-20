@@ -1,0 +1,38 @@
+suite_id: current_release
+description: Current-release benchmark suite covering retained-core and admitted extension surfaces under the active current_release scope.
+task_manifest_paths:
+- benchmarks/tasks/rediscovery/planted-analytic-demo.yaml
+- benchmarks/tasks/algorithmic_rediscovery/causal-last-observation-medium.yaml
+- benchmarks/tasks/predictive_generalization/seasonal-trend-medium.yaml
+- benchmarks/tasks/multi_entity/shared-local-generalization-medium-positive.yaml
+- benchmarks/tasks/multi_entity/shared-local-generalization-medium-negative.yaml
+- benchmarks/tasks/mechanistic/mechanistic-lane-medium-positive.yaml
+- benchmarks/tasks/mechanistic/mechanistic-lane-medium-negative.yaml
+- benchmarks/tasks/adversarial_honesty/leakage-trap-demo.yaml
+required_tracks:
+- rediscovery
+- predictive_generalization
+- adversarial_honesty
+surface_requirements:
+- surface_id: retained_core_release
+  task_ids:
+  - planted_analytic_demo
+  - seasonal_trend_medium_demo
+  - leakage_trap_demo
+  replay_required: true
+- surface_id: algorithmic_backend
+  task_ids:
+  - algorithmic_last_observation_medium_demo
+  replay_required: true
+- surface_id: shared_plus_local_decomposition
+  task_ids:
+  - shared_local_panel_medium_positive_demo
+  - shared_local_panel_medium_negative_demo
+  replay_required: true
+- surface_id: mechanistic_lane
+  task_ids:
+  - mechanistic_lane_medium_positive_demo
+  - mechanistic_lane_medium_negative_demo
+  replay_required: true
+authority_snapshot_id: euclid-authority-2026-04-15-b
+fixture_spec_id: euclid-certification-fixtures-v1

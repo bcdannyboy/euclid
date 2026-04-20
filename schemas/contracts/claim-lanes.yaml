@@ -1,0 +1,91 @@
+version: 1
+kind: claim_lane_semantics
+meaning_axis: claim_lane
+owners:
+  - id: claim_lane_semantics_council
+    display_name: Claim Lane Semantics Council
+global_rules:
+  probabilistic_meaning_axis: forecast_object_type
+  mechanistic_meaning_axis: claim_lane_with_external_evidence
+  predictive_nonpromotion_after_descriptive_success: downgrade_to_descriptive_only_without_abstention
+  descriptive_publication_failure_mode: typed_abstention_only
+contracts:
+  - claim_lane: descriptive_only
+    owner_ref: claim_lane_semantics_council
+    meaning: Descriptive publication-safe summary of observed structure under the bound coding law.
+    required_evidence_classes:
+      - descriptive_compression
+      - robustness
+      - replay_verification
+      - readiness_and_closure
+    allowed_to_say:
+      - historical_structure_summary
+    forbidden_without_upgrade:
+      - point_forecast_within_declared_validation_scope
+      - probabilistic_forecast_claim
+      - calibration_claim
+      - mechanism_claim
+      - causal_claim
+      - transport_claim
+    may_publish:
+      - reducer_artifact
+      - prediction_artifact
+      - scorecard
+      - claim_card
+      - reproducibility_bundle
+      - run_result
+      - publication_record
+    abstention_interaction: typed_abstention_only_when_descriptive_publication_fails
+  - claim_lane: predictively_supported
+    owner_ref: claim_lane_semantics_council
+    meaning: Predictive publication-safe result that survives the bound out-of-sample protocol and baseline comparison law.
+    required_evidence_classes:
+      - descriptive_compression
+      - predictive_generalization
+      - robustness
+      - replay_verification
+      - readiness_and_closure
+    allowed_to_say:
+      - historical_structure_summary
+      - point_forecast_within_declared_validation_scope
+    forbidden_without_upgrade:
+      - mechanism_claim
+      - causal_claim
+      - transport_claim
+    may_publish:
+      - reducer_artifact
+      - prediction_artifact
+      - scorecard
+      - claim_card
+      - reproducibility_bundle
+      - run_result
+      - publication_record
+    abstention_interaction: downgrade_to_descriptive_only_when_predictive_support_fails
+  - claim_lane: mechanistically_compatible_hypothesis
+    owner_ref: claim_lane_semantics_council
+    meaning: Mechanistic compatibility statement carried only when predictive support and external mechanism evidence contracts are both satisfied.
+    required_evidence_classes:
+      - descriptive_compression
+      - predictive_generalization
+      - robustness
+      - replay_verification
+      - readiness_and_closure
+      - boundary_specific_external_evidence
+    requires_lower_lane_support: predictively_supported
+    allowed_to_say:
+      - historical_structure_summary
+      - point_forecast_within_declared_validation_scope
+      - mechanism_claim
+    forbidden_without_upgrade:
+      - causal_proof
+      - transport_claim
+    may_publish:
+      - reducer_artifact
+      - prediction_artifact
+      - scorecard
+      - claim_card
+      - reproducibility_bundle
+      - run_result
+      - publication_record
+    publication_status: requires_bound_external_evidence_contracts
+    abstention_interaction: downgrade_to_predictively_supported_or_block_when_external_evidence_contracts_fail

@@ -1,0 +1,31 @@
+version: 1
+kind: reference_type_registry
+owners:
+  - id: reference_type_registry_council
+    display_name: Reference Type Registry Council
+typed_ref_shape:
+  required_fields:
+    - schema_name
+    - object_id
+  forbidden_placeholders:
+    - free_string_ref
+  optional_ref_rule: omit_field_when_absent
+reference_profiles:
+  - schema_name: search_plan_manifest@1.0.0
+    owner_ref: search_planning_owner
+    fields:
+      - path: run_manifest_ref
+        required: true
+        cardinality: exactly_one
+        forbidden_modules:
+          - claims
+        allowed_schema_names:
+          - run_manifest@1.0.0
+  - schema_name: claim_card_manifest@1.1.0
+    owner_ref: claims_owner
+    fields:
+      - path: search_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - search_plan_manifest@1.0.0

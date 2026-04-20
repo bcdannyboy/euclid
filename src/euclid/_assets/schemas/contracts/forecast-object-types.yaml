@@ -1,0 +1,62 @@
+version: 1
+kind: forecast_object_type_semantics
+meaning_axis: forecast_object_type
+owners:
+  - id: forecast_object_semantics_council
+    display_name: Forecast Object Semantics Council
+global_rules:
+  claim_lane_axis: claim_lane
+  probabilistic_objects_require_type_matched_calibration: true
+  probabilistic_objects_require_object_matched_scoring: true
+  probabilistic_publication_is_not_mechanistic: true
+contracts:
+  - forecast_object_type: point
+    owner_ref: forecast_object_semantics_council
+    semantic_family: point_functional
+    minimum_claim_lane: descriptive_only
+    meaning: Location-parameter point statement over the admitted target at a declared origin and horizon; the emitted object is the location_parameter itself.
+    calibration_mode: not_applicable_for_point_only_publication
+    scoring_semantics: point_loss_only
+    requires_contracts:
+      - point_score_policy_manifest
+      - observation_model_object
+  - forecast_object_type: distribution
+    owner_ref: forecast_object_semantics_council
+    semantic_family: probabilistic
+    minimum_claim_lane: predictively_supported
+    meaning: Full predictive distribution over the admitted target domain.
+    calibration_mode: required
+    scoring_semantics: full_distribution_scoring
+    requires_contracts:
+      - probabilistic_score_policy_manifest
+      - distribution_calibration_policy_manifest
+  - forecast_object_type: interval
+    owner_ref: forecast_object_semantics_council
+    semantic_family: probabilistic
+    minimum_claim_lane: predictively_supported
+    meaning: Predictive interval statement with declared coverage semantics and interval construction rule.
+    calibration_mode: required
+    scoring_semantics: interval_scoring
+    requires_contracts:
+      - interval_score_policy_manifest
+      - interval_calibration_policy_manifest
+  - forecast_object_type: quantile
+    owner_ref: forecast_object_semantics_council
+    semantic_family: probabilistic
+    minimum_claim_lane: predictively_supported
+    meaning: Predictive quantile statement for one or more declared probability levels.
+    calibration_mode: required
+    scoring_semantics: quantile_scoring
+    requires_contracts:
+      - quantile_score_policy_manifest
+      - quantile_calibration_policy_manifest
+  - forecast_object_type: event_probability
+    owner_ref: forecast_object_semantics_council
+    semantic_family: probabilistic
+    minimum_claim_lane: predictively_supported
+    meaning: Predictive probability statement for a declared event functional.
+    calibration_mode: required
+    scoring_semantics: event_probability_scoring
+    requires_contracts:
+      - event_probability_score_policy_manifest
+      - event_probability_calibration_policy_manifest

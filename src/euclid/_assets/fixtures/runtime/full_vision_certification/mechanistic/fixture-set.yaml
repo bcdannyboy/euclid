@@ -1,0 +1,14 @@
+fixture_family_id: mechanistic
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/full_vision_certification/mechanistic/mechanistic-series.csv
+series_count: 1
+entity_count: 1
+evidence_bundle_refs:
+- fixtures/runtime/full_vision_certification/mechanistic/mechanistic-positive-evidence.yaml
+- fixtures/runtime/full_vision_certification/mechanistic/mechanistic-overlap-evidence.yaml
+- fixtures/runtime/full_vision_certification/mechanistic/mechanistic-publication-golden.json
+- fixtures/runtime/full_vision_certification/mechanistic/mechanistic-downgrade-golden.json
+diversity_axes:
+- mechanistic_floor
+- positive_negative_pair

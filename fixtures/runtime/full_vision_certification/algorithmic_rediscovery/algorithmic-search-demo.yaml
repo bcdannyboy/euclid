@@ -1,0 +1,15 @@
+request_id: phase06-algorithmic-search-demo
+dataset_csv: algorithmic-search-series.csv
+cutoff_available_at: null
+quantization_step: "0.5"
+minimum_description_gain_bits: -2.0
+min_train_size: 3
+horizon: 2
+search:
+  class: exact_finite_enumeration
+  family_ids:
+    - algorithmic_last_observation
+    - algorithmic_running_half_average
+  seed: "0"
+  proposal_limit: 2
+  seasonal_period: 4

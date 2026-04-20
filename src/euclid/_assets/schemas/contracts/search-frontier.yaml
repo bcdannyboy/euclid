@@ -1,0 +1,29 @@
+version: 1
+kind: search_frontier_semantics
+owners:
+  - id: search_frontier_council
+    display_name: Search Frontier Council
+global_rules:
+  comparison_mode: stage_local_only
+  require_axis_comparability: true
+  dominance_rule: weakly_better_all_axes_strictly_better_one
+  forbidden_axes:
+    - null_results
+    - robustness_results
+    - holdout_results
+contracts:
+  - frontier_id: algorithmic_stage_frontier
+    owner_ref: search_frontier_council
+    reducer_family: algorithmic
+    allowed_axes:
+      - structure_code_bits
+      - description_gain_bits
+      - inner_primary_score
+    predictive_axis_rule: inner_primary_score_allowed_only_when_fold_local
+    hard_filter_reason_codes:
+      - parse_failed
+      - type_error
+      - causal_access_violation
+      - budget_violation
+      - division_by_zero_reachable
+      - codelength_comparability_failed

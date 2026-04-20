@@ -1,0 +1,18 @@
+version: 1
+kind: multi_entity_predictive_evaluation_policies
+owners:
+  - id: multi_entity_predictive_evaluation_owner
+    display_name: Multi Entity Predictive Evaluation Owner
+global_rules:
+  entity_panel_must_be_declared: true
+  entity_weights_must_sum_to_one: true
+  aggregation_rule: per_entity_primary_score_then_declared_entity_weights
+contracts:
+  - schema_name: multi_entity_predictive_evaluation_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    required_fields:
+      - entity_panel
+      - entity_weighting_rule
+      - within_entity_horizon_rule
+      - cross_entity_aggregation_rule
+    comparability_rule: compared_artifacts_must_share_panel_weights_and_evaluation_geometry

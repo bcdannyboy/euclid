@@ -1,0 +1,67 @@
+task_id: equality_saturation_search_medium_demo
+track_id: predictive_generalization
+task_family: search_class_equality_saturation_surface
+search_class: equality_saturation_heuristic
+search_class_honesty:
+  coverage_statement: incomplete_search_disclosed
+  exactness_ceiling: no_global_exactness_claim
+  requires_finite_canonical_space_proof: false
+  requires_disclosure:
+  - rewrite_system
+  - extractor_cost
+  - stop_rule
+regime_tags:
+- search_class_proof
+- equality_saturation
+dataset_ref: fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-search-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-14T00:00:00Z'
+generator_status: unknown_real_world
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: rolling_origin
+  initial_window: 12
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.02
+budget_policy:
+  wall_clock_seconds: 120
+  candidate_limit: 1
+baseline_registry:
+- baseline_id: naive_last_value
+  manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
+submitter_registry:
+- submitter_id: algorithmic_search_backend
+seed_policy:
+  seed: 37
+  restarts: 0
+adversarial_tags:
+- search_class_surface
+- positive_case
+abstention_policy:
+  allow_abstention: true
+  expected_mode: no_publishable_winner
+forbidden_shortcuts:
+- leak_future_observations
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+origin_policy:
+  policy_id: rolling_origin
+  min_origins: 6
+horizon_policy:
+  horizons:
+  - 1
+baseline_comparison_policy:
+  paired_test: diebold_mariano
+  require_margin_win: true
+fixture_spec_id: euclid-certification-fixtures-v1
+fixture_family_id: algorithmic_rediscovery

@@ -1,0 +1,20 @@
+version: 1
+vocabulary: reducer_families
+title: Reducer Families
+closed: true
+source_doc_refs:
+  - README.md
+  - docs/search-core.md
+entries:
+  - id: analytic
+    binding_status: retained
+    description: Primitive retained reducer family for explicit closed-form numeric structure.
+  - id: recursive
+    binding_status: retained
+    description: Primitive retained reducer family whose latent state evolves recursively across the ordered sequence.
+  - id: spectral
+    binding_status: retained
+    description: Primitive retained reducer family that encodes structure through harmonic or frequency-domain components.
+  - id: algorithmic
+    binding_status: extension_surface
+    description: Primitive reducer family whose update and output law are declared as deterministic programs over the admitted Euclid DSL.

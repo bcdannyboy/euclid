@@ -1,0 +1,5 @@
+source_id,series_id,event_time,available_at,observed_value,revision_id
+fixture-source,phase03-leakage,2026-01-01T00:00:00Z,2026-01-04T00:00:00Z,10.0,0
+fixture-source,phase03-leakage,2026-01-02T00:00:00Z,2026-01-02T00:00:00Z,20.0,0
+fixture-source,phase03-leakage,2026-01-03T00:00:00Z,2026-01-05T00:00:00Z,30.0,0
+fixture-source,phase03-leakage,2026-01-04T00:00:00Z,2026-01-06T00:00:00Z,40.0,0

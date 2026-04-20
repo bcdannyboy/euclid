@@ -1,0 +1,63 @@
+task_id: event_probability_medium_abstention_demo
+track_id: predictive_generalization
+task_family: probabilistic_forecast_surface
+regime_tags:
+- probabilistic
+- abstention_case
+dataset_ref: fixtures/runtime/full_vision_certification/single_entity_predictive/single-entity-forecast-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-14T00:00:00Z'
+generator_status: unknown_real_world
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: rolling_origin
+  initial_window: 12
+  step: 1
+forecast_object_type: event_probability
+score_policy:
+  metric_id: brier_score
+calibration_policy:
+  required: true
+  max_reliability_gap: 0.25
+practical_significance_margin: 0.02
+budget_policy:
+  wall_clock_seconds: 120
+  candidate_limit: 32
+baseline_registry:
+- baseline_id: naive_last_value
+  manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
+submitter_registry:
+- submitter_id: analytic_backend
+seed_policy:
+  seed: 31
+  restarts: 0
+adversarial_tags:
+- semantic_probabilistic_surface
+- abstention_case
+abstention_policy:
+  allow_abstention: true
+  expected_mode: calibrated_or_abstain
+forbidden_shortcuts:
+- oracle_fit
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+  verification_mode: candidate_and_score_replay
+origin_policy:
+  policy_id: rolling_origin
+  min_origins: 4
+horizon_policy:
+  horizons:
+  - 1
+  - 3
+baseline_comparison_policy:
+  paired_test: diebold_mariano
+  require_margin_win: true
+fixture_spec_id: euclid-certification-fixtures-v1
+fixture_family_id: single_entity_predictive

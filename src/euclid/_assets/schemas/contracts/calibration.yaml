@@ -1,0 +1,54 @@
+version: 1
+kind: calibration_policies
+owners:
+  - id: calibration_policy_council
+    display_name: Calibration Policy Council
+global_rules:
+  calibration_gate_axis: forecast_object_type
+  point_forecast_calibration_status: not_applicable
+  probabilistic_objects_require_type_matched_calibration: true
+  calibration_failure_effect: blocks_probabilistic_predictive_publication
+contracts:
+  - forecast_object_type: point
+    owner_ref: calibration_policy_council
+    calibration_mode: not_applicable
+    required_diagnostics: []
+    optional_diagnostics: []
+    pass_rule: typed_not_applicable_result
+    gate_effect: none
+  - forecast_object_type: distribution
+    owner_ref: calibration_policy_council
+    calibration_mode: required
+    required_diagnostics:
+      - pit_or_randomized_pit_uniformity
+    optional_diagnostics:
+      - calibration_sharpness_decomposition
+    pass_rule: declared_distributional_calibration_suite_passes
+    gate_effect: required_for_probabilistic_publication
+  - forecast_object_type: interval
+    owner_ref: calibration_policy_council
+    calibration_mode: required
+    required_diagnostics:
+      - nominal_coverage
+    optional_diagnostics:
+      - conditional_coverage
+    pass_rule: declared_interval_calibration_suite_passes
+    gate_effect: required_for_probabilistic_publication
+  - forecast_object_type: quantile
+    owner_ref: calibration_policy_council
+    calibration_mode: required
+    required_diagnostics:
+      - quantile_hit_balance
+    optional_diagnostics:
+      - multi_quantile_crossing_check
+    pass_rule: declared_quantile_calibration_suite_passes
+    gate_effect: required_for_probabilistic_publication
+  - forecast_object_type: event_probability
+    owner_ref: calibration_policy_council
+    calibration_mode: required
+    required_diagnostics:
+      - reliability_curve_or_binned_frequency
+    optional_diagnostics:
+      - brier_decomposition
+    pass_rule: declared_event_probability_calibration_suite_passes
+    gate_effect: required_for_probabilistic_publication

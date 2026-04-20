@@ -1,0 +1,121 @@
+suite_id: full_vision
+description: Full-vision benchmark suite covering retained-core, probabilistic, algorithmic, search-class, composition, shared-local, mechanistic, external-evidence, robustness, and portfolio proof surfaces with certification fixtures bound by euclid-certification-fixtures-v1.
+task_manifest_paths:
+- benchmarks/tasks/rediscovery/planted-analytic-demo.yaml
+- benchmarks/tasks/predictive_generalization/seasonal-trend-medium.yaml
+- benchmarks/tasks/adversarial_honesty/leakage-trap-demo.yaml
+- benchmarks/tasks/algorithmic_rediscovery/causal-last-observation-medium.yaml
+- benchmarks/tasks/predictive_generalization/search-class-exact-enumeration-medium.yaml
+- benchmarks/tasks/predictive_generalization/search-class-bounded-medium.yaml
+- benchmarks/tasks/predictive_generalization/search-class-equality-saturation-medium.yaml
+- benchmarks/tasks/predictive_generalization/search-class-stochastic-medium.yaml
+- benchmarks/tasks/predictive_generalization/composition-piecewise-medium.yaml
+- benchmarks/tasks/predictive_generalization/composition-additive-residual-medium.yaml
+- benchmarks/tasks/predictive_generalization/composition-regime-conditioned-medium.yaml
+- benchmarks/tasks/predictive_generalization/portfolio-selection-medium.yaml
+- benchmarks/tasks/predictive_generalization/probabilistic-distribution-medium-positive.yaml
+- benchmarks/tasks/predictive_generalization/probabilistic-interval-medium-robustness.yaml
+- benchmarks/tasks/predictive_generalization/probabilistic-quantile-medium-misspecification.yaml
+- benchmarks/tasks/predictive_generalization/probabilistic-event-probability-medium-abstention.yaml
+- benchmarks/tasks/multi_entity/shared-local-generalization-medium-positive.yaml
+- benchmarks/tasks/multi_entity/shared-local-generalization-medium-negative.yaml
+- benchmarks/tasks/mechanistic/mechanistic-lane-medium-positive.yaml
+- benchmarks/tasks/mechanistic/mechanistic-lane-medium-negative.yaml
+- benchmarks/tasks/mechanistic/mechanistic-lane-medium-insufficient.yaml
+- benchmarks/tasks/robustness/robustness-medium-positive.yaml
+- benchmarks/tasks/robustness/robustness-medium-leakage.yaml
+- benchmarks/tasks/robustness/robustness-medium-sensitivity-abstention.yaml
+required_tracks:
+- rediscovery
+- predictive_generalization
+- adversarial_honesty
+surface_requirements:
+- surface_id: retained_core_release
+  task_ids:
+  - planted_analytic_demo
+  - seasonal_trend_medium_demo
+  - leakage_trap_demo
+  replay_required: true
+- surface_id: probabilistic_forecast_surface
+  task_ids:
+  - distribution_medium_positive_demo
+  - interval_medium_robustness_demo
+  - quantile_medium_misspecification_demo
+  - event_probability_medium_abstention_demo
+  replay_required: true
+- surface_id: algorithmic_backend
+  task_ids:
+  - algorithmic_last_observation_medium_demo
+  replay_required: true
+- surface_id: search_class_honesty
+  task_ids:
+  - exact_enumeration_search_medium_demo
+  - bounded_search_medium_demo
+  - equality_saturation_search_medium_demo
+  - stochastic_search_medium_demo
+  replay_required: true
+- surface_id: composition_operator_semantics
+  task_ids:
+  - piecewise_composition_medium_demo
+  - additive_residual_composition_medium_demo
+  - regime_conditioned_composition_medium_demo
+  - shared_local_panel_medium_positive_demo
+  replay_required: true
+- surface_id: shared_plus_local_decomposition
+  task_ids:
+  - shared_local_panel_medium_positive_demo
+  - shared_local_panel_medium_negative_demo
+  replay_required: true
+- surface_id: mechanistic_lane
+  task_ids:
+  - mechanistic_lane_medium_positive_demo
+  - mechanistic_lane_medium_negative_demo
+  - mechanistic_lane_medium_insufficient_demo
+  replay_required: true
+- surface_id: external_evidence_ingestion
+  task_ids:
+  - mechanistic_lane_medium_positive_demo
+  - mechanistic_lane_medium_negative_demo
+  - mechanistic_lane_medium_insufficient_demo
+  replay_required: true
+- surface_id: robustness_lane
+  task_ids:
+  - robustness_medium_positive_demo
+  - robustness_medium_leakage_demo
+  - robustness_medium_sensitivity_abstention_demo
+  replay_required: true
+- surface_id: portfolio_orchestration
+  task_ids:
+  - portfolio_selection_medium_demo
+  replay_required: true
+release_gate_profile_path: schemas/readiness/benchmark-threshold-gates-v1.yaml
+release_gate_task_buckets:
+  descriptive_non_abstention:
+    required_task_ids:
+    - planted_analytic_demo
+    - seasonal_trend_medium_demo
+    - exact_enumeration_search_medium_demo
+    - bounded_search_medium_demo
+    - equality_saturation_search_medium_demo
+    - stochastic_search_medium_demo
+    - shared_local_panel_medium_positive_demo
+  false_holistic_rate:
+    required_task_ids:
+    - leakage_trap_demo
+    - mechanistic_lane_medium_insufficient_demo
+    - robustness_medium_leakage_demo
+  planted_law_recovery:
+    required_task_ids:
+    - planted_analytic_demo
+    - algorithmic_last_observation_medium_demo
+    - seasonal_trend_medium_demo
+    - piecewise_composition_medium_demo
+    - additive_residual_composition_medium_demo
+    - regime_conditioned_composition_medium_demo
+  thin_evidence_probabilistic_attachment:
+    required_task_ids:
+    - interval_medium_robustness_demo
+    - quantile_medium_misspecification_demo
+    - event_probability_medium_abstention_demo
+authority_snapshot_id: euclid-authority-2026-04-15-b
+fixture_spec_id: euclid-certification-fixtures-v1

@@ -1,0 +1,7 @@
+version: 1
+vocabulary: forecast_object_types
+title: Forecast Object Types
+closed: true
+entries:
+  - id: point
+    description: Fixture point forecast object type.

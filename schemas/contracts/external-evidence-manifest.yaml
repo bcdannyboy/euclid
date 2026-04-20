@@ -1,0 +1,15 @@
+version: 1
+kind: mechanistic_reentry_contract
+schema_name: external_evidence_manifest@1.0.0
+owners:
+  - id: external_evidence_manifest_owner
+    display_name: External Evidence Manifest Owner
+contract:
+  requirement_id: external_evidence_bundle
+  meaning: normalized external evidence bundle with preserved acquisition ordering and source digests
+  required_fields:
+    - acquisition_window
+    - ordered_source_ids
+    - record_refs
+    - source_digest_refs
+  acceptance_rule: every cited source is typed, versioned, and content-addressable

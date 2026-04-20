@@ -1,0 +1,6 @@
+baseline_id: seasonal_naive
+baseline_family: point_forecast_naive
+policy:
+  rule: last_seasonal_cycle
+  seasonal_period: 3
+

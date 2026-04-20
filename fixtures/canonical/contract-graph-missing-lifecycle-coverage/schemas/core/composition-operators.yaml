@@ -1,0 +1,7 @@
+version: 1
+vocabulary: composition_operators
+title: Composition Operators
+closed: true
+entries:
+  - id: piecewise
+    description: Fixture piecewise composition operator.

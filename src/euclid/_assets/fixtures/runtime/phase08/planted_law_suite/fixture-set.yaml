@@ -1,0 +1,23 @@
+fixture_family_id: phase08_planted_law_suite
+fixture_spec_id: phase08-planted-law-fixtures-v1
+dataset_refs:
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/linear-exact-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/linear-noisy-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/affine-lag-exact-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/affine-lag-noisy-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/damped-harmonic-exact-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/damped-harmonic-noisy-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/additive-composition-exact-series.csv
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/additive-composition-noisy-series.csv
+series_count: 8
+entity_count: 1
+evidence_bundle_refs:
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/linear.json
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/affine-lag.json
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/damped-harmonic.json
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/additive-composition.json
+  - src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/phase08-planted-law-note.yaml
+diversity_axes:
+  - law_family
+  - generator_variant
+  - benchmark_track

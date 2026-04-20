@@ -1,0 +1,99 @@
+{
+  "catalog_entry": {
+    "abstention_ref": null,
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_86ead64e03ac9b0e129a",
+    "comparator_exposure_status": "satisfied",
+    "forecast_object_type": "distribution",
+    "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
+    "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
+    "publication_mode": "candidate_publication",
+    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_97d9f90c2ddda6c47395"
+  },
+  "claim": {
+    "allowed_interpretation_codes": [
+      "historical_structure_summary",
+      "probabilistic_forecast_within_declared_validation_scope"
+    ],
+    "claim_type": "predictively_supported",
+    "predictive_support_status": "confirmatory_supported"
+  },
+  "comparison": {
+    "baseline_id": "analytic_intercept",
+    "baseline_primary_score": 234.697244153655,
+    "candidate_beats_baseline": true,
+    "candidate_primary_score": 167.419594695841,
+    "comparison_class_status": "comparable",
+    "paired_comparison_records": [
+      {
+        "candidate_primary_score": 167.419594695841,
+        "comparator_id": "analytic_intercept",
+        "comparator_kind": "baseline",
+        "comparator_primary_score": 234.697244153655,
+        "comparison_status": "comparable",
+        "failure_reason_code": null,
+        "mean_loss_differential": 67.277649457814,
+        "practical_significance_margin": 0.0,
+        "practical_significance_status": "candidate_better_than_margin",
+        "primary_score_delta": 67.277649457814,
+        "score_result_ref": {
+          "object_id": "probabilistic_score_result_manifest_7dec53da89c8b53e176d",
+          "schema_name": "probabilistic_score_result_manifest@1.0.0"
+        }
+      }
+    ],
+    "score_delta": 67.277649457814
+  },
+  "forecast_object_type": "distribution",
+  "publication_mode": "candidate_publication",
+  "replay": {
+    "artifact_hash_roles": [
+      "dataset_snapshot",
+      "feature_view",
+      "search_plan",
+      "evaluation_plan",
+      "run_result",
+      "candidate_or_abstention",
+      "scorecard",
+      "prediction_artifact",
+      "robustness_report",
+      "score_result",
+      "calibration_result"
+    ],
+    "bundle_ref": "reproducibility_bundle_manifest@1.0.0:phase06-probabilistic-distribution-demo_bundle",
+    "replay_verification_status": "verified",
+    "required_manifest_refs": [
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_3d900ca28efd3721a1a4",
+      "scorecard_manifest@1.1.0:scorecard_manifest_97d9f90c2ddda6c47395",
+      "claim_card_manifest@1.1.0:claim_card_manifest_86ead64e03ac9b0e129a",
+      "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
+      "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
+      "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568"
+    ],
+    "stage_order": [
+      "dataset_snapshot_frozen",
+      "feature_view_materialized",
+      "search_plan_frozen",
+      "evaluation_plan_frozen",
+      "comparison_universe_resolved",
+      "evaluation_event_log_written",
+      "evaluation_governance_resolved",
+      "scorecard_resolved",
+      "publication_decision_resolved",
+      "run_result_assembled"
+    ]
+  },
+  "request_id": "phase06-probabilistic-distribution-demo",
+  "run_result_ref": "run_result_manifest@1.1.0:phase06-probabilistic-distribution-demo_run_result",
+  "scorecard": {
+    "descriptive_status": "passed",
+    "predictive_reason_codes": [],
+    "predictive_status": "passed"
+  },
+  "summary_refs": {
+    "abstention_ref": null,
+    "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_86ead64e03ac9b0e129a",
+    "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
+    "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb"
+  }
+}

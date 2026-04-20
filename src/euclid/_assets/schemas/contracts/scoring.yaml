@@ -1,0 +1,75 @@
+version: 1
+kind: scoring_policies
+owners:
+  - id: scoring_policy_council
+    display_name: Scoring Policy Council
+global_rules:
+  comparability_axis: forecast_object_type_and_policy_identity
+  cross_object_comparison: forbidden_without_explicit_reduction_contract
+  cross_entity_aggregation: governed_by_shared_plus_local_evaluation_rules
+contracts:
+  - forecast_object_type: point
+    owner_ref: scoring_policy_council
+    allowed_primary_scores:
+      - squared_error
+      - absolute_error
+    aggregation_mode: per_horizon_mean_then_simplex_weighted_mean
+    confirmatory_differential_mode: per_origin_complete_horizon_simplex_weighted_sum
+    lower_is_better: true
+    calibration_interaction: not_applicable
+    comparability_requirements:
+      - identical_forecast_object_type
+      - identical_score_policy
+      - identical_horizon_weights
+      - identical_origin_set
+      - complete_declared_horizon_panel
+  - forecast_object_type: distribution
+    owner_ref: scoring_policy_council
+    allowed_primary_scores:
+      - log_score
+      - continuous_ranked_probability_score
+    aggregation_mode: per_origin_mean_then_declared_panel_mean
+    confirmatory_differential_mode: per_origin_primary_score_difference
+    lower_is_better: true
+    calibration_interaction: type_matched_required
+    comparability_requirements:
+      - identical_forecast_object_type
+      - identical_score_policy
+      - identical_origin_set
+  - forecast_object_type: interval
+    owner_ref: scoring_policy_council
+    allowed_primary_scores:
+      - interval_score
+    aggregation_mode: per_origin_mean_then_declared_panel_mean
+    confirmatory_differential_mode: per_origin_primary_score_difference
+    lower_is_better: true
+    calibration_interaction: type_matched_required
+    comparability_requirements:
+      - identical_forecast_object_type
+      - identical_score_policy
+      - identical_origin_set
+  - forecast_object_type: quantile
+    owner_ref: scoring_policy_council
+    allowed_primary_scores:
+      - pinball_loss
+    aggregation_mode: per_origin_mean_then_declared_panel_mean
+    confirmatory_differential_mode: per_origin_primary_score_difference
+    lower_is_better: true
+    calibration_interaction: type_matched_required
+    comparability_requirements:
+      - identical_forecast_object_type
+      - identical_score_policy
+      - identical_origin_set
+  - forecast_object_type: event_probability
+    owner_ref: scoring_policy_council
+    allowed_primary_scores:
+      - brier_score
+      - log_score
+    aggregation_mode: per_origin_mean_then_declared_panel_mean
+    confirmatory_differential_mode: per_origin_primary_score_difference
+    lower_is_better: true
+    calibration_interaction: type_matched_required
+    comparability_requirements:
+      - identical_forecast_object_type
+      - identical_score_policy
+      - identical_origin_set

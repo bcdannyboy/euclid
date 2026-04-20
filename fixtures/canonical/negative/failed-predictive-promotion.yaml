@@ -1,0 +1,205 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: failed_predictive_promotion_bundle
+scenario_id: failed-predictive-promotion
+scenario_class: negative_publication
+required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - evaluation_governance_manifest@1.1.0
+  - prediction_artifact_manifest@1.1.0
+  - point_score_result_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/claim-lanes.yaml
+required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+anchor_artifacts:
+  - docs/examples/negative-publication-fixtures.md
+  - docs/modeling-pipeline.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: candidate_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: descriptive_only
+  forecast_object_type: point
+  abstention_type: null
+  failure_effect: downgrade_to_descriptive_only_without_abstention
+  reason_codes:
+    - holdout_exhausted
+    - fresh_replication_required
+  catalog_scope: public
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: failed_predictive_promotion_validation_scope
+  - state: meaning_bound
+    produced_artifact_refs:
+      - schema_name: claim_card_manifest@1.1.0
+        object_id: failed_predictive_promotion_claim_card
+  - state: replay_bundle_assembled
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: failed_predictive_promotion_reproducibility_bundle
+  - state: replay_verified
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: failed_predictive_promotion_reproducibility_bundle
+  - state: candidate_publication_selected
+    produced_artifact_refs:
+      - schema_name: run_result_manifest@1.1.0
+        object_id: failed_predictive_promotion_run_result
+  - state: publication_record_written
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: failed_predictive_promotion_publication_record
+  - state: publication_completed
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: failed_predictive_promotion_publication_record
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: failed_predictive_promotion_validation_scope
+    module_id: candidate_fitting
+    body:
+      scope_id: failed_predictive_promotion_scope
+      scenario_id: failed-predictive-promotion
+      claim_lane: descriptive_only
+      forecast_object_type: point
+      catalog_scope: public
+      anchor_artifact_paths:
+        - docs/examples/negative-publication-fixtures.md
+        - docs/modeling-pipeline.md
+  - schema_name: evaluation_governance_manifest@1.1.0
+    object_id: failed_predictive_promotion_evaluation_governance
+    module_id: evaluation_governance
+    body:
+      governance_id: failed_predictive_promotion_evaluation_governance
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: failed_predictive_promotion_validation_scope
+      confirmatory_status: exhausted
+      fresh_replication_required: true
+      fresh_replication_reason_codes:
+        - fresh_replication_required
+      holdout_access_count: 2
+      max_confirmatory_accesses: 1
+  - schema_name: prediction_artifact_manifest@1.1.0
+    object_id: failed_predictive_promotion_prediction_artifact
+    module_id: evaluation
+    body:
+      prediction_artifact_id: failed_predictive_promotion_prediction_artifact
+      forecast_object_type: point
+  - schema_name: point_score_result_manifest@1.0.0
+    object_id: failed_predictive_promotion_point_score_result
+    module_id: evaluation
+    body:
+      result_id: failed_predictive_promotion_point_score_result
+      prediction_artifact_ref:
+        schema_name: prediction_artifact_manifest@1.1.0
+        object_id: failed_predictive_promotion_prediction_artifact
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: failed_predictive_promotion_scorecard
+    module_id: scoring
+    body:
+      scorecard_id: failed_predictive_promotion_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: failed_predictive_promotion_validation_scope
+      point_score_result_ref:
+        schema_name: point_score_result_manifest@1.0.0
+        object_id: failed_predictive_promotion_point_score_result
+      evaluation_governance_ref:
+        schema_name: evaluation_governance_manifest@1.1.0
+        object_id: failed_predictive_promotion_evaluation_governance
+      descriptive_status: passed
+      descriptive_reason_codes: []
+      predictive_status: blocked
+      predictive_reason_codes:
+        - holdout_exhausted
+        - fresh_replication_required
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: failed_predictive_promotion_claim_card
+    module_id: claims
+    body:
+      claim_id: failed_predictive_promotion_claim_card
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: failed_predictive_promotion_validation_scope
+      scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: failed_predictive_promotion_scorecard
+      claim_lane: descriptive_only
+      forecast_object_type: point
+      predictive_support_status: exhausted
+      prediction_artifact_ref:
+        schema_name: prediction_artifact_manifest@1.1.0
+        object_id: failed_predictive_promotion_prediction_artifact
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: failed_predictive_promotion_reproducibility_bundle
+    module_id: replay
+    body:
+      bundle_id: failed_predictive_promotion_reproducibility_bundle
+      required_manifest_refs:
+        - schema_name: claim_card_manifest@1.1.0
+          object_id: failed_predictive_promotion_claim_card
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: failed_predictive_promotion_run_result
+      replay_verification_status: verified
+      failure_reason_codes: []
+  - schema_name: run_result_manifest@1.1.0
+    object_id: failed_predictive_promotion_run_result
+    module_id: catalog_publishing
+    body:
+      run_id: failed_predictive_promotion_run
+      result_mode: candidate_publication
+      primary_scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: failed_predictive_promotion_scorecard
+      primary_claim_card_ref:
+        schema_name: claim_card_manifest@1.1.0
+        object_id: failed_predictive_promotion_claim_card
+      evaluation_governance_ref:
+        schema_name: evaluation_governance_manifest@1.1.0
+        object_id: failed_predictive_promotion_evaluation_governance
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: failed_predictive_promotion_reproducibility_bundle
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: failed_predictive_promotion_publication_record
+    module_id: catalog_publishing
+    body:
+      publication_id: failed_predictive_promotion_publication_record
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: failed_predictive_promotion_run_result
+      catalog_scope: public
+      publication_mode: candidate_publication
+      replay_verification_status: verified
+      comparator_exposure_status: satisfied
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: failed_predictive_promotion_reproducibility_bundle
+      published_at: '2026-04-12T00:00:00Z'

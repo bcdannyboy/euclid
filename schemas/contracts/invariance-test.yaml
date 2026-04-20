@@ -1,0 +1,14 @@
+version: 1
+kind: mechanistic_reentry_contract
+schema_name: invariance_test_manifest@1.0.0
+owners:
+  - id: invariance_test_contract_owner
+    display_name: Invariance Test Contract Owner
+contract:
+  requirement_id: invariance_or_intervention_support
+  meaning: bound external evidence must include at least one admissible invariance or intervention check
+  required_fields:
+    - mechanism_mapping_ref
+    - external_evidence_ref
+    - checks
+  acceptance_rule: at least one declared check passes against the bound mechanism map

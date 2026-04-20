@@ -1,0 +1,162 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: abstention_only_publication_bundle
+scenario_id: abstention-only-publication
+scenario_class: negative_publication
+required_modules:
+  - candidate_fitting
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - abstention_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/abstention-types.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+required_evidence_classes:
+  - descriptive_compression
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+anchor_artifacts:
+  - docs/examples/negative-publication-fixtures.md
+  - docs/modeling-pipeline.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: abstention_only_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: null
+  forecast_object_type: null
+  abstention_type: no_admissible_reducer
+  failure_effect: typed_abstention_only
+  catalog_scope: public
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: abstention_only_publication_validation_scope
+  - state: meaning_bound
+    produced_artifact_refs:
+      - schema_name: abstention_manifest@1.1.0
+        object_id: abstention_only_publication_abstention
+  - state: replay_bundle_assembled
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: abstention_only_publication_reproducibility_bundle
+  - state: replay_verified
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: abstention_only_publication_reproducibility_bundle
+  - state: abstention_only_publication_selected
+    produced_artifact_refs:
+      - schema_name: run_result_manifest@1.1.0
+        object_id: abstention_only_publication_run_result
+  - state: publication_record_written
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: abstention_only_publication_publication_record
+  - state: catalog_projected
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: abstention_only_publication_publication_record
+  - state: publication_completed
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: abstention_only_publication_publication_record
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: abstention_only_publication_validation_scope
+    module_id: candidate_fitting
+    body:
+      scope_id: abstention_only_publication_scope
+      scenario_id: abstention-only-publication
+      claim_lane: null
+      forecast_object_type: null
+      catalog_scope: public
+      anchor_artifact_paths:
+        - docs/examples/negative-publication-fixtures.md
+        - docs/modeling-pipeline.md
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: abstention_only_publication_scorecard
+    module_id: scoring
+    body:
+      scorecard_id: abstention_only_publication_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: abstention_only_publication_validation_scope
+      descriptive_status: blocked
+      descriptive_reason_codes:
+        - descriptive_gate_failed
+        - no_candidate_survived_search
+      predictive_status: not_requested
+      predictive_reason_codes:
+        - predictive_not_requested
+      evidence_classes:
+        - descriptive_compression
+        - robustness
+  - schema_name: abstention_manifest@1.1.0
+    object_id: abstention_only_publication_abstention
+    module_id: claims
+    body:
+      abstention_id: abstention_only_publication_abstention
+      abstention_type: no_admissible_reducer
+      blocked_ceiling: descriptive_only
+      reason_codes:
+        - descriptive_gate_failed
+        - no_candidate_survived_search
+      governing_refs:
+        - schema_name: scorecard_manifest@1.1.0
+          object_id: abstention_only_publication_scorecard
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: abstention_only_publication_reproducibility_bundle
+    module_id: replay
+    body:
+      bundle_id: abstention_only_publication_reproducibility_bundle
+      bundle_mode: abstention_only_publication
+      required_manifest_refs:
+        - schema_name: abstention_manifest@1.1.0
+          object_id: abstention_only_publication_abstention
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: abstention_only_publication_run_result
+      replay_verification_status: verified
+      failure_reason_codes: []
+  - schema_name: run_result_manifest@1.1.0
+    object_id: abstention_only_publication_run_result
+    module_id: catalog_publishing
+    body:
+      run_id: abstention_only_publication_run
+      result_mode: abstention_only_publication
+      primary_scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: abstention_only_publication_scorecard
+      primary_abstention_ref:
+        schema_name: abstention_manifest@1.1.0
+        object_id: abstention_only_publication_abstention
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: abstention_only_publication_reproducibility_bundle
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: abstention_only_publication_publication_record
+    module_id: catalog_publishing
+    body:
+      publication_id: abstention_only_publication_publication_record
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: abstention_only_publication_run_result
+      catalog_scope: public
+      publication_mode: abstention_only_publication
+      replay_verification_status: verified
+      comparator_exposure_status: not_applicable_abstention_only
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: abstention_only_publication_reproducibility_bundle
+      published_at: '2026-04-12T00:00:00Z'

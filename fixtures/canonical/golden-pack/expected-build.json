@@ -1,0 +1,117 @@
+{
+  "project_name": "Fixture Euclid",
+  "scope_statement": "Fixture scope statement for the Euclid canonical-pack compiler.",
+  "canonical_docs": [
+    {
+      "path": "README.md",
+      "title": "Fixture Euclid Project",
+      "related": [
+        "[[Fixture System Map]]"
+      ]
+    },
+    {
+      "path": "docs/system.md",
+      "title": "Fixture System Map",
+      "related": [
+        "[[Fixture Euclid Project]]"
+      ]
+    }
+  ],
+  "vocabularies": {
+    "abstention_types": {
+      "path": "schemas/core/abstention-types.yaml",
+      "title": "Abstention Types",
+      "entry_ids": [
+        "no_admissible_reducer"
+      ]
+    },
+    "claim_lanes": {
+      "path": "schemas/core/claim-lanes.yaml",
+      "title": "Claim Lanes",
+      "entry_ids": [
+        "descriptive_only"
+      ]
+    },
+    "composition_operators": {
+      "path": "schemas/core/composition-operators.yaml",
+      "title": "Composition Operators",
+      "entry_ids": [
+        "piecewise"
+      ]
+    },
+    "evidence_classes": {
+      "path": "schemas/core/evidence-classes.yaml",
+      "title": "Evidence Classes",
+      "entry_ids": [
+        "descriptive_compression"
+      ]
+    },
+    "forecast_object_types": {
+      "path": "schemas/core/forecast-object-types.yaml",
+      "title": "Forecast Object Types",
+      "entry_ids": [
+        "point"
+      ]
+    },
+    "reducer_families": {
+      "path": "schemas/core/reducer-families.yaml",
+      "title": "Reducer Families",
+      "entry_ids": [
+        "analytic"
+      ]
+    },
+    "scope_axes": {
+      "path": "schemas/core/scope-axes.yaml",
+      "title": "Scope Axes",
+      "entry_ids": [
+        "entity_scope"
+      ]
+    }
+  },
+  "runtime_modules": {
+    "core": [
+      "manifest_registry",
+      "evaluation"
+    ]
+  },
+  "artifact_classes": {
+    "publication": [
+      "claim_card",
+      "publication_record"
+    ]
+  },
+  "contracts": [
+    {
+      "path": "schemas/contracts/module-ownership.json",
+      "kind": "module_ownership",
+      "owners": [
+        "control_plane",
+        "evaluation_team"
+      ],
+      "contract_modules": [
+        "manifest_registry"
+      ]
+    },
+    {
+      "path": "schemas/readiness/readiness-charter.yaml",
+      "kind": "readiness_charter",
+      "owners": [
+        "readiness_council"
+      ],
+      "contract_modules": []
+    }
+  ],
+  "math_fixtures": [],
+  "owner_ids": [
+    "control_plane",
+    "evaluation_team",
+    "readiness_council"
+  ],
+  "validation_summary": {
+    "required_refs_checked": 9,
+    "closed_vocabularies_loaded": 7,
+    "contract_artifacts_loaded": 2,
+    "math_fixtures_loaded": 0,
+    "owners_declared": 3
+  }
+}

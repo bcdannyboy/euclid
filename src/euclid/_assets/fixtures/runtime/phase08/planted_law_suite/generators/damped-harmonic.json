@@ -1,0 +1,27 @@
+{
+  "law_id": "phase08_damped_harmonic",
+  "family": "damped_harmonic",
+  "description": "Damped harmonic planted generator with exponential decay and cosine phase.",
+  "equivalence_class": "oscillatory_decay_equivalent",
+  "parameters": {
+    "amplitude": 6.0,
+    "decay_rate": 0.12,
+    "angular_frequency": 0.55,
+    "phase_shift": 0.25,
+    "offset": 0.5
+  },
+  "variants": {
+    "exact": {
+      "recovery_class": "equivalent_generator",
+      "max_pointwise_abs_error": 1e-06,
+      "max_predictive_mae": 1e-06
+    },
+    "noisy": {
+      "recovery_class": "same_family_approximation",
+      "min_pointwise_abs_error": 0.01,
+      "max_pointwise_abs_error": 0.12,
+      "max_holdout_mae": 0.05,
+      "forbid_exact_equivalence": true
+    }
+  }
+}

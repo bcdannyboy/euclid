@@ -1,0 +1,54 @@
+version: 1
+kind: robustness_policies
+owners:
+  - id: robustness_policy_council
+    display_name: Robustness Policy Council
+global_rules:
+  final_status_rule: failed_overrides_abstained_over_passed
+  null_results_are_descriptive_only: true
+  leakage_canaries_are_structural: true
+  holdout_reuse_forbidden: true
+null_families:
+  - family_id: iid_permutation_null
+    owner_ref: robustness_policy_council
+    generator: without_replacement_random_permutation
+    statistic: description_gain_bits
+    interpretation: candidate_relative_descriptive_only
+perturbation_families:
+  - family_id: recent_history_truncation
+    owner_ref: robustness_policy_council
+    preserved_properties:
+      - temporal_order
+      - units
+      - causal_direction
+    question_answered: dependence_on_long_history_availability
+  - family_id: quantization_coarsening
+    owner_ref: robustness_policy_council
+    preserved_properties:
+      - temporal_order
+      - sequence_length
+      - units
+    question_answered: dependence_on_fine_numeric_precision
+leakage_canary_types:
+  - canary_type: future_target_level_feature
+    owner_ref: robustness_policy_council
+    expected_block_relation: at_expected_stage_or_earlier
+  - canary_type: late_available_target_copy
+    owner_ref: robustness_policy_council
+    expected_block_relation: at_expected_stage_or_earlier
+  - canary_type: holdout_membership_feature
+    owner_ref: robustness_policy_council
+    expected_block_relation: at_expected_stage_or_earlier
+  - canary_type: post_cutoff_revision_level_feature
+    owner_ref: robustness_policy_council
+    expected_block_relation: at_expected_stage_or_earlier
+terminal_statuses:
+  - status: passed
+    owner_ref: robustness_policy_council
+    rule: null_not_failed_and_stability_passed_and_canaries_pass
+  - status: abstained
+    owner_ref: robustness_policy_council
+    rule: no_failure_but_some_required_component_abstained
+  - status: failed
+    owner_ref: robustness_policy_council
+    rule: any_component_failed_or_any_canary_survived

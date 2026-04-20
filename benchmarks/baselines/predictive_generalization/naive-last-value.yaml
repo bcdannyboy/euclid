@@ -1,0 +1,5 @@
+baseline_id: naive_last_value
+baseline_family: point_forecast_naive
+policy:
+  rule: last_observation_carried_forward
+

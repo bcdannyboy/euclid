@@ -1,0 +1,58 @@
+version: 1
+kind: benchmark_release_gate_profile
+profile_id: benchmark_threshold_gates_v1
+description: Threshold-based benchmark release blockers for the holistic-equation honesty architecture.
+gates:
+- gate_id: benchmark.descriptive_non_abstention
+  metric_id: descriptive_non_abstention_rate
+  comparator: ">="
+  threshold: 1.0
+  unit: fraction
+  task_bucket_id: descriptive_non_abstention
+  report_as_release_blocker: true
+  blocker_reason_code: descriptive_non_abstention_below_threshold
+  summary: Descriptive search must emit the best available approximation whenever fallback search is available.
+- gate_id: benchmark.false_holistic_rate
+  metric_id: false_holistic_rate
+  comparator: "<="
+  threshold: 0.0
+  unit: fraction
+  task_bucket_id: false_holistic_rate
+  report_as_release_blocker: true
+  blocker_reason_code: false_holistic_rate_above_threshold
+  summary: Adversarial and leakage canaries must not produce any false holistic claim.
+- gate_id: benchmark.planted_law_recovery
+  metric_id: planted_law_recovery_rate
+  comparator: ">="
+  threshold: 0.75
+  unit: fraction
+  task_bucket_id: planted_law_recovery
+  report_as_release_blocker: true
+  blocker_reason_code: planted_law_recovery_below_threshold
+  summary: Planted-law suites must recover the intended compact structure at or above the declared recovery floor.
+- gate_id: benchmark.thin_evidence_probabilistic_attachment
+  metric_id: thin_evidence_probabilistic_attachment_rate
+  comparator: "<="
+  threshold: 0.0
+  unit: fraction
+  task_bucket_id: thin_evidence_probabilistic_attachment
+  report_as_release_blocker: true
+  blocker_reason_code: thin_evidence_probabilistic_attachment_above_threshold
+  summary: Thin-evidence cases must not retain probabilistic attachment as a stronger claim.
+suites:
+  current_release:
+    required_gate_ids:
+    - benchmark.descriptive_non_abstention
+    - benchmark.false_holistic_rate
+    - benchmark.planted_law_recovery
+  full_vision:
+    required_gate_ids:
+    - benchmark.descriptive_non_abstention
+    - benchmark.false_holistic_rate
+    - benchmark.planted_law_recovery
+    - benchmark.thin_evidence_probabilistic_attachment
+  phase08_holistic_honesty:
+    required_gate_ids:
+    - benchmark.descriptive_non_abstention
+    - benchmark.false_holistic_rate
+    - benchmark.planted_law_recovery

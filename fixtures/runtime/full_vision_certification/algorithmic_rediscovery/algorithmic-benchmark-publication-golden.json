@@ -1,0 +1,55 @@
+{
+  "replay_ref": {
+    "candidate_hash": "sha256:df9f8c46a5cdcf6507175259dbba868e0c40f2e95140fc94442977252246ebb2",
+    "candidate_id": "algorithmic_efe315a71097",
+    "submitter_id": "algorithmic_search_backend"
+  },
+  "submitter": {
+    "accepted_candidate_count": 24,
+    "attempted_candidate_count": 155,
+    "canonical_program_count": 155,
+    "replay_hook_names": [
+      "algorithmic_dsl",
+      "budget_record",
+      "search_scope",
+      "search_seed",
+      "search_stop_rule"
+    ],
+    "selected_candidate_id": "algorithmic_efe315a71097",
+    "status": "selected",
+    "submitter_id": "algorithmic_search_backend"
+  },
+  "submitter_result": {
+    "budget_consumption": {
+      "accepted_candidate_count": 24,
+      "attempted_candidate_count": 155,
+      "canonical_program_count": 155,
+      "declared_candidate_limit": 256,
+      "declared_wall_clock_seconds": 300,
+      "omitted_candidate_count": 0,
+      "rejected_candidate_count": 131
+    },
+    "selected_candidate_id": "algorithmic_efe315a71097",
+    "status": "selected"
+  },
+  "task_id": "algorithmic_last_observation_demo",
+  "task_result": {
+    "local_winner_candidate_id": "algorithmic_efe315a71097",
+    "local_winner_submitter_id": "algorithmic_search_backend",
+    "replay_ref_refs": [
+      {
+        "artifact_type": "benchmark_replay_ref",
+        "relative_path": "results/rediscovery/algorithmic_last_observation_demo/replay-algorithmic_search_backend.json"
+      }
+    ],
+    "status": "completed",
+    "submitter_result_refs": [
+      {
+        "artifact_type": "submitter_result",
+        "relative_path": "results/rediscovery/algorithmic_last_observation_demo/submitter-algorithmic_search_backend.json"
+      }
+    ]
+  },
+  "telemetry_subject_id": "algorithmic_last_observation_demo",
+  "track_id": "rediscovery"
+}

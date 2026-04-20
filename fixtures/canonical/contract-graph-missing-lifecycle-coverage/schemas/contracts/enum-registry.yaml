@@ -1,0 +1,12 @@
+version: 1
+kind: enum_registry
+owners:
+  - id: lifecycle_fixture_owner
+    display_name: Lifecycle Fixture Owner
+enums:
+  - enum_name: run_lifecycle_states
+    owner_ref: lifecycle_fixture_owner
+    canonical_source_path: schemas/contracts/run-lifecycle.yaml
+    allowed_values:
+      - run_declared
+      - search_contract_frozen

@@ -1,0 +1,370 @@
+version: 1
+kind: schema_registry
+owners:
+  - id: schema_registry_council
+    display_name: Schema Registry Council
+schemas:
+  - schema_name: schema_registry_manifest@1.0.0
+    owner_ref: manifest_registry_owner
+    owning_module: manifest_registry
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: scope_ledger_manifest@1.0.0
+    owner_ref: manifest_registry_owner
+    owning_module: manifest_registry
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: lineage_edge@1.0.0
+    owner_ref: manifest_registry_owner
+    owning_module: manifest_registry
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: run_manifest@1.0.0
+    owner_ref: manifest_registry_owner
+    owning_module: manifest_registry
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: observation_record@1.0.0
+    owner_ref: ingestion_owner
+    owning_module: ingestion
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: dataset_snapshot_manifest@1.0.0
+    owner_ref: snapshotting_owner
+    owning_module: snapshotting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: time_safety_audit_manifest@1.0.0
+    owner_ref: timeguard_owner
+    owning_module: timeguard
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: feature_spec@1.0.0
+    owner_ref: features_owner
+    owning_module: features
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: feature_view_manifest@1.0.0
+    owner_ref: features_owner
+    owning_module: features
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: evaluation_plan_manifest@1.1.0
+    owner_ref: split_planning_owner
+    owning_module: split_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: search_plan_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: canonicalization_policy_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: search_ledger_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: frontier_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: rejected_diagnostics_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: freeze_event_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: frozen_shortlist_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: baseline_registry_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    owning_module: evaluation_governance
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: forecast_comparison_policy_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    owning_module: evaluation_governance
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: comparison_universe_manifest@1.0.0
+    owner_ref: evaluation_governance_owner
+    owning_module: evaluation_governance
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: evaluation_event_log_manifest@1.0.0
+    owner_ref: evaluation_governance_owner
+    owning_module: evaluation_governance
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: evaluation_governance_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    owning_module: evaluation_governance
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: predictive_gate_policy_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    owning_module: evaluation_governance
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: algorithmic_dsl_manifest@1.1.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: dsl_semantics_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: dsl_rewrite_system_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: canonical_serialization_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: observational_equivalence_suite_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: algorithmic_search_policy_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: algorithmic_frontier_policy_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    owning_module: algorithmic_dsl
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: typed_pooling_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: conditional_shared_local_codelength_contract@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: exchangeability_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: unseen_entity_prediction_policy_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: multi_entity_predictive_evaluation_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: shared_local_freeze_refit_protocol_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    owning_module: shared_plus_local_decomposition
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: source_digest_manifest@1.0.0
+    owner_ref: external_evidence_ingestion_owner
+    owning_module: external_evidence_ingestion
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: external_evidence_record_manifest@1.0.0
+    owner_ref: external_evidence_ingestion_owner
+    owning_module: external_evidence_ingestion
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: external_evidence_manifest@1.0.0
+    owner_ref: external_evidence_ingestion_owner
+    owning_module: external_evidence_ingestion
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: domain_specific_mechanism_mapping_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    owning_module: mechanistic_evidence
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: units_check_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    owning_module: mechanistic_evidence
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: invariance_test_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    owning_module: mechanistic_evidence
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: evidence_independence_protocol_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    owning_module: mechanistic_evidence
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: mechanistic_evidence_dossier_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    owning_module: mechanistic_evidence
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: target_transform_manifest@1.0.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: base_measure_policy_manifest@1.0.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: canonical_structure_code_manifest@1.0.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: codelength_policy_manifest@1.1.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: reference_description_policy_manifest@1.1.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: observation_model_manifest@1.1.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: candidate_spec@1.0.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: reducer_artifact_manifest@1.0.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: candidate_state_manifest@1.0.0
+    owner_ref: candidate_fitting_owner
+    owning_module: candidate_fitting
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: prediction_artifact_manifest@1.1.0
+    owner_ref: evaluation_owner
+    owning_module: evaluation
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: point_score_policy_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: probabilistic_score_policy_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: interval_score_policy_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: quantile_score_policy_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: event_probability_score_policy_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: point_score_result_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: probabilistic_score_result_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: calibration_contract_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: calibration_result_manifest@1.0.0
+    owner_ref: scoring_owner
+    owning_module: scoring
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: surrogate_generator_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: null_protocol_manifest@1.1.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: retention_metric_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: perturbation_protocol_manifest@1.1.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: leakage_canary_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: leakage_canary_result_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: null_result_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: perturbation_family_result_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: sensitivity_analysis_manifest@1.0.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: robustness_report_manifest@1.1.0
+    owner_ref: robustness_owner
+    owning_module: robustness
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: mechanistic_lane_policy_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    owning_module: mechanistic_evidence
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: scorecard_manifest@1.1.0
+    owner_ref: gate_lifecycle_owner
+    owning_module: gate_lifecycle
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: validation_scope_manifest@1.0.0
+    owner_ref: claims_owner
+    owning_module: claims
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: claim_card_manifest@1.1.0
+    owner_ref: claims_owner
+    owning_module: claims
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: abstention_manifest@1.1.0
+    owner_ref: claims_owner
+    owning_module: claims
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    owner_ref: replay_owner
+    owning_module: replay
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: run_result_manifest@1.1.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: publication_record_manifest@1.1.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: mdl_observation_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: scoring_calibration_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: predictive_governance_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: nulls_stability_leakage_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: dsl_search_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: readiness_judgment_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: schema_lifecycle_integration_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: worked_example_set_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md
+  - schema_name: worked_examples_closure_manifest@1.0.0
+    owner_ref: catalog_publishing_owner
+    owning_module: catalog_publishing
+    canonical_source_path: docs/contracts-manifests.md

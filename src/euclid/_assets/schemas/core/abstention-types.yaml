@@ -1,0 +1,18 @@
+version: 1
+vocabulary: abstention_types
+title: Abstention Types
+closed: true
+source_doc_refs:
+  - README.md
+  - docs/search-core.md
+  - docs/modeling-pipeline.md
+entries:
+  - id: no_admissible_reducer
+    binding_status: retained
+    description: Emitted when no candidate survives descriptive admissibility inside the active reducer grammar.
+  - id: codelength_comparability_failed
+    binding_status: retained
+    description: Emitted when surviving candidates cannot be compared under the shared retained coding law.
+  - id: robustness_failed
+    binding_status: retained
+    description: Emitted when the retained robustness protocol blocks publication even after descriptive structure is found.

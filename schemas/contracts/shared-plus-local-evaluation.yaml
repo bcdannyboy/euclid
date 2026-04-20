@@ -1,0 +1,30 @@
+version: 1
+kind: shared_plus_local_evaluation_rules
+owners:
+  - id: shared_plus_local_evaluation_council
+    display_name: Shared Plus Local Evaluation Council
+global_rules:
+  entity_index_set_required: true
+  cross_entity_comparison_requires_declared_weights: true
+  unseen_entity_publication_requires_separate_contract: true
+contracts:
+  - rule_id: entity_panel_comparability
+    owner_ref: shared_plus_local_evaluation_council
+    aggregation_mode: declared_entity_panel_only
+    rule: Compared artifacts must share the same declared entity panel and evaluation geometry.
+  - rule_id: shared_component_fit_scope
+    owner_ref: shared_plus_local_evaluation_council
+    training_scope: shared_component_may_use_only_training_entities_and_training_times
+    rule: The shared component may not read held-out entities or future rows.
+  - rule_id: local_component_fit_scope
+    owner_ref: shared_plus_local_evaluation_council
+    training_scope: local_component_may_use_only_entity_local_training_rows
+    rule: Each local component is fit only on the training rows of its own entity slice.
+  - rule_id: cross_entity_aggregation
+    owner_ref: shared_plus_local_evaluation_council
+    aggregation_mode: per_entity_primary_score_then_declared_entity_weights
+    rule: Cross-entity predictive publication must disclose entity weights and may not silently drop entities.
+  - rule_id: unseen_entity_publication
+    owner_ref: shared_plus_local_evaluation_council
+    policy: separate_declared_contract_required
+    rule: Claims about unseen entities require their own transport contract instead of reuse of within-panel evidence.

@@ -1,0 +1,30 @@
+bundle_id: glucose_mechanism_bundle
+domain_id: glucose_regulation
+acquisition_window:
+  start: '2026-02-01T00:00:00Z'
+  end: '2026-02-04T00:00:00Z'
+raw_sources:
+  - source_id: paper-a
+    citation: doi:10.1000/alpha
+    evidence_kind: measurement
+    acquired_at: '2026-02-01T09:00:00Z'
+    content:
+      finding: glucose recovers toward baseline
+      effect_direction: positive
+    provenance:
+      publisher: lab-alpha
+    independence_mode: derived_from_predictive_artifact
+    derived_from_predictive_ref:
+      schema_name: point_score_result_manifest@1.0.0
+      object_id: score_result
+term_bindings:
+  - term_id: lag1_state
+    domain_entity: circulating_glucose
+    activity: state_persistence
+term_units:
+  - term_id: lag1_state
+    unit_id: mmol_per_l
+    compatible: true
+invariance_checks:
+  - check_id: meal_shift
+    status: passed

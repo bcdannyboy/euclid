@@ -1,0 +1,234 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: inadmissible_candidate_bundle
+scenario_id: inadmissible-candidate
+scenario_class: negative_publication
+required_modules:
+  - search_planning
+  - candidate_fitting
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - search_plan_manifest@1.0.0
+  - search_ledger_manifest@1.0.0
+  - rejected_diagnostics_manifest@1.0.0
+  - frozen_shortlist_manifest@1.0.0
+  - reducer_artifact_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/search-frontier.yaml
+  - schemas/contracts/claim-lanes.yaml
+required_evidence_classes:
+  - descriptive_compression
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+anchor_artifacts:
+  - docs/search-core.md
+  - docs/search-core.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: candidate_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: descriptive_only
+  forecast_object_type: point
+  abstention_type: null
+  failure_effect: rejected_candidate_removed_before_publication
+  catalog_scope: public
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: inadmissible_candidate_validation_scope
+  - state: meaning_bound
+    produced_artifact_refs:
+      - schema_name: claim_card_manifest@1.1.0
+        object_id: inadmissible_candidate_claim_card
+  - state: replay_bundle_assembled
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: inadmissible_candidate_reproducibility_bundle
+  - state: replay_verified
+    produced_artifact_refs:
+      - schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: inadmissible_candidate_reproducibility_bundle
+  - state: candidate_publication_selected
+    produced_artifact_refs:
+      - schema_name: run_result_manifest@1.1.0
+        object_id: inadmissible_candidate_run_result
+  - state: publication_record_written
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: inadmissible_candidate_publication_record
+  - state: publication_completed
+    produced_artifact_refs:
+      - schema_name: publication_record_manifest@1.1.0
+        object_id: inadmissible_candidate_publication_record
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: inadmissible_candidate_validation_scope
+    module_id: candidate_fitting
+    body:
+      scope_id: inadmissible_candidate_scope
+      scenario_id: inadmissible-candidate
+      claim_lane: descriptive_only
+      forecast_object_type: point
+      catalog_scope: public
+      anchor_artifact_paths:
+        - docs/search-core.md
+        - docs/search-core.md
+  - schema_name: search_plan_manifest@1.0.0
+    object_id: inadmissible_candidate_search_plan
+    module_id: search_planning
+    body:
+      plan_id: inadmissible_candidate_search_plan
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: inadmissible_candidate_validation_scope
+      search_class: frozen_candidate_replay
+  - schema_name: search_ledger_manifest@1.0.0
+    object_id: inadmissible_candidate_search_ledger
+    module_id: search_planning
+    body:
+      ledger_id: inadmissible_candidate_search_ledger
+      search_plan_ref:
+        schema_name: search_plan_manifest@1.0.0
+        object_id: inadmissible_candidate_search_plan
+      attempted_candidate_count: 2
+      admitted_candidate_refs:
+        - schema_name: reducer_artifact_manifest@1.0.0
+          object_id: inadmissible_candidate_reducer_artifact
+      rejected_candidate_count: 1
+  - schema_name: rejected_diagnostics_manifest@1.0.0
+    object_id: inadmissible_candidate_rejected_diagnostics
+    module_id: search_planning
+    body:
+      diagnostics_id: inadmissible_candidate_rejected_diagnostics
+      search_ledger_ref:
+        schema_name: search_ledger_manifest@1.0.0
+        object_id: inadmissible_candidate_search_ledger
+      rejected_candidates:
+        - candidate_id: inadmissible_candidate_overfit_variant
+          reason_codes:
+            - codelength_comparability_failed
+  - schema_name: reducer_artifact_manifest@1.0.0
+    object_id: inadmissible_candidate_reducer_artifact
+    module_id: candidate_fitting
+    body:
+      artifact_id: inadmissible_candidate_reducer_artifact
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: inadmissible_candidate_validation_scope
+      math_fixture_path: fixtures/canonical/math/descriptive-only-analytic-piecewise.yaml
+  - schema_name: frozen_shortlist_manifest@1.0.0
+    object_id: inadmissible_candidate_frozen_shortlist
+    module_id: search_planning
+    body:
+      frozen_shortlist_id: inadmissible_candidate_frozen_shortlist
+      search_plan_ref:
+        schema_name: search_plan_manifest@1.0.0
+        object_id: inadmissible_candidate_search_plan
+      selection_rule: single_lowest_total_bits_admissible_candidate
+      tie_break_rule: lexicographic_candidate_id
+      shortlist_cardinality: 1
+      candidate_refs:
+        - schema_name: reducer_artifact_manifest@1.0.0
+          object_id: inadmissible_candidate_reducer_artifact
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: inadmissible_candidate_scorecard
+    module_id: scoring
+    body:
+      scorecard_id: inadmissible_candidate_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: inadmissible_candidate_validation_scope
+      reducer_artifact_ref:
+        schema_name: reducer_artifact_manifest@1.0.0
+        object_id: inadmissible_candidate_reducer_artifact
+      rejected_diagnostics_ref:
+        schema_name: rejected_diagnostics_manifest@1.0.0
+        object_id: inadmissible_candidate_rejected_diagnostics
+      frozen_shortlist_ref:
+        schema_name: frozen_shortlist_manifest@1.0.0
+        object_id: inadmissible_candidate_frozen_shortlist
+      descriptive_status: passed
+      descriptive_reason_codes: []
+      predictive_status: not_requested
+      predictive_reason_codes:
+        - predictive_not_requested
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: inadmissible_candidate_claim_card
+    module_id: claims
+    body:
+      claim_id: inadmissible_candidate_claim_card
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: inadmissible_candidate_validation_scope
+      scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: inadmissible_candidate_scorecard
+      claim_lane: descriptive_only
+      forecast_object_type: point
+      predictive_support_status: not_requested
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: inadmissible_candidate_reproducibility_bundle
+    module_id: replay
+    body:
+      bundle_id: inadmissible_candidate_reproducibility_bundle
+      required_manifest_refs:
+        - schema_name: claim_card_manifest@1.1.0
+          object_id: inadmissible_candidate_claim_card
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: inadmissible_candidate_run_result
+      replay_verification_status: verified
+      failure_reason_codes: []
+  - schema_name: run_result_manifest@1.1.0
+    object_id: inadmissible_candidate_run_result
+    module_id: catalog_publishing
+    body:
+      run_id: inadmissible_candidate_run
+      result_mode: candidate_publication
+      primary_reducer_artifact_ref:
+        schema_name: reducer_artifact_manifest@1.0.0
+        object_id: inadmissible_candidate_reducer_artifact
+      primary_scorecard_ref:
+        schema_name: scorecard_manifest@1.1.0
+        object_id: inadmissible_candidate_scorecard
+      primary_claim_card_ref:
+        schema_name: claim_card_manifest@1.1.0
+        object_id: inadmissible_candidate_claim_card
+      rejected_diagnostics_ref:
+        schema_name: rejected_diagnostics_manifest@1.0.0
+        object_id: inadmissible_candidate_rejected_diagnostics
+      frozen_shortlist_ref:
+        schema_name: frozen_shortlist_manifest@1.0.0
+        object_id: inadmissible_candidate_frozen_shortlist
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: inadmissible_candidate_reproducibility_bundle
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: inadmissible_candidate_publication_record
+    module_id: catalog_publishing
+    body:
+      publication_id: inadmissible_candidate_publication_record
+      run_result_ref:
+        schema_name: run_result_manifest@1.1.0
+        object_id: inadmissible_candidate_run_result
+      catalog_scope: public
+      publication_mode: candidate_publication
+      replay_verification_status: verified
+      comparator_exposure_status: satisfied
+      reproducibility_bundle_ref:
+        schema_name: reproducibility_bundle_manifest@1.0.0
+        object_id: inadmissible_candidate_reproducibility_bundle
+      published_at: '2026-04-12T00:00:00Z'

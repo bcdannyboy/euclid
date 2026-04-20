@@ -1,0 +1,71 @@
+task_id: phase08_planted_affine_lag_noisy
+track_id: predictive_generalization
+task_family: single_entity_point_forecast
+regime_tags:
+  - phase08_planted_law
+  - noisy_variant
+  - positive_case
+dataset_ref: src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/affine-lag-noisy-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-19T00:00:00Z'
+generator_status: near_equivalent_generator
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: rolling_origin
+  initial_window: 12
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.01
+budget_policy:
+  wall_clock_seconds: 60
+  candidate_limit: 24
+baseline_registry:
+  - baseline_id: naive_last_value
+    manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
+submitter_registry:
+  - submitter_id: analytic_backend
+seed_policy:
+  seed: 31
+  restarts: 0
+adversarial_tags:
+  - planted_generator
+  - recovery_threshold
+abstention_policy:
+  allow_abstention: true
+  expected_mode: no_publishable_winner
+forbidden_shortcuts:
+  - oracle_fit
+  - leak_future_observations
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+  verification_mode: candidate_and_score_replay
+origin_policy:
+  policy_id: rolling_origin
+  min_origins: 6
+horizon_policy:
+  horizons:
+    - 1
+baseline_comparison_policy:
+  paired_test: diebold_mariano
+  require_margin_win: true
+fixture_spec_id: phase08-planted-law-fixtures-v1
+fixture_family_id: phase08_planted_law_suite
+phase08_planted_contract:
+  family: affine_lag
+  variant: noisy
+  generator_ref: src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/affine-lag.json
+  expected_recovery:
+    recovery_class: same_family_approximation
+    max_holdout_mae: 0.04
+  expected_non_recovery:
+    forbid_exact_equivalence: true
+    min_pointwise_abs_error: 0.01

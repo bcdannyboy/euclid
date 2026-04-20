@@ -1,0 +1,210 @@
+version: 1
+kind: publication_lifecycle
+owners:
+  - id: publication_lifecycle_council
+    display_name: Publication Lifecycle Council
+global_rules:
+  initial_state: publication_requested
+  terminal_states:
+    - publication_completed
+    - publication_blocked
+  allowed_modes:
+    - candidate_publication
+    - abstention_only_publication
+  replay_rule: publication_record_cannot_be_written_until_replay_is_verified
+  public_catalog_rule: catalog_scope_public_requires_ready_readiness_judgment
+states:
+  - state_id: publication_requested
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - claims
+    required_artifacts:
+      - claim_card_or_abstention
+
+  - state_id: meaning_bound
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - claims
+      - gate_lifecycle
+    required_artifacts:
+      - scorecard
+      - claim_card_or_abstention
+
+  - state_id: replay_bundle_assembled
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - reproducibility_bundle
+
+  - state_id: replay_verified
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - replay_verification_report
+
+  - state_id: replay_failed
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - replay_verification_report
+
+  - state_id: run_result_assembled
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - run_result
+
+  - state_id: candidate_publication_selected
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+      - catalog_publishing
+    required_artifacts:
+      - claim_card
+      - run_result
+
+  - state_id: abstention_only_publication_selected
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+      - catalog_publishing
+    required_artifacts:
+      - abstention
+      - run_result
+
+  - state_id: publication_record_written
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - catalog_publishing
+    required_artifacts:
+      - publication_record
+
+  - state_id: catalog_projected
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - catalog_publishing
+    required_artifacts:
+      - catalog_entry
+      - api_projection
+      - cli_projection
+
+  - state_id: publication_completed
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - catalog_publishing
+    required_artifacts:
+      - publication_record
+      - catalog_entry
+    terminal: true
+
+  - state_id: publication_blocked
+    owner_ref: publication_lifecycle_council
+    responsible_modules:
+      - replay
+      - catalog_publishing
+    required_artifacts:
+      - replay_verification_report
+    terminal: true
+
+transitions:
+  - transition_id: meaning_objects_bound
+    owner_ref: publication_lifecycle_council
+    from: publication_requested
+    to: meaning_bound
+    activating_modules:
+      - claims
+      - gate_lifecycle
+    guard: exactly one claim_card or abstention is bound to the scorecard
+
+  - transition_id: replay_bundle_complete
+    owner_ref: publication_lifecycle_council
+    from: meaning_bound
+    to: replay_bundle_assembled
+    activating_modules:
+      - replay
+    guard: reproducibility bundle includes all required hashes, refs, and seeds
+
+  - transition_id: replay_verification_succeeds
+    owner_ref: publication_lifecycle_council
+    from: replay_bundle_assembled
+    to: replay_verified
+    activating_modules:
+      - replay
+    guard: replay_verification_report.status = verified
+
+  - transition_id: replay_verification_fails
+    owner_ref: publication_lifecycle_council
+    from: replay_bundle_assembled
+    to: replay_failed
+    activating_modules:
+      - replay
+    guard: replay_verification_report.status = failed
+
+  - transition_id: publication_blocked_on_replay_failure
+    owner_ref: publication_lifecycle_council
+    from: replay_failed
+    to: publication_blocked
+    activating_modules:
+      - replay
+      - catalog_publishing
+    guard: publication cannot proceed after replay failure
+
+  - transition_id: run_result_materialized
+    owner_ref: publication_lifecycle_council
+    from: replay_verified
+    to: run_result_assembled
+    activating_modules:
+      - replay
+    guard: run_result is assembled from the verified evidence graph
+
+  - transition_id: candidate_publication_mode_selected
+    owner_ref: publication_lifecycle_council
+    from: run_result_assembled
+    to: candidate_publication_selected
+    activating_modules:
+      - catalog_publishing
+    guard: run_result.result_mode = candidate_publication
+
+  - transition_id: abstention_publication_mode_selected
+    owner_ref: publication_lifecycle_council
+    from: run_result_assembled
+    to: abstention_only_publication_selected
+    activating_modules:
+      - catalog_publishing
+    guard: run_result.result_mode = abstention_only_publication
+
+  - transition_id: publication_record_persisted
+    owner_ref: publication_lifecycle_council
+    from: candidate_publication_selected
+    to: publication_record_written
+    activating_modules:
+      - catalog_publishing
+    guard: comparator_exposure_status = satisfied
+
+  - transition_id: abstention_record_persisted
+    owner_ref: publication_lifecycle_council
+    from: abstention_only_publication_selected
+    to: publication_record_written
+    activating_modules:
+      - catalog_publishing
+    guard: comparator_exposure_status = not_applicable_abstention_only
+
+  - transition_id: catalog_projection_complete
+    owner_ref: publication_lifecycle_council
+    from: publication_record_written
+    to: catalog_projected
+    activating_modules:
+      - catalog_publishing
+    guard: read models are derived only from publication_record and replay-verified artifacts
+
+  - transition_id: publication_complete
+    owner_ref: publication_lifecycle_council
+    from: catalog_projected
+    to: publication_completed
+    activating_modules:
+      - catalog_publishing
+    guard: publication record and catalog projections are durable and read-only

@@ -1,0 +1,70 @@
+version: 1
+kind: canonical_math_fixture
+fixture_id: shared_plus_local_predictively_supported
+claim_lane: predictively_supported
+forecast_object_type: point
+primary_score: absolute_error
+comparison_regime_id: unconditional_model_pair
+adjustment_id: fresh_replication_only
+predictive_gate_policy_id: point_predictive_gate
+time_safety_status: verified
+confirmatory_status: replicated
+shared_plus_local_rule_ids:
+  - entity_panel_comparability
+  - shared_component_fit_scope
+  - local_component_fit_scope
+  - cross_entity_aggregation
+  - unseen_entity_publication
+admitted_data_object:
+  object_id: multi_entity_panel
+  entity_index_set:
+    - entity_a
+    - entity_b
+  order_relation: entity_then_event_time_total_order
+  coded_target_domain: real_line
+target_transform_object:
+  object_id: identity_target_transform
+  transform_id: identity
+quantization_object:
+  object_id: fixed_step_mid_tread_quantization
+  quantization_mode: fixed_step_mid_tread
+observation_model_object:
+  object_id: shared_local_point_observation_model
+  forecast_object_type: point
+  support: real_line
+reference_description_object:
+  object_id: shared_local_reference_description
+  reference_family: panel_naive
+codelength_policy_object:
+  object_id: additive_codelength_policy
+  code_unit: bits
+shared_component:
+  object_id: shared_spectral_component
+  reducer_family: spectral
+local_components:
+  - object_id: entity_a_recursive_local_component
+    reducer_family: recursive
+  - object_id: entity_b_recursive_local_component
+    reducer_family: recursive
+reducer_object:
+  object_id: shared_plus_local_reducer
+  reducer_family: recursive
+  composition_operator: shared_plus_local_decomposition
+  observation_model_object_ref: shared_local_point_observation_model
+  codelength_policy_object_ref: additive_codelength_policy
+  entity_index_set:
+    - entity_a
+    - entity_b
+  shared_component_ref: shared_spectral_component
+  local_component_refs:
+    - entity_a_recursive_local_component
+    - entity_b_recursive_local_component
+  unseen_entity_rule: separate_declared_contract_required
+descriptive_admissibility_object:
+  object_id: shared_local_descriptive_admissibility
+  data_object_ref: multi_entity_panel
+  reducer_object_ref: shared_plus_local_reducer
+  reference_description_object_ref: shared_local_reference_description
+  codelength_policy_object_ref: additive_codelength_policy
+  failure_abstention_type: no_admissible_reducer
+  status: admissible

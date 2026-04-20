@@ -1,0 +1,58 @@
+task_id: robustness_medium_leakage_demo
+track_id: predictive_generalization
+task_family: robustness_leakage
+regime_tags:
+- robustness
+- leakage
+- negative_case
+dataset_ref: fixtures/runtime/full_vision_certification/robustness/leakage-trap-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-14T00:00:00Z'
+generator_status: unknown_real_world
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: walk_forward
+  initial_window: 6
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.01
+budget_policy:
+  wall_clock_seconds: 120
+  candidate_limit: 8
+baseline_registry:
+- baseline_id: reference_description
+  manifest_path: benchmarks/baselines/rediscovery/reference-description.yaml
+submitter_registry:
+- submitter_id: analytic_backend
+seed_policy:
+  seed: 17
+  restarts: 0
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+adversarial_tags:
+- robustness
+- leakage
+- leakage_canary_case
+abstention_policy:
+  allow_abstention: true
+  expected_mode: robustness_failed
+forbidden_shortcuts:
+- raw_test_set_fit
+origin_policy:
+  origin_selection: declared_walk_forward_panel
+horizon_policy:
+  horizons:
+  - 1
+baseline_comparison_policy:
+  comparator_set: declared_registry_only
+fixture_spec_id: euclid-certification-fixtures-v1
+fixture_family_id: robustness

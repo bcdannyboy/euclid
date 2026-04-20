@@ -1,0 +1,109 @@
+snapshot:
+  series_id: phase04-duplicate-demo
+  cutoff_available_at: "2026-01-06T00:00:00Z"
+  revision_policy: latest_available_revision_per_event_time
+  observed_values:
+    - 10.0
+    - 12.0
+    - 13.0
+    - 15.0
+    - 16.0
+    - 18.0
+  piecewise_partition_values:
+    - 0.5
+    - 1.5
+    - 2.5
+    - 0.5
+    - 1.5
+    - 2.5
+search:
+  seasonal_period: 4
+  exact:
+    candidate_ids:
+      - dup_a
+      - dup_b
+      - analytic_anchor
+    proposal_limit: 3
+  bounded:
+    candidate_ids:
+      - dup_a
+      - dup_b
+      - analytic_anchor
+    proposal_limit: 2
+proposals:
+  - candidate_id: dup_a
+    primitive_family: analytic
+    form_class: closed_form_expression
+    parameter_values:
+      intercept: 14.0
+    literal_values:
+      upper_cut: 3.0
+      lower_cut: 1.0
+    persistent_state:
+      step_count: 1
+      running_total: 0.0
+    composition_payload:
+      operator_id: piecewise
+      ordered_partition:
+        - start_literal: 2.0
+          end_literal: 3.0
+          reducer_id: tail
+        - start_literal: 0.0
+          end_literal: 1.0
+          reducer_id: head
+        - start_literal: 1.0
+          end_literal: 2.0
+          reducer_id: tail
+  - candidate_id: dup_b
+    primitive_family: analytic
+    form_class: closed_form_expression
+    parameter_values:
+      intercept: 14.0
+    literal_values:
+      lower_cut: 1.0
+      upper_cut: 3.0
+    persistent_state:
+      running_total: 0.0
+      step_count: 1
+    composition_payload:
+      operator_id: piecewise
+      ordered_partition:
+        - start_literal: 0.0
+          end_literal: 1.0
+          reducer_id: head
+        - start_literal: 1.0
+          end_literal: 3.0
+          reducer_id: tail
+  - candidate_id: analytic_anchor
+    primitive_family: analytic
+    form_class: closed_form_expression
+    parameter_values:
+      intercept: 15.0
+    literal_values:
+      lower_cut: 1.0
+      upper_cut: 3.0
+    persistent_state:
+      running_total: 0.0
+      step_count: 1
+    composition_payload:
+      operator_id: piecewise
+      ordered_partition:
+        - start_literal: 0.0
+          end_literal: 1.0
+          reducer_id: head
+        - start_literal: 1.0
+          end_literal: 3.0
+          reducer_id: tail
+expected:
+  exact:
+    accepted_candidate_ids:
+      - dup_a
+      - analytic_anchor
+    rejected_reason_codes:
+      dup_b: duplicate_canonical_candidate
+  bounded:
+    accepted_candidate_ids:
+      - dup_a
+    rejected_reason_codes:
+      dup_b: duplicate_canonical_candidate
+    omitted_candidate_count: 1

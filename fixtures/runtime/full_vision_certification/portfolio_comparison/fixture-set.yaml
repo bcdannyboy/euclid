@@ -1,0 +1,11 @@
+fixture_family_id: portfolio_comparison
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/full_vision_certification/portfolio_comparison/portfolio-comparison-series.csv
+series_count: 1
+entity_count: 1
+evidence_bundle_refs:
+- fixtures/runtime/full_vision_certification/portfolio_comparison/portfolio-selection-note.yaml
+diversity_axes:
+- portfolio_selection
+- comparator_universe

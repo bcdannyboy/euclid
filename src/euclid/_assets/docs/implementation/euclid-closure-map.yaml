@@ -1,0 +1,1443 @@
+version: 1
+kind: euclid_closure_map
+status: frozen_contract
+closure_map_id: euclid-closure-map-2026-04-15-v1
+authority_snapshot_id: euclid-authority-2026-04-15-b
+traceability_id: euclid-traceability-2026-04-15-v1
+master_plan_ref: docs/README.md
+scope_authority_refs:
+- EUCLID.md
+- docs/system.md
+must_cover_row_families:
+- reducer_family
+- composition_operator
+- forecast_object_type
+- run_support_object
+- admissibility_rule
+- search_class
+- evidence_lane
+- lifecycle_artifact
+- benchmark_track
+- benchmark_surface
+- operator_runtime_surface
+- clean_install_surface
+- replay_surface
+allowed_work_kinds:
+- implementation
+- proof
+- doc_normalization
+- certification
+allowed_shared_provenance_modes:
+- exclusive
+- declared_shared
+- forbidden
+required_row_fields:
+- capability_row_id
+- row_family
+- primary_owner_task_id
+- supporting_task_ids
+- work_kind
+- closing_evidence_scope_ids
+- shared_provenance_mode
+- notes
+rules:
+- Every full-vision matrix row must appear exactly once as a primary owner.
+- Every task in the master ledger must appear as a primary or supporting owner in at least one closure row.
+- Shared provenance is allowed only when the same provenance identifier is declared here and mirrored in release reporting.
+- current_release evidence cannot close a full_vision-only row.
+- doc_normalization work may support a row but may not be the only closing owner of a runtime-semantic row.
+rows:
+- capability_row_id: reducer_family:algorithmic
+  row_family: reducer_family
+  primary_owner_task_id: '3.06'
+  supporting_task_ids:
+  - '1.02'
+  - '11.01'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: reducer_family:algorithmic closes through task 3.06 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: reducer_family:analytic
+  row_family: reducer_family
+  primary_owner_task_id: '11.01'
+  supporting_task_ids:
+  - '1.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: reducer_family:analytic closes through task 11.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: reducer_family:recursive
+  row_family: reducer_family
+  primary_owner_task_id: '11.01'
+  supporting_task_ids:
+  - '1.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: reducer_family:recursive closes through task 11.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: reducer_family:spectral
+  row_family: reducer_family
+  primary_owner_task_id: '11.01'
+  supporting_task_ids:
+  - '1.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: reducer_family:spectral closes through task 11.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: composition_operator:additive_residual
+  row_family: composition_operator
+  primary_owner_task_id: '4.02'
+  supporting_task_ids:
+  - '11.01'
+  - '4.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: composition_operator:additive_residual closes through task 4.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: composition_operator:piecewise
+  row_family: composition_operator
+  primary_owner_task_id: '4.01'
+  supporting_task_ids:
+  - '11.01'
+  - '4.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: composition_operator:piecewise closes through task 4.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: composition_operator:regime_conditioned
+  row_family: composition_operator
+  primary_owner_task_id: '4.03'
+  supporting_task_ids:
+  - '11.01'
+  - '4.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: composition_operator:regime_conditioned closes through task 4.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: composition_operator:shared_plus_local_decomposition
+  row_family: composition_operator
+  primary_owner_task_id: '5.02'
+  supporting_task_ids:
+  - '11.01'
+  - '5.01'
+  - '5.03'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: composition_operator:shared_plus_local_decomposition closes through task 5.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: forecast_object_type:distribution
+  row_family: forecast_object_type
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '11.01'
+  - '2.01'
+  - '2.02'
+  - '2.03'
+  - '2.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: forecast_object_type:distribution closes through task 2.05 under the frozen 2026-04-15 ledger.
+- capability_row_id: forecast_object_type:event_probability
+  row_family: forecast_object_type
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '11.01'
+  - '2.01'
+  - '2.02'
+  - '2.03'
+  - '2.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: forecast_object_type:event_probability closes through task 2.05 under the frozen 2026-04-15 ledger.
+- capability_row_id: forecast_object_type:interval
+  row_family: forecast_object_type
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '11.01'
+  - '2.01'
+  - '2.02'
+  - '2.03'
+  - '2.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: forecast_object_type:interval closes through task 2.05 under the frozen 2026-04-15 ledger.
+- capability_row_id: forecast_object_type:point
+  row_family: forecast_object_type
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '11.01'
+  - '2.01'
+  - '2.02'
+  - '2.03'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: forecast_object_type:point closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: forecast_object_type:quantile
+  row_family: forecast_object_type
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '11.01'
+  - '2.01'
+  - '2.02'
+  - '2.03'
+  - '2.04'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: forecast_object_type:quantile closes through task 2.05 under the frozen 2026-04-15 ledger.
+- capability_row_id: run_support_object:codelength_policy_object
+  row_family: run_support_object
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: run_support_object:codelength_policy_object closes through task 1.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: run_support_object:observation_model_object
+  row_family: run_support_object
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: run_support_object:observation_model_object closes through task 1.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: run_support_object:quantization_object
+  row_family: run_support_object
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: run_support_object:quantization_object closes through task 1.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: run_support_object:reference_description_object
+  row_family: run_support_object
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: run_support_object:reference_description_object closes through task 1.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: run_support_object:target_transform_object
+  row_family: run_support_object
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: run_support_object:target_transform_object closes through task 1.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: admissibility_rule:codelength_comparability
+  row_family: admissibility_rule
+  primary_owner_task_id: '4.04'
+  supporting_task_ids:
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: admissibility_rule:codelength_comparability closes through task 4.04 under the frozen 2026-04-15 ledger.
+- capability_row_id: admissibility_rule:composition_closure
+  row_family: admissibility_rule
+  primary_owner_task_id: '4.04'
+  supporting_task_ids:
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: admissibility_rule:composition_closure closes through task 4.04 under the frozen 2026-04-15 ledger.
+- capability_row_id: admissibility_rule:family_membership
+  row_family: admissibility_rule
+  primary_owner_task_id: '3.01'
+  supporting_task_ids:
+  - '1.01'
+  - '1.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: admissibility_rule:family_membership closes through task 3.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: admissibility_rule:observation_model_compatibility
+  row_family: admissibility_rule
+  primary_owner_task_id: '3.01'
+  supporting_task_ids:
+  - '1.01'
+  - '1.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: admissibility_rule:observation_model_compatibility closes through task 3.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: admissibility_rule:valid_state_semantics
+  row_family: admissibility_rule
+  primary_owner_task_id: '3.01'
+  supporting_task_ids:
+  - '1.01'
+  - '1.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: admissibility_rule:valid_state_semantics closes through task 3.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: search_class:bounded_heuristic
+  row_family: search_class
+  primary_owner_task_id: '3.03'
+  supporting_task_ids:
+  - '11.01'
+  - '3.06'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: search_class:bounded_heuristic closes through task 3.03 under the frozen 2026-04-15 ledger.
+- capability_row_id: search_class:equality_saturation_heuristic
+  row_family: search_class
+  primary_owner_task_id: '3.04'
+  supporting_task_ids:
+  - '11.01'
+  - '3.06'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: search_class:equality_saturation_heuristic closes through task 3.04 under the frozen 2026-04-15 ledger.
+- capability_row_id: search_class:exact_finite_enumeration
+  row_family: search_class
+  primary_owner_task_id: '3.02'
+  supporting_task_ids:
+  - '11.01'
+  - '3.06'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: search_class:exact_finite_enumeration closes through task 3.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: search_class:stochastic_heuristic
+  row_family: search_class
+  primary_owner_task_id: '3.05'
+  supporting_task_ids:
+  - '11.01'
+  - '3.06'
+  - '9.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: search_class:stochastic_heuristic closes through task 3.05 under the frozen 2026-04-15 ledger.
+- capability_row_id: evidence_lane:boundary_specific_external_evidence
+  row_family: evidence_lane
+  primary_owner_task_id: '6.02'
+  supporting_task_ids:
+  - '11.01'
+  - '6.01'
+  - '6.03'
+  - '7.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: evidence_lane:boundary_specific_external_evidence closes through task 6.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: evidence_lane:descriptive_compression
+  row_family: evidence_lane
+  primary_owner_task_id: '11.01'
+  supporting_task_ids:
+  - '1.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: evidence_lane:descriptive_compression closes through task 11.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: evidence_lane:predictive_generalization
+  row_family: evidence_lane
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '11.01'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: evidence_lane:predictive_generalization closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: evidence_lane:readiness_and_closure
+  row_family: evidence_lane
+  primary_owner_task_id: '10.03'
+  supporting_task_ids:
+  - '0.01'
+  - '0.02'
+  - '0.03'
+  - '0.04'
+  - '0.05'
+  - '0.06'
+  - '0.07'
+  - '0.08'
+  - '0.09'
+  - '0.10'
+  - '0.11'
+  - '0.12'
+  - '00.01'
+  - '00.02'
+  - '00.03'
+  - '00.04'
+  - '00.05'
+  - '1.00'
+  - '1.05'
+  - '1.06'
+  - '1.07'
+  - '1.08'
+  - '10.02'
+  - '10.04'
+  - '10.05'
+  - '11.02'
+  - '11.03'
+  - '11.04'
+  - '9.02'
+  - '9.05'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: evidence_lane:readiness_and_closure closes through task 10.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance
+- capability_row_id: evidence_lane:replay_verification
+  row_family: evidence_lane
+  primary_owner_task_id: '1.03'
+  supporting_task_ids:
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: evidence_lane:replay_verification closes through task 1.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: evidence_lane:robustness
+  row_family: evidence_lane
+  primary_owner_task_id: '8.02'
+  supporting_task_ids:
+  - '11.01'
+  - '8.01'
+  - '8.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: evidence_lane:robustness closes through task 8.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:abstention
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:abstention closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:calibration_result
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.04'
+  supporting_task_ids:
+  - '11.01'
+  - '2.05'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:calibration_result closes through task 2.04 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:candidate_spec
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:candidate_spec closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:canonicalization_policy
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:canonicalization_policy closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:catalog_entry
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:catalog_entry closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance
+- capability_row_id: lifecycle_artifact:causal_availability_window
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:causal_availability_window closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:claim_card
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:claim_card closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:claim_card_or_abstention
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:claim_card_or_abstention closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:comparison_universe
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:comparison_universe closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:dataset_lineage_snapshot
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:dataset_lineage_snapshot closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:dataset_snapshot
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:dataset_snapshot closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:evaluation_event_log
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:evaluation_event_log closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:evaluation_plan
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:evaluation_plan closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:evidence_independence_attestation
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '6.02'
+  supporting_task_ids:
+  - '11.01'
+  - '7.01'
+  - '7.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: lifecycle_artifact:evidence_independence_attestation closes through task 6.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: lifecycle_artifact:external_evidence_bundle
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '6.02'
+  supporting_task_ids:
+  - '11.01'
+  - '6.01'
+  - '6.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: lifecycle_artifact:external_evidence_bundle closes through task 6.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: lifecycle_artifact:feature_materialization_report
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:feature_materialization_report closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:feature_view
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:feature_view closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:freeze_event
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:freeze_event closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:frontier
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:frontier closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:frozen_shortlist
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:frozen_shortlist closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:lifecycle_gate_decision
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:lifecycle_gate_decision closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:mechanistic_evidence_dossier
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '7.01'
+  supporting_task_ids:
+  - '11.01'
+  - '7.02'
+  - '7.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: lifecycle_artifact:mechanistic_evidence_dossier closes through task 7.01 under the frozen 2026-04-15 ledger.
+- capability_row_id: lifecycle_artifact:observation_record
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '10.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:observation_record closes through task 1.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:point_score_result
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.03'
+  supporting_task_ids:
+  - '11.01'
+  - '2.05'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:point_score_result closes through task 2.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:prediction_artifact
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.02'
+  supporting_task_ids:
+  - '11.01'
+  - '2.05'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:prediction_artifact closes through task 2.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:predictive_gate_policy
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:predictive_gate_policy closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:publication_record
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:publication_record closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance
+- capability_row_id: lifecycle_artifact:reducer_artifact
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:reducer_artifact closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:rejected_diagnostics
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:rejected_diagnostics closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:replay_verification_report
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.03'
+  supporting_task_ids:
+  - '1.04'
+  - '10.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:replay_verification_report closes through task 1.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:reproducibility_bundle
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.03'
+  supporting_task_ids:
+  - '1.04'
+  - '10.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:reproducibility_bundle closes through task 1.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:robustness_report
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '8.01'
+  supporting_task_ids:
+  - '11.01'
+  - '8.02'
+  - '8.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:robustness_report closes through task 8.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:run_manifest
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.01'
+  supporting_task_ids:
+  - '1.02'
+  - '1.03'
+  - '10.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:run_manifest closes through task 1.01 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:run_result
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.03'
+  supporting_task_ids:
+  - '1.04'
+  - '10.02'
+  - '11.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:run_result closes through task 1.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance
+- capability_row_id: lifecycle_artifact:scorecard
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '2.05'
+  supporting_task_ids:
+  - '10.04'
+  - '11.01'
+  - '7.02'
+  - '8.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:scorecard closes through task 2.05 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:search_budget
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:search_budget closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:search_plan
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:search_plan closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:shared_plus_local_aggregation_table
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '5.02'
+  supporting_task_ids:
+  - '11.01'
+  - '5.01'
+  - '5.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:shared_plus_local_aggregation_table closes through task 5.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:shared_plus_local_decomposition_policy
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '5.02'
+  supporting_task_ids:
+  - '11.01'
+  - '5.01'
+  - '5.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:shared_plus_local_decomposition_policy closes through task 5.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:source_digest
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '6.02'
+  supporting_task_ids:
+  - '11.01'
+  - '6.01'
+  - '6.03'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: lifecycle_artifact:source_digest closes through task 6.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: lifecycle_artifact:split_manifest
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:split_manifest closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: lifecycle_artifact:time_safety_audit
+  row_family: lifecycle_artifact
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.01'
+  - '1.03'
+  - '11.01'
+  - '3.01'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: lifecycle_artifact:time_safety_audit closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_track:adversarial_honesty
+  row_family: benchmark_track
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '9.01'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_track:adversarial_honesty closes through task 9.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_track:predictive_generalization
+  row_family: benchmark_track
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '9.01'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_track:predictive_generalization closes through task 9.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_track:rediscovery
+  row_family: benchmark_track
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '9.01'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_track:rediscovery closes through task 9.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_surface:algorithmic_backend
+  row_family: benchmark_surface
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '3.06'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_surface:algorithmic_backend closes through task 9.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_surface:composition_operator_semantics
+  row_family: benchmark_surface
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '4.01'
+  - '4.02'
+  - '4.03'
+  - '4.04'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: benchmark_surface:composition_operator_semantics closes through task 9.03 under the frozen 2026-04-15 ledger.
+- capability_row_id: benchmark_surface:mechanistic_lane
+  row_family: benchmark_surface
+  primary_owner_task_id: '7.03'
+  supporting_task_ids:
+  - '11.01'
+  - '7.01'
+  - '7.02'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_surface:mechanistic_lane closes through task 7.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_surface:external_evidence_ingestion
+  row_family: benchmark_surface
+  primary_owner_task_id: '6.03'
+  supporting_task_ids:
+  - '11.01'
+  - '6.01'
+  - '6.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: benchmark_surface:external_evidence_ingestion closes through task 6.03 under the frozen 2026-04-15 ledger.
+- capability_row_id: benchmark_surface:portfolio_orchestration
+  row_family: benchmark_surface
+  primary_owner_task_id: '9.04'
+  supporting_task_ids:
+  - '11.01'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: benchmark_surface:portfolio_orchestration closes through task 9.04 under the frozen 2026-04-15 ledger.
+- capability_row_id: benchmark_surface:probabilistic_forecast_surface
+  row_family: benchmark_surface
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '2.05'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: benchmark_surface:probabilistic_forecast_surface closes through task 9.03 under the frozen 2026-04-15 ledger.
+- capability_row_id: benchmark_surface:retained_core_release
+  row_family: benchmark_surface
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_surface:retained_core_release closes through task 9.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_surface:search_class_honesty
+  row_family: benchmark_surface
+  primary_owner_task_id: '9.03'
+  supporting_task_ids:
+  - '11.01'
+  - '3.02'
+  - '3.03'
+  - '3.04'
+  - '3.05'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: benchmark_surface:search_class_honesty closes through task 9.03 under the frozen 2026-04-15 ledger.
+- capability_row_id: benchmark_surface:shared_plus_local_decomposition
+  row_family: benchmark_surface
+  primary_owner_task_id: '5.03'
+  supporting_task_ids:
+  - '11.01'
+  - '5.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  shared_provenance_mode: declared_shared
+  notes: benchmark_surface:shared_plus_local_decomposition closes through task 5.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: repo_checkout_release_provenance
+- capability_row_id: benchmark_surface:robustness_lane
+  row_family: benchmark_surface
+  primary_owner_task_id: '8.03'
+  supporting_task_ids:
+  - '11.01'
+  - '8.01'
+  - '8.02'
+  - '9.03'
+  work_kind: proof
+  closing_evidence_scope_ids:
+  - full_vision
+  shared_provenance_mode: exclusive
+  notes: benchmark_surface:robustness_lane closes through task 8.03 under the frozen 2026-04-15 ledger.
+- capability_row_id: operator_runtime_surface:operator_replay
+  row_family: operator_runtime_surface
+  primary_owner_task_id: '1.03'
+  supporting_task_ids:
+  - '1.00'
+  - '1.04'
+  - '1.05'
+  - '1.06'
+  - '1.07'
+  - '1.08'
+  - '10.02'
+  - '11.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: operator_runtime_surface:operator_replay closes through task 1.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance
+- capability_row_id: operator_runtime_surface:operator_run
+  row_family: operator_runtime_surface
+  primary_owner_task_id: '1.02'
+  supporting_task_ids:
+  - '1.00'
+  - '1.04'
+  - '1.05'
+  - '1.06'
+  - '1.07'
+  - '1.08'
+  - '10.02'
+  - '11.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: operator_runtime_surface:operator_run closes through task 1.02 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance
+- capability_row_id: clean_install_surface:benchmark_execution
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:benchmark_execution closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: clean_install_surface:determinism_same_seed
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:determinism_same_seed closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: clean_install_surface:operator_replay
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:operator_replay closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: clean_install_surface:operator_run
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:operator_run closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: clean_install_surface:packaged_notebook_smoke
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:packaged_notebook_smoke closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: clean_install_surface:performance_runtime_smoke
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:performance_runtime_smoke closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: clean_install_surface:release_status
+  row_family: clean_install_surface
+  primary_owner_task_id: '10.02'
+  supporting_task_ids:
+  - '1.06'
+  - '1.07'
+  - '10.01'
+  - '10.03'
+  - '11.02'
+  work_kind: certification
+  closing_evidence_scope_ids:
+  - shipped_releasable
+  shared_provenance_mode: exclusive
+  notes: clean_install_surface:release_status closes through task 10.02 under the frozen 2026-04-15 ledger.
+- capability_row_id: replay_surface:operator_native_replay
+  row_family: replay_surface
+  primary_owner_task_id: '1.03'
+  supporting_task_ids:
+  - '1.00'
+  - '1.04'
+  - '1.05'
+  - '1.06'
+  - '1.07'
+  - '1.08'
+  - '10.02'
+  - '11.02'
+  work_kind: implementation
+  closing_evidence_scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  shared_provenance_mode: declared_shared
+  notes: replay_surface:operator_native_replay closes through task 1.03 under the frozen 2026-04-15 ledger.
+  shared_provenance_id: public_surface_release_provenance

@@ -1,0 +1,12 @@
+fixture_family_id: panel_shared_local
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/full_vision_certification/panel_shared_local/panel-shared-local-series.csv
+series_count: 3
+entity_count: 3
+evidence_bundle_refs:
+- fixtures/runtime/full_vision_certification/panel_shared_local/shared-local-panel-publication-golden.json
+- fixtures/runtime/full_vision_certification/panel_shared_local/panel-shared-local-note.yaml
+diversity_axes:
+- entity_panel
+- positive_negative_pair

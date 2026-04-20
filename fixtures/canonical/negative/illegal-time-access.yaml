@@ -1,0 +1,91 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: illegal_time_access_bundle
+scenario_id: illegal-time-access
+scenario_class: blocked_publication
+required_modules:
+  - ingestion
+  - snapshotting
+  - timeguard
+  - features
+  - split_planning
+  - evaluation
+  - gate_lifecycle
+  - replay
+required_schema_families:
+  - time_safety_audit_manifest@1.0.0
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/run-lifecycle.yaml
+required_evidence_classes:
+  - predictive_generalization
+anchor_artifacts:
+  - docs/examples/blocked-and-invalid-fixtures.md
+  - docs/search-core.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: publication_blocked
+  terminal_lifecycle_state: publication_blocked
+  claim_lane: null
+  forecast_object_type: point
+  abstention_type: null
+  failure_effect: predictive_path_stops_before_claim_binding_when_time_safety_fails
+  reason_codes:
+    - future_target_feature_detected
+    - feature_available_after_origin
+lifecycle_trace:
+  - state: publication_requested
+    produced_artifact_refs:
+      - schema_name: validation_scope_manifest@1.0.0
+        object_id: illegal_time_access_validation_scope
+  - state: publication_blocked
+    produced_artifact_refs:
+      - schema_name: time_safety_audit_manifest@1.0.0
+        object_id: illegal_time_access_time_safety_audit
+      - schema_name: scorecard_manifest@1.1.0
+        object_id: illegal_time_access_scorecard
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: illegal_time_access_validation_scope
+    module_id: split_planning
+    body:
+      scope_id: illegal_time_access_scope
+      scenario_id: illegal-time-access
+      claim_lane: null
+      forecast_object_type: point
+      anchor_artifact_paths:
+        - docs/examples/blocked-and-invalid-fixtures.md
+        - docs/search-core.md
+  - schema_name: time_safety_audit_manifest@1.0.0
+    object_id: illegal_time_access_time_safety_audit
+    module_id: timeguard
+    body:
+      audit_id: illegal_time_access_time_safety_audit
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: illegal_time_access_validation_scope
+      status: blocked
+      blocking_reason_codes:
+        - future_target_feature_detected
+        - feature_available_after_origin
+      failure_reason_codes:
+        - future_target_feature_detected
+        - feature_available_after_origin
+  - schema_name: scorecard_manifest@1.1.0
+    object_id: illegal_time_access_scorecard
+    module_id: evaluation
+    body:
+      scorecard_id: illegal_time_access_scorecard
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: illegal_time_access_validation_scope
+      time_safety_audit_ref:
+        schema_name: time_safety_audit_manifest@1.0.0
+        object_id: illegal_time_access_time_safety_audit
+      descriptive_status: blocked
+      predictive_status: blocked
+      blocking_reason_codes:
+        - future_target_feature_detected
+        - feature_available_after_origin

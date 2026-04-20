@@ -1,0 +1,319 @@
+version: 1
+kind: candidate_state_machine
+owners:
+  - id: candidate_state_council
+    display_name: Candidate State Council
+global_rules:
+  initial_state: proposed
+  terminal_states:
+    - rejected_pre_freeze
+    - replay_failed
+    - published
+  publication_precondition: replay_verified_required
+  downgrade_rule: descriptive_failure_emits_abstention_but_predictive_or_mechanistic_shortfall_downgrades_claim_lane
+states:
+  - state_id: proposed
+    owner_ref: candidate_state_council
+    stage: search
+    responsible_modules:
+      - candidate_fitting
+    required_artifacts:
+      - candidate_spec
+
+  - state_id: fit
+    owner_ref: candidate_state_council
+    stage: search
+    responsible_modules:
+      - candidate_fitting
+    required_artifacts:
+      - reducer_artifact
+
+  - state_id: frontier_retained
+    owner_ref: candidate_state_council
+    stage: search
+    responsible_modules:
+      - search_planning
+      - candidate_fitting
+    required_artifacts:
+      - frontier
+
+  - state_id: rejected_pre_freeze
+    owner_ref: candidate_state_council
+    stage: search
+    responsible_modules:
+      - candidate_fitting
+      - search_planning
+    required_artifacts:
+      - rejected_diagnostics
+    terminal: true
+
+  - state_id: shared_plus_local_aggregated
+    owner_ref: candidate_state_council
+    stage: search
+    responsible_modules:
+      - shared_plus_local_decomposition
+    required_artifacts:
+      - shared_plus_local_aggregation_table
+
+  - state_id: frozen
+    owner_ref: candidate_state_council
+    stage: candidate_freeze
+    responsible_modules:
+      - search_planning
+      - evaluation_governance
+    required_artifacts:
+      - freeze_event
+      - frozen_shortlist
+
+  - state_id: evaluated_point
+    owner_ref: candidate_state_council
+    stage: evaluation
+    responsible_modules:
+      - evaluation
+    required_artifacts:
+      - prediction_artifact
+
+  - state_id: evaluated_probabilistic
+    owner_ref: candidate_state_council
+    stage: evaluation
+    responsible_modules:
+      - probabilistic_evaluation
+    required_artifacts:
+      - prediction_artifact
+      - calibration_result
+
+  - state_id: robustness_checked
+    owner_ref: candidate_state_council
+    stage: robustness
+    responsible_modules:
+      - robustness
+      - scoring
+    required_artifacts:
+      - point_score_result
+      - robustness_report
+
+  - state_id: mechanistic_evaluated
+    owner_ref: candidate_state_council
+    stage: mechanistic_evaluation
+    responsible_modules:
+      - mechanistic_evidence
+    required_artifacts:
+      - mechanistic_evidence_dossier
+
+  - state_id: claim_emitted
+    owner_ref: candidate_state_council
+    stage: meaning
+    responsible_modules:
+      - gate_lifecycle
+      - claims
+    required_artifacts:
+      - scorecard
+      - claim_card
+
+  - state_id: abstained
+    owner_ref: candidate_state_council
+    stage: meaning
+    responsible_modules:
+      - gate_lifecycle
+      - claims
+    required_artifacts:
+      - scorecard
+      - abstention
+
+  - state_id: replay_verified
+    owner_ref: candidate_state_council
+    stage: replay
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - reproducibility_bundle
+      - run_result
+
+  - state_id: replay_failed
+    owner_ref: candidate_state_council
+    stage: replay
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - replay_verification_report
+    terminal: true
+
+  - state_id: published
+    owner_ref: candidate_state_council
+    stage: publication
+    responsible_modules:
+      - catalog_publishing
+    required_artifacts:
+      - publication_record
+      - catalog_entry
+    terminal: true
+
+transitions:
+  - transition_id: candidate_fit_succeeds
+    owner_ref: candidate_state_council
+    from: proposed
+    to: fit
+    activating_modules:
+      - candidate_fitting
+    guard: candidate satisfies declared grammar and fitting contracts
+
+  - transition_id: candidate_reaches_frontier
+    owner_ref: candidate_state_council
+    from: fit
+    to: frontier_retained
+    activating_modules:
+      - search_planning
+    guard: candidate remains admissible on the frozen frontier axes
+
+  - transition_id: candidate_rejected_before_freeze
+    owner_ref: candidate_state_council
+    from: fit
+    to: rejected_pre_freeze
+    activating_modules:
+      - candidate_fitting
+      - search_planning
+    guard: candidate violates admissibility or is dominated before freeze
+
+  - transition_id: shared_local_state_bound
+    owner_ref: candidate_state_council
+    from: frontier_retained
+    to: shared_plus_local_aggregated
+    activating_modules:
+      - shared_plus_local_decomposition
+    guard: candidate uses shared_plus_local_decomposition
+
+  - transition_id: candidate_freeze_complete
+    owner_ref: candidate_state_council
+    from: frontier_retained
+    to: frozen
+    activating_modules:
+      - search_planning
+      - evaluation_governance
+    guard: candidate is selected into the frozen shortlist without shared-plus-local aggregation
+
+  - transition_id: candidate_freeze_after_shared_local
+    owner_ref: candidate_state_council
+    from: shared_plus_local_aggregated
+    to: frozen
+    activating_modules:
+      - search_planning
+      - evaluation_governance
+    guard: aggregated candidate identity and entity weights are sealed
+
+  - transition_id: point_evaluation_complete
+    owner_ref: candidate_state_council
+    from: frozen
+    to: evaluated_point
+    activating_modules:
+      - evaluation
+    guard: point prediction artifact is emitted for the frozen candidate
+
+  - transition_id: probabilistic_evaluation_complete
+    owner_ref: candidate_state_council
+    from: evaluated_point
+    to: evaluated_probabilistic
+    activating_modules:
+      - probabilistic_evaluation
+    guard: admitted forecast object type is distribution, interval, quantile, or event_probability
+
+  - transition_id: robustness_check_complete
+    owner_ref: candidate_state_council
+    from: evaluated_point
+    to: robustness_checked
+    activating_modules:
+      - scoring
+      - robustness
+    guard: candidate remains point-only after scoring
+
+  - transition_id: robustness_after_probabilistic
+    owner_ref: candidate_state_council
+    from: evaluated_probabilistic
+    to: robustness_checked
+    activating_modules:
+      - scoring
+      - robustness
+    guard: probabilistic evidence has been scored and robustness protocols are closed
+
+  - transition_id: mechanistic_evaluation_complete
+    owner_ref: candidate_state_council
+    from: robustness_checked
+    to: mechanistic_evaluated
+    activating_modules:
+      - mechanistic_evidence
+    guard: mechanistic lane is requested and predictive floor survives
+
+  - transition_id: claim_emission_complete
+    owner_ref: candidate_state_council
+    from: robustness_checked
+    to: claim_emitted
+    activating_modules:
+      - gate_lifecycle
+      - claims
+    guard: descriptive floor passes and no mechanistic branch is required
+
+  - transition_id: claim_emission_after_mechanistic
+    owner_ref: candidate_state_council
+    from: mechanistic_evaluated
+    to: claim_emitted
+    activating_modules:
+      - gate_lifecycle
+      - claims
+    guard: claim lane is resolved after mechanistic evidence closes
+
+  - transition_id: abstention_emission_complete
+    owner_ref: candidate_state_council
+    from: robustness_checked
+    to: abstained
+    activating_modules:
+      - gate_lifecycle
+      - claims
+    guard: descriptive floor fails before mechanistic branch activates
+
+  - transition_id: abstention_after_mechanistic
+    owner_ref: candidate_state_council
+    from: mechanistic_evaluated
+    to: abstained
+    activating_modules:
+      - gate_lifecycle
+      - claims
+    guard: descriptive floor fails or mechanistic branch cannot raise the lane
+
+  - transition_id: replay_verification_complete
+    owner_ref: candidate_state_council
+    from: claim_emitted
+    to: replay_verified
+    activating_modules:
+      - replay
+    guard: replay report status is verified
+
+  - transition_id: abstention_replay_verification_complete
+    owner_ref: candidate_state_council
+    from: abstained
+    to: replay_verified
+    activating_modules:
+      - replay
+    guard: abstention-only bundle verifies successfully
+
+  - transition_id: replay_verification_failed
+    owner_ref: candidate_state_council
+    from: claim_emitted
+    to: replay_failed
+    activating_modules:
+      - replay
+    guard: replay report status is failed
+
+  - transition_id: abstention_replay_verification_failed
+    owner_ref: candidate_state_council
+    from: abstained
+    to: replay_failed
+    activating_modules:
+      - replay
+    guard: abstention-only replay bundle fails verification
+
+  - transition_id: catalog_publication_complete
+    owner_ref: candidate_state_council
+    from: replay_verified
+    to: published
+    activating_modules:
+      - catalog_publishing
+    guard: publication record is written and catalog projection is emitted

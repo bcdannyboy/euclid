@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Euclid Market Workbench</title>
+    <link rel="stylesheet" href="/vendor/katex/katex.min.css" />
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="shell" data-workbench-shell="workspace">
+      <aside class="control-rail" aria-labelledby="control-rail-title">
+        <div class="brand-block">
+          <p class="eyebrow">Analyst Workbench</p>
+          <h1 id="control-rail-title">Euclid Market Workbench</h1>
+          <p class="lede">
+            Frame the target, rerun the operator stack, and inspect benchmark
+            pressure, abstentions, and equations from one working surface.
+          </p>
+        </div>
+
+        <div class="rail-intro">
+          <div>
+            <p class="eyebrow rail-eyebrow">Analysis Controls</p>
+            <p class="field-hint rail-intro-copy">
+              Keep reruns, target selection, and date bounds nearby.
+            </p>
+          </div>
+          <button
+            id="control-rail-toggle"
+            class="subtle-action"
+            type="button"
+            aria-controls="control-rail-body"
+            aria-expanded="true"
+          >
+            Collapse
+          </button>
+        </div>
+
+        <div id="control-rail-body" class="rail-body">
+          <section class="status-block recent-block" aria-labelledby="runtime-status-title">
+            <div class="section-head">
+              <h2 id="runtime-status-title">Runtime Status</h2>
+              <p>Live execution state for the active workbench session.</p>
+            </div>
+            <div class="status-row">
+              <span class="status-label">Runtime</span>
+              <span
+                id="status-line"
+                class="status-value"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                Waiting for input.
+              </span>
+            </div>
+            <div class="status-row">
+              <span class="status-label">API Key</span>
+              <span id="api-key-state" class="status-value" aria-live="polite">Checking…</span>
+            </div>
+          </section>
+
+          <section
+            id="recent-analyses-section"
+            class="recent-block"
+            aria-labelledby="recent-analyses-title"
+            hidden
+            aria-hidden="true"
+          >
+            <div class="section-head">
+              <h2 id="recent-analyses-title">Recent Analyses</h2>
+              <p>Reload a saved workspace without refetching data.</p>
+            </div>
+            <div id="recent-list" class="recent-list"></div>
+          </section>
+
+          <section class="recent-block" aria-labelledby="analysis-controls-title">
+            <div class="section-head">
+              <h2 id="analysis-controls-title">Launch Or Rerun</h2>
+              <p>Define symbol, target, and date bounds for the next pass.</p>
+            </div>
+
+            <form id="analysis-form" class="analysis-form">
+              <label class="field">
+                <span>Symbol</span>
+                <input name="symbol" value="SPY" autocomplete="off" required />
+              </label>
+
+              <label class="field">
+                <span>Target</span>
+                <select id="target-select" name="target_id"></select>
+              </label>
+              <p id="target-hint" class="field-hint"></p>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span>Start</span>
+                  <input name="start_date" type="date" required />
+                </label>
+                <label class="field">
+                  <span>End</span>
+                  <input name="end_date" type="date" required />
+                </label>
+              </div>
+
+              <div class="range-presets">
+                <span class="range-presets-label">Quick range</span>
+                <div class="range-preset-buttons" role="group" aria-label="Quick range">
+                  <button type="button" class="preset-chip" data-range-preset="ytd">YTD</button>
+                  <button type="button" class="preset-chip" data-range-preset="1y">1Y</button>
+                  <button type="button" class="preset-chip" data-range-preset="3y">3Y</button>
+                  <button type="button" class="preset-chip" data-range-preset="5y">5Y</button>
+                </div>
+                <p class="field-hint">
+                  Every new run is forced to an explicit start and end date. Presets only rewrite
+                  those visible dates.
+                </p>
+              </div>
+
+              <label class="field">
+                <span>FMP API Key</span>
+                <input
+                  name="api_key"
+                  type="password"
+                  autocomplete="off"
+                  placeholder="Optional if FMP_API_KEY is exported"
+                />
+              </label>
+
+              <div class="toggle-group">
+                <label class="toggle">
+                  <input type="checkbox" name="include_probabilistic" checked />
+                  <span>Include probabilistic bundle</span>
+                </label>
+                <label class="toggle">
+                  <input type="checkbox" name="include_benchmark" checked />
+                  <span>Include benchmark comparison</span>
+                </label>
+              </div>
+
+              <button class="primary-action" type="submit">Run Analysis</button>
+            </form>
+          </section>
+        </div>
+      </aside>
+
+      <main class="stage">
+        <header id="hero" class="hero">
+          <p class="hero-kicker">No analysis loaded</p>
+          <h2>Set the target and run the workspace.</h2>
+          <p class="hero-copy">
+            The analyst briefing below becomes the primary surface after the first run.
+          </p>
+        </header>
+
+        <section
+          id="analyst-briefing"
+          class="panel explainer-panel analyst-brief"
+          aria-labelledby="analyst-briefing-title"
+        >
+          <div class="panel-head">
+            <div>
+              <p class="mini-kicker">Analyst Briefing</p>
+              <h3 id="analyst-briefing-title">Current analysis framing</h3>
+            </div>
+            <div id="briefing-actions" role="group" aria-label="Briefing actions"></div>
+          </div>
+          <div id="briefing-summary" class="term-grid" aria-live="polite"></div>
+          <p id="briefing-empty" class="empty-state">
+            Run or reopen an analysis to populate the briefing before moving across views.
+          </p>
+        </section>
+
+        <nav class="tab-strip" aria-label="Workbench views" role="tablist" aria-orientation="horizontal">
+          <button
+            id="tab-trigger-overview"
+            class="tab-button active"
+            data-tab="overview"
+            type="button"
+            role="tab"
+            aria-controls="tab-overview"
+            aria-selected="true"
+            tabindex="0"
+          >
+            Overview
+          </button>
+          <button
+            id="tab-trigger-atlas"
+            class="tab-button"
+            data-tab="atlas"
+            type="button"
+            role="tab"
+            aria-controls="tab-atlas"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            Workspace
+          </button>
+          <button
+            id="tab-trigger-point"
+            class="tab-button"
+            data-tab="point"
+            type="button"
+            role="tab"
+            aria-controls="tab-point"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            Point
+          </button>
+          <button
+            id="tab-trigger-probabilistic"
+            class="tab-button"
+            data-tab="probabilistic"
+            type="button"
+            role="tab"
+            aria-controls="tab-probabilistic"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            Probabilistic
+          </button>
+          <button
+            id="tab-trigger-benchmark"
+            class="tab-button"
+            data-tab="benchmark"
+            type="button"
+            role="tab"
+            aria-controls="tab-benchmark"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            Benchmark
+          </button>
+          <button
+            id="tab-trigger-artifacts"
+            class="tab-button"
+            data-tab="artifacts"
+            type="button"
+            role="tab"
+            aria-controls="tab-artifacts"
+            aria-selected="false"
+            tabindex="-1"
+          >
+            Artifacts
+          </button>
+        </nav>
+
+        <section
+          id="tab-overview"
+          class="tab-panel active"
+          role="tabpanel"
+          aria-labelledby="tab-trigger-overview"
+          tabindex="0"
+        ></section>
+        <section
+          id="tab-atlas"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-trigger-atlas"
+          tabindex="0"
+        ></section>
+        <section
+          id="tab-point"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-trigger-point"
+          tabindex="0"
+        ></section>
+        <section
+          id="tab-probabilistic"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-trigger-probabilistic"
+          tabindex="0"
+        ></section>
+        <section
+          id="tab-benchmark"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-trigger-benchmark"
+          tabindex="0"
+        ></section>
+        <section
+          id="tab-artifacts"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-trigger-artifacts"
+          tabindex="0"
+        ></section>
+      </main>
+    </div>
+    <script src="/vendor/echarts/echarts.min.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

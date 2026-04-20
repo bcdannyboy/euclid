@@ -1,0 +1,7 @@
+version: 1
+vocabulary: scope_axes
+title: Scope Axes
+closed: true
+entries:
+  - id: entity_scope
+    description: Fixture entity scope axis.

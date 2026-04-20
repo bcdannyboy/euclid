@@ -1,0 +1,7 @@
+version: 1
+vocabulary: evidence_classes
+title: Evidence Classes
+closed: true
+entries:
+  - id: descriptive_compression
+    description: Fixture descriptive compression evidence class.

@@ -1,0 +1,41 @@
+version: 1
+kind: abstention_type_semantics
+owners:
+  - id: abstention_semantics_council
+    display_name: Abstention Semantics Council
+global_rules:
+  result_mode_for_abstention: abstention_only_publication
+  predictive_nonpromotion_is_not_an_abstention: true
+  descriptive_success_requires_claim_card: true
+contracts:
+  - abstention_type: no_admissible_reducer
+    owner_ref: abstention_semantics_council
+    meaning: No candidate remains descriptively admissible under the bound coding law and data-support checks.
+    blocked_claim_lanes:
+      - descriptive_only
+      - predictively_supported
+      - mechanistically_compatible_hypothesis
+    result_mode: abstention_only_publication
+    reason_codes:
+      - descriptive_gate_failed
+      - no_candidate_survived_search
+  - abstention_type: codelength_comparability_failed
+    owner_ref: abstention_semantics_council
+    meaning: Surviving candidates cannot be compared under one shared codelength policy and reference description law.
+    blocked_claim_lanes:
+      - descriptive_only
+      - predictively_supported
+      - mechanistically_compatible_hypothesis
+    result_mode: abstention_only_publication
+    reason_codes:
+      - codelength_comparability_failed
+  - abstention_type: robustness_failed
+    owner_ref: abstention_semantics_council
+    meaning: A descriptively admissible candidate fails the bound robustness publication requirements.
+    blocked_claim_lanes:
+      - descriptive_only
+      - predictively_supported
+      - mechanistically_compatible_hypothesis
+    result_mode: abstention_only_publication
+    reason_codes:
+      - robustness_failed

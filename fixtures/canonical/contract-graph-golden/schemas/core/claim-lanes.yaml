@@ -1,0 +1,7 @@
+version: 1
+vocabulary: claim_lanes
+title: Claim Lanes
+closed: true
+entries:
+  - id: descriptive_only
+    description: Fixture descriptive-only claim lane.

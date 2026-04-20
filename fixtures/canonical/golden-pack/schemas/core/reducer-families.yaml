@@ -1,0 +1,7 @@
+version: 1
+vocabulary: reducer_families
+title: Reducer Families
+closed: true
+entries:
+  - id: analytic
+    description: Fixture analytic reducer family.

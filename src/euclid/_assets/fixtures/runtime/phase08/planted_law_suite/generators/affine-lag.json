@@ -1,0 +1,25 @@
+{
+  "law_id": "phase08_affine_lag",
+  "family": "affine_lag",
+  "description": "Affine lag planted generator y_t = intercept + phi * y_(t-1).",
+  "equivalence_class": "affine_lag_equivalent",
+  "parameters": {
+    "initial_value": 5.0,
+    "intercept": 1.25,
+    "lag_coefficient": 0.78
+  },
+  "variants": {
+    "exact": {
+      "recovery_class": "equivalent_generator",
+      "max_pointwise_abs_error": 1e-06,
+      "max_predictive_mae": 1e-06
+    },
+    "noisy": {
+      "recovery_class": "same_family_approximation",
+      "min_pointwise_abs_error": 0.01,
+      "max_pointwise_abs_error": 0.07,
+      "max_holdout_mae": 0.04,
+      "forbid_exact_equivalence": true
+    }
+  }
+}

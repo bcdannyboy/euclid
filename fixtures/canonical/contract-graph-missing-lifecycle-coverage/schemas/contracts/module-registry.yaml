@@ -1,0 +1,55 @@
+version: 1
+kind: module_registry
+owners:
+  - id: manifest_registry_owner
+    display_name: Manifest Registry Owner
+  - id: search_planning_owner
+    display_name: Search Planning Owner
+  - id: claims_owner
+    display_name: Claims Owner
+modules:
+  - module: manifest_registry
+    owner_ref: manifest_registry_owner
+    plane: control_plane
+    inputs:
+      - typed_manifest_payload
+    outputs:
+      - run_manifest
+    allowed_dependencies: []
+    forbidden_dependencies:
+      - claims
+    deterministic_obligations:
+      - identical payloads yield identical manifest ids
+    canonical_refs:
+      - docs/system.md
+
+  - module: search_planning
+    owner_ref: search_planning_owner
+    plane: control_plane
+    inputs:
+      - run_manifest
+    outputs:
+      - search_plan
+    allowed_dependencies:
+      - manifest_registry
+    forbidden_dependencies:
+      - claims
+    deterministic_obligations:
+      - identical manifests yield identical search plans
+    canonical_refs:
+      - docs/system.md
+
+  - module: claims
+    owner_ref: claims_owner
+    plane: control_plane
+    inputs:
+      - search_plan
+    outputs:
+      - claim_card
+    allowed_dependencies:
+      - search_planning
+    forbidden_dependencies: []
+    deterministic_obligations:
+      - identical search plans yield identical claim cards
+    canonical_refs:
+      - docs/system.md

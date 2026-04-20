@@ -1,0 +1,769 @@
+version: 1
+map_id: canonical_math_source_map
+phase: canonical_readiness_02
+description: >-
+  Pre-rewrite merge map for Euclid's canonical math layer. Each entry records
+  the strongest current precursor for a canonical math object and whether the
+  current formulation can be promoted directly, must be synthesized across
+  multiple sources, or exists only as retained-boundary language that later
+  phases must replace with positive canon or an exact non-admission law.
+decision_vocab:
+  - id: promote_directly
+    meaning: >-
+      The current formulation is already affirmative, closed enough to carry
+      forward, and only needs editorial normalization in the canonical layer.
+  - id: synthesize
+    meaning: >-
+      The canonical object needs merged content from multiple sources or a scope
+      generalization that no single precursor closes on its own.
+  - id: replace_boundary_only
+    meaning: >-
+      The current source contributes only deferment, prohibition, or reentry
+      scaffolding; later phases must replace it with positive semantics or an
+      explicit Euclid-wide non-admission law.
+document_posture_vocab:
+  - id: affirmative_core
+    meaning: Primary affirmative mathematical law written mostly in prose math.
+  - id: contract_core
+    meaning: Primary affirmative manifest or policy contract.
+  - id: mixed_contract_with_boundary
+    meaning: >-
+      Contains real positive contracts, but the surrounding framing still leans
+      on retained-scope or deferred-surface language.
+  - id: boundary_only
+    meaning: Deferred-domain or blocked-request surface with no positive math.
+source_documents:
+  - path: docs/search-core.md
+    posture: affirmative_core
+    strongest_for:
+      - admitted_data_object
+      - target_transform_and_quantization_law
+      - observation_model_contract
+      - total_codelength_law
+      - reducer_state_semantics
+      - reference_description_and_descriptive_gain
+      - descriptive_comparability_and_descriptive_abstention
+      - point_forecast_object_and_point_scoring_law
+    notes: >-
+      Strongest affirmative precursor for the base Euclid data and coding law,
+      but still retained-scope and point-only.
+  - path: docs/modeling-pipeline.md
+    posture: affirmative_core
+    strongest_for:
+      - point_forecast_object_and_point_scoring_law
+      - probabilistic_forecast_object_family
+      - forecast_object_specific_calibration_law
+    notes: >-
+      Strong on type-matched point evaluation; only negative on probabilistic
+      forecast objects and calibration.
+  - path: docs/search-core.md
+    posture: boundary_only
+    strongest_for:
+      - full_composition_surface
+      - shared_plus_local_math_and_evaluation_law
+    notes: >-
+      Boundary-only placeholder for shared-plus-local language. No active
+      pooling, exchangeability, coding, or multi-entity evaluation law exists
+      here yet.
+  - path: docs/modeling-pipeline.md
+    posture: boundary_only
+    strongest_for:
+      - mechanistic_evidence_and_lane_law
+    notes: >-
+      Boundary-only placeholder for mechanistic language. It blocks
+      mechanistic claims but does not define positive mechanistic semantics.
+  - path: docs/modeling-pipeline.md
+    posture: affirmative_core
+    strongest_for:
+      - null_protocol_and_null_usage_law
+      - perturbation_stability_and_leakage_law
+    notes: >-
+      Strongest affirmative precursor for nulls, perturbations, retention
+      metrics, leakage canaries, and conservative robustness aggregation.
+  - path: docs/search-core.md
+    posture: mixed_contract_with_boundary
+    strongest_for:
+      - full_reducer_family_surface
+      - algorithmic_search_stage_classes_and_frontier_semantics
+      - canonicalization_and_observational_equivalence
+    notes: >-
+      Strong on honest search-stage classes and frontier semantics, but it
+      still frames algorithmic publication through retained-scope deferral.
+  - path: docs/modeling-pipeline.md
+    posture: affirmative_core
+    strongest_for:
+      - claim_ladder_and_output_semantics
+      - predictive_comparison_object_and_stage_protocol
+      - confirmatory_test_selection_multiplicity_and_promotion
+    notes: >-
+      Strongest affirmative precursor for predictive governance, multiplicity,
+      holdout exhaustion, and promotion law. The filename is historical.
+  - path: docs/search-core.md
+    posture: contract_core
+    strongest_for:
+      - target_transform_and_quantization_law
+      - observation_model_contract
+      - total_codelength_law
+      - reference_description_and_descriptive_gain
+      - descriptive_comparability_and_descriptive_abstention
+    notes: >-
+      Strongest machine-readable contract source for the retained coding policy
+      and structure-code interface.
+  - path: docs/modeling-pipeline.md
+    posture: contract_core
+    strongest_for:
+      - point_forecast_object_and_point_scoring_law
+    notes: >-
+      Strongest machine-readable contract for point-score policies, comparable
+      score results, and forbidden score shortcuts.
+  - path: docs/modeling-pipeline.md
+    posture: contract_core
+    strongest_for:
+      - forecast_object_specific_calibration_law
+    notes: >-
+      Strong retained point-forecast non-applicability contract, but no
+      positive probabilistic calibration laws.
+  - path: docs/modeling-pipeline.md
+    posture: contract_core
+    strongest_for:
+      - predictive_comparison_object_and_stage_protocol
+      - confirmatory_test_selection_multiplicity_and_promotion
+    notes: >-
+      Strongest machine-readable source for baseline governance, comparison
+      universe accounting, event logs, and predictive gate policy.
+  - path: docs/modeling-pipeline.md
+    posture: contract_core
+    strongest_for:
+      - perturbation_stability_and_leakage_law
+    notes: >-
+      Strongest machine-readable source for perturbation protocols, retention
+      metrics, leakage canaries, and robustness report rules.
+  - path: docs/search-core.md
+    posture: mixed_contract_with_boundary
+    strongest_for:
+      - full_reducer_family_surface
+      - algorithmic_dsl_fragment
+      - canonicalization_and_observational_equivalence
+    notes: >-
+      Strong positive DSL fragment definition, but still explicitly framed as a
+      deferred exploratory surface rather than a fully admitted family law.
+  - path: docs/modeling-pipeline.md
+    posture: boundary_only
+    strongest_for:
+      - mechanistic_evidence_and_lane_law
+    notes: >-
+      Strong machine-readable boundary policy for blocked mechanistic requests,
+      but no positive evidence semantics.
+  - path: docs/search-core.md
+    posture: boundary_only
+    strongest_for:
+      - full_composition_surface
+      - shared_plus_local_math_and_evaluation_law
+    notes: >-
+      Strong machine-readable boundary policy for blocked shared-plus-local
+      requests, but no positive decomposition or evaluation law.
+supplemental_support_refs:
+  - path: schemas/core/reducer-families.yaml
+    purpose: >-
+      Stable current vocabulary for retained primitive families plus the
+      algorithmic extension-surface family id.
+  - path: schemas/core/composition-operators.yaml
+    purpose: >-
+      Stable current vocabulary for `piecewise`, `additive_residual`,
+      `regime_conditioned`, and `shared_plus_local_decomposition` while the
+      compared math/spec corpus lacks a full affirmative operator law.
+  - path: schemas/core/claim-lanes.yaml
+    purpose: Stable current lane id closure while math docs only partially close the ladder.
+  - path: schemas/core/forecast-object-types.yaml
+    purpose: >-
+      Stable current forecast-object id closure while the compared math/spec
+      corpus only closes the retained point branch.
+canonical_objects:
+  - object_id: admitted_data_object
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/admitted-data.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## 1. Admitted Data'
+      rationale: >-
+        Defines the admitted tuple, finite-target rule, missing-target
+        exclusion, and predictive time-safety precondition affirmatively.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## Retained-Scope Contract Rules'
+        rationale: >-
+          Confirms the transform, base-measure, and quantization invariants that
+          the admitted data object binds into the coding law.
+    rewrite_requirements: []
+  - object_id: target_transform_and_quantization_law
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/codelength-policy.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## 2. Target Transform and Quantization'
+      rationale: >-
+        States the transform, quantization bin law, representative value, and
+        binding failure condition as explicit math.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## `target_transform_manifest@1.0.0`'
+          - '## `base_measure_policy_manifest@1.0.0`'
+          - '## `codelength_policy_manifest@1.1.0`'
+        rationale: >-
+          Supplies the machine-bindable manifest shapes and closed enum values
+          for the same law.
+    rewrite_requirements: []
+  - object_id: observation_model_contract
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/observation-models.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## 3. Observation Model Requirement'
+      rationale: >-
+        Defines the shared transformed-domain density and CDF requirements plus
+        the retained observation-model family closure.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## `codelength_policy_manifest@1.1.0`'
+        rationale: >-
+          Closes the cross-candidate equality conditions that observation-model
+          refs must satisfy for comparability.
+    rewrite_requirements: []
+  - object_id: total_codelength_law
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/codelength-policy.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## 4. Exact MDL Law'
+        - '### 4.1 Family code'
+        - '### 4.2 Structure code'
+        - '### 4.3 Literal code'
+        - '### 4.4 Parameter code'
+        - '### 4.5 State code'
+        - '### 4.6 Integer code law'
+        - '### 4.7 Data code'
+      rationale: >-
+        Already closes the full additive code law and each retained term as
+        explicit mathematics.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## External Upstream Schema'
+          - '## `codelength_policy_manifest@1.1.0`'
+          - '## Deterministic Behavior'
+        rationale: >-
+          Supplies the upstream structure-code manifest and exact machine-bound
+          policy fields for the same law.
+    rewrite_requirements: []
+  - object_id: reducer_state_semantics
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/reducer-state.yaml
+    decision: synthesize
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '### 4.5 State code'
+      rationale: >-
+        Strongest current statement of how latent state enters the coding law.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## `codelength_policy_manifest@1.1.0`'
+          - '## Deterministic Behavior'
+        rationale: >-
+          Supplies the exact state-code family and lattice-step policy surface.
+      - path: docs/search-core.md
+        sections:
+          - '## `algorithmic_dsl_manifest@1.1.0`'
+          - '## Deterministic Behavior'
+          - '## Testing'
+        rationale: >-
+          Supplies next-state slots, simultaneous state updates, and bounded DSL
+          state access that later algorithmic state semantics must align to.
+    rewrite_requirements:
+      - unify descriptive state-code semantics with bounded algorithmic next-state semantics
+      - distinguish coded latent state from runtime update rules without hidden implementer assumptions
+  - object_id: reference_description_and_descriptive_gain
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/codelength-policy.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## 5. Reference Description and Descriptive Gain'
+        - '### `description_gain_ratio` removal'
+      rationale: >-
+        Defines the retained reference code and descriptive gain in bits and
+        explicitly removes the ratio shortcut from the binding contract.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## `reference_description_policy_manifest@1.1.0`'
+          - '## Deterministic Behavior'
+        rationale: >-
+          Supplies the machine-readable reference-description policy and the
+          exact output quantities that implementations must compute.
+    rewrite_requirements: []
+  - object_id: descriptive_comparability_and_descriptive_abstention
+    domain: core_math
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/codelength-policy.yaml
+      - schemas/contracts/abstentions.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## 6. Cross-Candidate Comparability and Abstention'
+      rationale: >-
+        Already closes the shared-policy equality conditions, comparability
+        failure reasons, and descriptive abstention trigger.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## `codelength_policy_manifest@1.1.0`'
+          - '## Failure Behavior'
+        rationale: >-
+          Supplies the same equality conditions and candidate-level failure
+          reasons in machine-readable contract language.
+    rewrite_requirements: []
+  - object_id: full_reducer_family_surface
+    domain: reducer_and_composition
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/core/reducer-families.yaml
+    decision: synthesize
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## Purpose'
+        - '### 4.1 Family code'
+      rationale: >-
+        Strongest positive treatment of retained primitive families inside the
+        coding law.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## Purpose'
+          - '## Binding Search Discipline'
+          - '## Search Modes'
+          - '## Search Outputs'
+        rationale: >-
+          Supplies the honest search-stage and output semantics that make the
+          algorithmic family legible as an extension surface.
+      - path: docs/search-core.md
+        sections:
+          - '## Purpose'
+          - '## Retained Fragment Boundary'
+          - '## `algorithmic_dsl_manifest@1.1.0`'
+        rationale: >-
+          Supplies the bounded positive fragment for algorithmic programs.
+      - path: schemas/core/reducer-families.yaml
+        sections: []
+        rationale: Stable current family ids and descriptions.
+    rewrite_requirements:
+      - merge retained primitive family law with the positive bounded algorithmic family surface
+      - replace retained-public deferral wording with affirmative family definitions plus exact publication or non-admission laws
+  - object_id: full_composition_surface
+    domain: reducer_and_composition
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/core/composition-operators.yaml
+      - schemas/contracts/composition-semantics.yaml
+    decision: synthesize
+    strongest_precursor:
+      path: schemas/core/composition-operators.yaml
+      sections: []
+      rationale: >-
+        Stable current composition vocabulary for `piecewise`,
+        `additive_residual`, `regime_conditioned`, and
+        `shared_plus_local_decomposition`.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## Retained Scope Boundary'
+          - '## Reentry Boundary'
+        rationale: >-
+          Supplies the current shared-plus-local boundary and the exact missing
+          contract classes for later activation.
+      - path: docs/search-core.md
+        sections:
+          - '## Authoritative Manifest'
+          - '## Deterministic Behavior'
+        rationale: >-
+          Supplies the machine-readable blocked-request policy for the current
+          shared-plus-local placeholder.
+    rewrite_requirements:
+      - add affirmative math for `piecewise`, `additive_residual`, and `regime_conditioned`
+      - decide whether shared-plus-local remains a Euclid extension surface or becomes a positive canonical operator family
+      - stop relying on the absence of math/spec definitions as an implicit policy
+  - object_id: point_forecast_object_and_point_scoring_law
+    domain: forecast_semantics
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/scoring.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Retained Forecast-Type Evaluation Matrix'
+        - '## Exact Point-Loss Law'
+        - '## Forbidden Score Shortcuts'
+      rationale: >-
+        Already closes the retained point object, admissible point losses,
+        common complete-horizon panel, and forbidden score shortcuts.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## `point_score_policy_manifest@1.0.0`'
+          - '## Exact Point-Loss Law'
+          - '## `point_score_result_manifest@1.0.0`'
+        rationale: >-
+          Supplies the exact point-score manifest and result object that
+          implementations must materialize.
+      - path: docs/search-core.md
+        sections:
+          - '## 7. Predictive Risk for Retained Scope'
+        rationale: >-
+          Keeps the point-score object aligned with the descriptive coding-law
+          backbone and shared common-panel object.
+    rewrite_requirements: []
+  - object_id: probabilistic_forecast_object_family
+    domain: forecast_semantics
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/core/forecast-object-types.yaml
+      - schemas/contracts/forecast-object-types.yaml
+    decision: synthesize
+    strongest_precursor:
+      path: schemas/core/forecast-object-types.yaml
+      sections: []
+      rationale: >-
+        Stable current object ids for `distribution`, `interval`, `quantile`,
+        and `event_probability`.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Scope Boundary'
+          - '## Calibration Boundary'
+        rationale: >-
+          Names the forecast-object ids only negatively through current deferral
+          and point-only evaluation scope.
+      - path: docs/search-core.md
+        sections:
+          - '## 7. Predictive Risk for Retained Scope'
+        rationale: Notes that probabilistic publication is currently out of scope.
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Purpose'
+          - '## Retained Forecast-Type Matrix'
+        rationale: >-
+          Confirms that only the point branch is currently closed and that
+          probabilistic branches still need positive contracts.
+    rewrite_requirements:
+      - define affirmative object semantics for distribution, interval, quantile, and event probability outputs
+      - specify which evaluation and calibration laws attach to each forecast object
+      - preserve exact non-admission laws only where a forecast object is outside Euclid altogether
+  - object_id: forecast_object_specific_calibration_law
+    domain: forecast_semantics
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/calibration.yaml
+    decision: synthesize
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Retained Forecast-Type Matrix'
+        - '## `calibration_contract_manifest@1.0.0`'
+        - '## `calibration_result_manifest@1.0.0`'
+      rationale: >-
+        Cleanest current contract for the point-forecast terminal-not-applicable
+        branch.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Calibration Boundary'
+        rationale: >-
+          States why calibration is not meaningful for the retained point object
+          and why probabilistic calibration was left unopened.
+    rewrite_requirements:
+      - keep the point branch as terminal not applicable
+      - add positive calibration semantics for any probabilistic forecast objects that remain inside Euclid
+      - close abstention and failure behavior for each forecast-object branch
+  - object_id: claim_ladder_and_output_semantics
+    domain: claim_and_output
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/core/claim-lanes.yaml
+      - schemas/contracts/claim-lanes.yaml
+      - schemas/contracts/abstention-types.yaml
+    decision: synthesize
+    strongest_precursor:
+      path: schemas/core/claim-lanes.yaml
+      sections: []
+      rationale: Stable current lane ids and current retained versus extension-surface split.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## 8. Retained Claim Ceilings'
+        rationale: Supplies the retained descriptive and predictive ceilings.
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Confirmatory Promotion Law'
+          - '## Forbidden Summary Semantics'
+        rationale: >-
+          Supplies the predictive promotion boundary and forbids confidence
+          fields from standing in for lane meaning.
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Retained Scope Boundary'
+          - '## Allowed and Forbidden Language'
+        rationale: Supplies the current blocked mechanistic branch.
+    rewrite_requirements:
+      - separate descriptive, predictive, probabilistic, and mechanistic meaning without collapsing one into another
+      - close what each lane may publish, what evidence each lane requires, and how typed abstention interacts with blocked promotion
+  - object_id: predictive_comparison_object_and_stage_protocol
+    domain: predictive_governance
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/evaluation-governance.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Prequential Comparison Object'
+        - '## Stage Protocol'
+      rationale: >-
+        Already defines the exact per-origin complete-horizon differential and
+        the full retained stage protocol in affirmative terms.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Required External Contracts'
+          - '## Retained-Scope Rules'
+        rationale: >-
+          Supplies the machine-bindable comparison policy and governance counts.
+    rewrite_requirements: []
+  - object_id: confirmatory_test_selection_multiplicity_and_promotion
+    domain: predictive_governance
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/evaluation-governance.yaml
+      - schemas/contracts/predictive-gate-policy.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Test-Selection Regime'
+        - '### Exact Retained Diebold-Mariano Procedure'
+        - '## Multiplicity Law'
+        - '## Holdout Exhaustion and Reuse'
+        - '## Fresh Replication Triggers'
+        - '## Confirmatory Promotion Law'
+      rationale: >-
+        Closes the retained confirmatory test, multiplicity policy, holdout
+        exhaustion triggers, and machine-decidable promotion law.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Required External Contracts'
+          - '## Stage Execution Rules'
+          - '## Failure Behavior'
+        rationale: >-
+          Supplies the machine-readable objects and enum closures for the same
+          confirmatory law.
+    rewrite_requirements: []
+  - object_id: null_protocol_and_null_usage_law
+    domain: robustness
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/null-protocol.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Retained Null Law'
+        - '## Null Usage Boundary'
+      rationale: >-
+        Already closes the surrogate generator, Monte Carlo p-value, rejection
+        rule, and descriptive-only usage boundary.
+    supporting_precursors: []
+    rewrite_requirements: []
+  - object_id: perturbation_stability_and_leakage_law
+    domain: robustness
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/robustness.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Perturbation Families'
+        - '## Retention Metrics'
+        - '## Stability Aggregation'
+        - '## Leakage Canary Types'
+        - '## Leakage Canary Pass Rule'
+        - '## Final Robustness Law'
+      rationale: >-
+        Already closes the perturbation families, rate metrics, conservative
+        aggregation, canary types, and final robustness status law.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## `retention_metric_manifest@1.0.0`'
+          - '## `perturbation_protocol_manifest@1.1.0`'
+          - '## `leakage_canary_manifest@1.0.0`'
+          - '## `leakage_canary_result_manifest@1.0.0`'
+          - '## `robustness_report_manifest@1.1.0`'
+        rationale: >-
+          Supplies the exact machine-readable protocol surface for the same
+          robustness law.
+    rewrite_requirements: []
+  - object_id: algorithmic_dsl_fragment
+    domain: search_and_dsl
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/algorithmic-dsl.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## Retained Fragment Boundary'
+        - '## `algorithmic_dsl_manifest@1.1.0`'
+        - '## Deterministic Behavior'
+      rationale: >-
+        Already closes the admitted DSL fragment, operator inventory, state-slot
+        bound, lag bound, and deterministic execution rules.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## Required External Contracts'
+        rationale: >-
+          Connects the DSL fragment to the search-policy and canonicalization
+          contracts that later math rewrites must reference.
+    rewrite_requirements: []
+  - object_id: algorithmic_search_stage_classes_and_frontier_semantics
+    domain: search_and_dsl
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/search-classes.yaml
+      - schemas/contracts/search-frontier.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## Binding Search Discipline'
+        - '## Search Modes'
+        - '## `algorithmic_search_policy_manifest@1.0.0`'
+        - '## Exact-Search Eligibility'
+        - '## Heuristic-Search Disclosure Obligations'
+        - '## `algorithmic_frontier_policy_manifest@1.0.0`'
+        - '## Frontier Semantics'
+        - '## Search Outputs'
+        - '## Abstention Rule'
+      rationale: >-
+        Already distinguishes exact finite enumeration, bounded heuristic,
+        equality-saturation heuristic, and stochastic heuristic search honestly
+        and closes frontier semantics plus disclosure obligations.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## `algorithmic_dsl_manifest@1.1.0`'
+        rationale: Supplies the fragment bounds that exactness claims depend on.
+    rewrite_requirements: []
+  - object_id: canonicalization_and_observational_equivalence
+    domain: search_and_dsl
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/rewrite-guarantees.yaml
+    decision: promote_directly
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## Canonicalization and Equivalence Scope'
+      rationale: >-
+        Cleanly separates canonicalization guarantees from global semantic
+        identity and from heuristic duplicate screening.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## Deterministic Behavior'
+        rationale: >-
+          Confirms that canonicalization is deterministic but not a universal
+          semantic identity theorem.
+    rewrite_requirements: []
+  - object_id: shared_plus_local_math_and_evaluation_law
+    domain: extension_surfaces
+    canonical_targets:
+      - docs/search-core.md
+      - schemas/contracts/shared-plus-local-evaluation.yaml
+    decision: replace_boundary_only
+    strongest_precursor:
+      path: docs/search-core.md
+      sections:
+        - '## Authoritative Manifest'
+        - '## Deterministic Behavior'
+        - '## Reentry Boundary'
+      rationale: >-
+        Strongest current source is a blocked-request policy with reentry
+        requirements, not a positive shared-plus-local law.
+    supporting_precursors:
+      - path: docs/search-core.md
+        sections:
+          - '## Retained Scope Boundary'
+          - '## Literature Boundary'
+          - '## Reentry Boundary'
+        rationale: Supplies the current rationale for why the placeholder stayed deferred.
+    rewrite_requirements:
+      - define positive shared and local parameter objects, if Euclid is going to admit them
+      - define shared-local coding comparability, evaluation scope, and unseen-entity behavior
+      - otherwise replace the placeholder with an exact Euclid-wide non-admission law instead of retained-v1 boundary prose
+  - object_id: mechanistic_evidence_and_lane_law
+    domain: extension_surfaces
+    canonical_targets:
+      - docs/modeling-pipeline.md
+      - schemas/contracts/mechanistic-evidence.yaml
+    decision: replace_boundary_only
+    strongest_precursor:
+      path: docs/modeling-pipeline.md
+      sections:
+        - '## Authoritative Manifest'
+        - '## Deterministic Behavior'
+        - '## Reentry Boundary'
+      rationale: >-
+        Strongest current source is a blocked mechanistic-lane policy and list
+        of missing future contracts, not a positive mechanistic evidence law.
+    supporting_precursors:
+      - path: docs/modeling-pipeline.md
+        sections:
+          - '## Retained Scope Boundary'
+          - '## Literature Boundary'
+          - '## Reentry Boundary'
+          - '## Allowed and Forbidden Language'
+        rationale: Supplies the current rationale for why the mechanistic lane stayed deferred.
+    rewrite_requirements:
+      - define positive mechanistic evidence objects, independence requirements, and publication semantics if Euclid is going to admit a mechanistic lane
+      - otherwise replace the retained-v1 boundary framing with an exact Euclid-wide non-admission law

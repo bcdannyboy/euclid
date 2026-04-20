@@ -1,0 +1,18 @@
+version: 1
+kind: shared_local_freeze_refit_protocols
+owners:
+  - id: shared_local_freeze_refit_protocol_owner
+    display_name: Shared Local Freeze Refit Protocol Owner
+global_rules:
+  shared_component_must_freeze_before_confirmatory_access: true
+  local_component_refit_scope: entity_local_training_rows_only
+  post_holdout_mutation_forbidden: true
+contracts:
+  - schema_name: shared_local_freeze_refit_protocol_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    required_fields:
+      - shared_component_freeze_rule
+      - local_component_refit_rule
+      - confirmatory_access_rule
+      - replay_requirements
+    publication_rule: freeze_and_refit_protocol_must_match_across_comparison_universe

@@ -1,0 +1,737 @@
+{
+  "analysis_version": "worker4-regression-2026-04-18",
+  "analysis_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close/analysis.json",
+  "workspace_root": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close",
+  "request": {
+    "symbol": "GLD",
+    "target_id": "price_close",
+    "start_date": "2021-04-18",
+    "end_date": "2026-04-18",
+    "include_probabilistic": true,
+    "include_benchmark": true
+  },
+  "dataset": {
+    "symbol": "GLD",
+    "target": {
+      "id": "price_close",
+      "label": "Price Close",
+      "description": "Predict the raw close level for each trading day.",
+      "y_axis_label": "Close",
+      "recommended": false,
+      "recommended_reason": "Raw levels are useful for replaying a published point path, but they often collapse into near-persistence equations.",
+      "analysis_note": "Raw close levels usually reward persistence and drift. Treat any descriptive equation on this target as a level-tracking summary, not evidence of deeper market structure."
+    },
+    "rows": 4,
+    "stats": {
+      "latest_value": 167.04,
+      "latest_event_time": "2021-04-22T00:00:00Z"
+    },
+    "date_range": {
+      "start": "2021-04-19T00:00:00Z",
+      "end": "2021-04-22T00:00:00Z"
+    },
+    "dataset_csv": "__FIXTURE_DATASET_CSV__",
+    "series": [
+      {
+        "event_time": "2021-04-19T00:00:00Z",
+        "available_at": "2021-04-19T21:00:00Z",
+        "observed_value": 165.89,
+        "open": 165.91,
+        "high": 166.44,
+        "low": 165.72,
+        "close": 165.89,
+        "volume": 5836595
+      },
+      {
+        "event_time": "2021-04-20T00:00:00Z",
+        "available_at": "2021-04-20T21:00:00Z",
+        "observed_value": 166.48,
+        "open": 165.65,
+        "high": 166.81,
+        "low": 165.62,
+        "close": 166.48,
+        "volume": 6526589
+      },
+      {
+        "event_time": "2021-04-21T00:00:00Z",
+        "available_at": "2021-04-21T21:00:00Z",
+        "observed_value": 168.13,
+        "open": 167.18,
+        "high": 168.39,
+        "low": 167.15,
+        "close": 168.13,
+        "volume": 8432265
+      },
+      {
+        "event_time": "2021-04-22T00:00:00Z",
+        "available_at": "2021-04-22T21:00:00Z",
+        "observed_value": 167.04,
+        "open": 167.11,
+        "high": 167.53,
+        "low": 166.4901,
+        "close": 167.04,
+        "volume": 7753234
+      }
+    ]
+  },
+  "operator_point": {
+    "status": "completed",
+    "selected_family": "drift",
+    "result_mode": "abstention_only_publication",
+    "replay_verification": "verified",
+    "confirmatory_primary_score": 5.631576,
+    "publication": {
+      "status": "abstained",
+      "headline": "Operator replay verified a candidate, but the point lane did not clear publication gates.",
+      "reason_codes": [
+        "robustness_failed",
+        "perturbation_protocol_failed"
+      ]
+    },
+    "abstention": {
+      "abstention_id": "operator_abstention_v1",
+      "abstention_type": "robustness_failed",
+      "blocked_ceiling": "descriptive_only",
+      "reason_codes": [
+        "robustness_failed",
+        "perturbation_protocol_failed"
+      ]
+    },
+    "comparison": {
+      "comparison_class_status": "comparable",
+      "candidate_beats_baseline": true,
+      "baseline_id": "constant_baseline"
+    },
+    "scorecard": {
+      "descriptive_status": "blocked_robustness_failed",
+      "predictive_status": "not_requested",
+      "predictive_reason_codes": [
+        "predictive_not_requested"
+      ],
+      "descriptive_reason_codes": [
+        "robustness_failed",
+        "perturbation_protocol_failed"
+      ]
+    },
+    "equation": {
+      "label": "y(t) = 166.48 + 0.218356*t",
+      "structure_signature": "drift:intercept=166.48,slope=0.218356",
+      "parameter_summary": {
+        "intercept": 166.48,
+        "slope": 0.218356
+      },
+      "curve": [
+        {
+          "event_time": "2021-04-19T00:00:00Z",
+          "fitted_value": 166.48
+        },
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "fitted_value": 166.698356
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "fitted_value": 166.916712
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "fitted_value": 167.135068
+        }
+      ],
+      "family_id": "drift"
+    },
+    "chart": {
+      "actual_series": [
+        {
+          "event_time": "2021-04-19T00:00:00Z",
+          "observed_value": 165.89
+        },
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "observed_value": 166.48
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "observed_value": 168.13
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "observed_value": 167.04
+        }
+      ],
+      "equation_curve": [
+        {
+          "event_time": "2021-04-19T00:00:00Z",
+          "fitted_value": 166.48
+        },
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "fitted_value": 166.698356
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "fitted_value": 166.916712
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "fitted_value": 167.135068
+        }
+      ]
+    },
+    "manifest_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close/manifests/operator-point.yaml",
+    "output_root": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close/runs/point",
+    "search_scope": {
+      "scope_kind": "narrow_release_surface",
+      "headline": "Operator point lane only searched the current-release surface (constant, drift, linear_trend, seasonal_naive).",
+      "workflow_id": "euclid_current_release_candidate",
+      "search_class": "bounded_heuristic",
+      "proposal_limit": null,
+      "family_ids": [
+        "constant",
+        "drift",
+        "linear_trend",
+        "seasonal_naive"
+      ]
+    },
+    "publishable": false
+  },
+  "descriptive_fit": {
+    "status": "completed",
+    "source": "benchmark_local_selection",
+    "submitter_id": "portfolio_orchestrator",
+    "candidate_id": "analytic_lag1_affine",
+    "family_id": "analytic",
+    "metrics": {
+      "total_code_bits": 6970.0
+    },
+    "honesty_note": "Descriptive fit from the broader benchmark-local search winner; not an operator publication.",
+    "semantic_audit": {
+      "classification": "near_persistence",
+      "headline": "Raw close descriptive fit is effectively a persistence equation with a tiny intercept.",
+      "summary": "Against a naive y(t)=y(t-1) baseline, this fit only improves one-step MAE by 3.5%. Treat it as a level-tracking summary, not a meaningful structural market equation.",
+      "delta_form_label": "\u0394y(t) = -0.160657 + 0.00169*y(t-1)",
+      "fit_mae": 1.0710057382611542,
+      "naive_last_value_mae": 1.110000000000004,
+      "relative_improvement_vs_naive_last_value": 0.03512996553049528,
+      "recommended_target_id": "daily_return",
+      "recommended_target_label": "Daily Return",
+      "recommended_target_reason": "Better default for interpretable descriptive equations because it makes level persistence explicit instead of hiding it inside raw prices."
+    },
+    "equation": {
+      "label": "y(t) = -0.160657 + 1.00169*y(t-1)",
+      "structure_signature": "sha256:e0e2eae48783289be358ab94ddc810c8ceb0f2172ec4245dc5da7b6aedc25114",
+      "parameter_summary": {
+        "intercept": -0.160657374652,
+        "lag_coefficient": 1.001690453969
+      },
+      "curve": [
+        {
+          "event_time": "2021-04-19T00:00:00Z",
+          "fitted_value": 165.89
+        },
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "fitted_value": 166.00977203426538
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "fitted_value": 166.6007694021071
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "fitted_value": 168.25355865115594
+        }
+      ],
+      "candidate_id": "analytic_lag1_affine",
+      "family_id": "analytic",
+      "delta_form_label": "\u0394y(t) = -0.160657 + 0.00169*y(t-1)"
+    },
+    "chart": {
+      "actual_series": [
+        {
+          "event_time": "2021-04-19T00:00:00Z",
+          "observed_value": 165.89
+        },
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "observed_value": 166.48
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "observed_value": 168.13
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "observed_value": 167.04
+        }
+      ],
+      "equation_curve": [
+        {
+          "event_time": "2021-04-19T00:00:00Z",
+          "fitted_value": 165.89
+        },
+        {
+          "event_time": "2021-04-20T00:00:00Z",
+          "fitted_value": 166.00977203426538
+        },
+        {
+          "event_time": "2021-04-21T00:00:00Z",
+          "fitted_value": 166.6007694021071
+        },
+        {
+          "event_time": "2021-04-22T00:00:00Z",
+          "fitted_value": 168.25355865115594
+        }
+      ]
+    },
+    "selection_scope": "shared_planning_cir_only",
+    "selection_rule": "min_total_code_bits_then_max_description_gain_then_min_structure_code_bits_then_min_canonical_byte_length_then_candidate_id",
+    "law_eligible": true,
+    "law_rejection_reason_codes": [],
+    "claim_class": "descriptive_fit",
+    "is_law_claim": false
+  },
+  "benchmark": {
+    "status": "completed",
+    "track_summary": {
+      "abstention_mode": "no_publishable_winner",
+      "replay_verification_status": "verified",
+      "forecast_object_type": "point",
+      "score_law": "mean_absolute_error"
+    },
+    "descriptive_fit_status": {
+      "status": "available",
+      "headline": "Benchmark-local descriptive fit is available for this run.",
+      "reason_codes": []
+    },
+    "portfolio_selection": {
+      "status": "selected",
+      "winner_submitter_id": "analytic_backend",
+      "winner_candidate_id": "analytic_lag1_affine",
+      "selection_explanation": "Winner analytic_backend / analytic_lag1_affine; 6970 total code bits; runner-up algorithmic_search_backend / algorithmic_last_observation at 7013; selected by min total code bits then max description gain then min structure code bits then min canonical byte length then candidate id",
+      "selection_explanation_raw": {
+        "selection_rule": "min_total_code_bits_then_max_description_gain_then_min_structure_code_bits_then_min_canonical_byte_length_then_candidate_id",
+        "winner": {
+          "submitter_id": "analytic_backend",
+          "candidate_id": "analytic_lag1_affine",
+          "total_code_bits": 6970.0
+        },
+        "runner_up": {
+          "submitter_id": "algorithmic_search_backend",
+          "candidate_id": "algorithmic_last_observation",
+          "total_code_bits": 7013.0
+        }
+      },
+      "compared_finalists": [
+        {
+          "submitter_id": "analytic_backend",
+          "candidate_id": "analytic_lag1_affine",
+          "total_code_bits": 6970.0
+        },
+        {
+          "submitter_id": "algorithmic_search_backend",
+          "candidate_id": "algorithmic_last_observation",
+          "total_code_bits": 7013.0
+        }
+      ],
+      "decision_trace": [
+        {
+          "step": "collect_submitter_finalists",
+          "family_finalists": {
+            "analytic_backend": "analytic_lag1_affine",
+            "algorithmic_search_backend": "algorithmic_last_observation",
+            "recursive_spectral_backend": "recursive_level_smoother"
+          }
+        },
+        {
+          "step": "select_portfolio_winner",
+          "selected_backend_family": "analytic",
+          "selected_candidate_id": "analytic_lag1_affine"
+        }
+      ]
+    },
+    "submitters": [
+      {
+        "submitter_id": "analytic_backend",
+        "status": "selected",
+        "selected_candidate_id": "analytic_lag1_affine",
+        "selected_candidate_metrics": {
+          "total_code_bits": 6970.0
+        }
+      },
+      {
+        "submitter_id": "algorithmic_search_backend",
+        "status": "selected",
+        "selected_candidate_id": "algorithmic_last_observation",
+        "selected_candidate_metrics": {
+          "total_code_bits": 7013.0
+        }
+      },
+      {
+        "submitter_id": "recursive_spectral_backend",
+        "status": "selected",
+        "selected_candidate_id": "recursive_level_smoother",
+        "selected_candidate_metrics": {
+          "total_code_bits": 7339.0
+        }
+      },
+      {
+        "submitter_id": "portfolio_orchestrator",
+        "status": "selected",
+        "selected_candidate_id": "analytic_lag1_affine",
+        "selected_candidate_metrics": {
+          "total_code_bits": 6970.0
+        }
+      }
+    ],
+    "report_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close/benchmark-root/reports/predictive_generalization/fmp_gld_benchmark.md",
+    "task_result_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close/benchmark-root/results/predictive_generalization/fmp_gld_benchmark/benchmark-task-result.json",
+    "telemetry_path": "/Users/danielbloom/Desktop/euclid/build/workbench/20260418T180827Z-gld-price-close/benchmark-root/results/predictive_generalization/fmp_gld_benchmark/performance-telemetry.json"
+  },
+  "probabilistic": {
+    "distribution": {
+      "status": "completed",
+      "selected_family": "analytic",
+      "replay_verification": "verified",
+      "evidence": {
+        "strength": "thin",
+        "headline": "Only 1 realized forecasts across 1 origins. Calibration can pass here without proving robustness.",
+        "sample_size": 1,
+        "origin_count": 1,
+        "horizon_count": 1
+      },
+      "calibration": {
+        "status": "passed",
+        "passed": true,
+        "gate_effect": "required_for_probabilistic_publication"
+      },
+      "equation": {
+        "label": "y(t) = -0.160657 + 1.00169*y(t-1)",
+        "structure_signature": "sha256:e0e2eae48783289be358ab94ddc810c8ceb0f2172ec4245dc5da7b6aedc25114",
+        "family_id": "analytic"
+      },
+      "latest_row": {
+        "origin_time": "2021-04-21T00:00:00Z",
+        "available_at": "2021-04-22T21:00:00Z",
+        "horizon": 1,
+        "location": 168.25355865115594,
+        "scale": 1.15,
+        "realized_observation": 167.04
+      },
+      "rows": [
+        {
+          "origin_time": "2021-04-21T00:00:00Z",
+          "available_at": "2021-04-22T21:00:00Z",
+          "horizon": 1,
+          "location": 168.25355865115594,
+          "scale": 1.15,
+          "realized_observation": 167.04
+        }
+      ],
+      "chart": {
+        "forecast_bands": [
+          {
+            "origin_time": "2021-04-21T00:00:00Z",
+            "available_at": "2021-04-22T21:00:00Z",
+            "center": 168.25355865115594,
+            "lower": 167.10355865115595,
+            "upper": 169.40355865115594,
+            "realized_observation": 167.04
+          }
+        ]
+      }
+    },
+    "quantile": {
+      "status": "completed",
+      "selected_family": "analytic",
+      "replay_verification": "verified",
+      "evidence": {
+        "strength": "thin",
+        "headline": "Only 0 realized forecasts across 0 origins. Calibration can pass here without proving robustness.",
+        "sample_size": 0,
+        "origin_count": 0,
+        "horizon_count": 0
+      },
+      "equation": {
+        "label": "y(t) = -0.160657 + 1.00169*y(t-1)",
+        "structure_signature": "sha256:e0e2eae48783289be358ab94ddc810c8ceb0f2172ec4245dc5da7b6aedc25114",
+        "family_id": "analytic"
+      },
+      "latest_row": {
+        "origin_time": "2021-04-21T00:00:00Z",
+        "available_at": "2021-04-22T21:00:00Z",
+        "horizon": 1,
+        "quantiles": [
+          {
+            "level": 0.1,
+            "value": 166.85
+          },
+          {
+            "level": 0.5,
+            "value": 168.25355865115594
+          },
+          {
+            "level": 0.9,
+            "value": 169.66
+          }
+        ],
+        "realized_observation": 167.04
+      }
+    },
+    "interval": {
+      "status": "completed",
+      "selected_family": "analytic",
+      "replay_verification": "verified",
+      "evidence": {
+        "strength": "thin",
+        "headline": "Only 0 realized forecasts across 0 origins. Calibration can pass here without proving robustness.",
+        "sample_size": 0,
+        "origin_count": 0,
+        "horizon_count": 0
+      },
+      "equation": {
+        "label": "y(t) = -0.160657 + 1.00169*y(t-1)",
+        "structure_signature": "sha256:e0e2eae48783289be358ab94ddc810c8ceb0f2172ec4245dc5da7b6aedc25114",
+        "family_id": "analytic"
+      },
+      "latest_row": {
+        "origin_time": "2021-04-21T00:00:00Z",
+        "available_at": "2021-04-22T21:00:00Z",
+        "horizon": 1,
+        "lower_bound": 166.75,
+        "upper_bound": 169.75,
+        "nominal_coverage": 0.8,
+        "realized_observation": 167.04
+      }
+    },
+    "event_probability": {
+      "status": "completed",
+      "selected_family": "analytic",
+      "replay_verification": "verified",
+      "evidence": {
+        "strength": "thin",
+        "headline": "Only 0 realized forecasts across 0 origins. Calibration can pass here without proving robustness.",
+        "sample_size": 0,
+        "origin_count": 0,
+        "horizon_count": 0
+      },
+      "equation": {
+        "label": "y(t) = -0.160657 + 1.00169*y(t-1)",
+        "structure_signature": "sha256:e0e2eae48783289be358ab94ddc810c8ceb0f2172ec4245dc5da7b6aedc25114",
+        "family_id": "analytic"
+      },
+      "latest_row": {
+        "origin_time": "2021-04-21T00:00:00Z",
+        "available_at": "2021-04-22T21:00:00Z",
+        "horizon": 1,
+        "event_probability": 0.42,
+        "realized_event": false,
+        "realized_observation": 167.04,
+        "event_definition": {
+          "event_id": "target_ge_origin_target",
+          "operator": "greater_than_or_equal",
+          "threshold": 168.13,
+          "threshold_source": "origin_target"
+        }
+      }
+    }
+  },
+  "holistic_equation": null,
+  "claim_class": "descriptive_fit",
+  "gap_report": [
+    "operator_not_publishable",
+    "no_backend_joint_claim",
+    "probabilistic_evidence_thin",
+    "requires_posthoc_symbolic_synthesis"
+  ],
+  "would_have_abstained_because": [
+    "robustness_failed",
+    "perturbation_protocol_failed"
+  ],
+  "not_holistic_because": [
+    "No validated deterministic-plus-probabilistic joint claim was published."
+  ],
+  "predictive_law": null,
+  "publishable": false,
+  "change_atlas": {
+    "status": "completed",
+    "headline": "Probabilistic rows were available, but none could be projected into change space.",
+    "metrics": [
+      {
+        "id": "delta",
+        "label": "Delta",
+        "short_label": "Delta",
+        "y_axis_label": "Delta"
+      },
+      {
+        "id": "return",
+        "label": "Return",
+        "short_label": "Return",
+        "y_axis_label": "Return"
+      },
+      {
+        "id": "log_return",
+        "label": "Log Return",
+        "short_label": "Log Return",
+        "y_axis_label": "Log Return"
+      }
+    ],
+    "horizons": [
+      1
+    ],
+    "historical": {
+      "delta": {
+        "1": {
+          "horizon": 1,
+          "sample_size": 3,
+          "latest_value": -1.0900000000000034,
+          "latest_origin_time": "2021-04-21T00:00:00Z",
+          "latest_available_at": "2021-04-22T21:00:00Z",
+          "mean": 0.38333333333333525,
+          "stdev": 1.1281055900146186,
+          "min": -1.0900000000000034,
+          "max": 1.6500000000000057,
+          "quantiles": [
+            {
+              "level": 0.1,
+              "value": -0.754000000000002
+            },
+            {
+              "level": 0.5,
+              "value": 0.5900000000000034
+            },
+            {
+              "level": 0.9,
+              "value": 1.4380000000000053
+            }
+          ],
+          "histogram": [
+            {
+              "lower": -1.0900000000000034,
+              "upper": -0.40500000000000114,
+              "count": 1
+            },
+            {
+              "lower": -0.40500000000000114,
+              "upper": 0.28000000000000114,
+              "count": 0
+            },
+            {
+              "lower": 0.28000000000000114,
+              "upper": 0.9650000000000034,
+              "count": 1
+            },
+            {
+              "lower": 0.9650000000000034,
+              "upper": 1.6500000000000057,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "return": {
+        "1": {
+          "horizon": 1,
+          "sample_size": 3,
+          "latest_value": -0.006483078570154066,
+          "latest_origin_time": "2021-04-21T00:00:00Z",
+          "latest_available_at": "2021-04-22T21:00:00Z",
+          "mean": 0.0023281984984869033,
+          "stdev": 0.0067490224179108755,
+          "min": -0.006483078570154066,
+          "max": 0.009911100432484332,
+          "quantiles": [
+            {
+              "level": 0.1,
+              "value": -0.004475148129497164
+            },
+            {
+              "level": 0.5,
+              "value": 0.0035565736331304443
+            },
+            {
+              "level": 0.9,
+              "value": 0.008640195072613554
+            }
+          ],
+          "histogram": [
+            {
+              "lower": -0.006483078570154066,
+              "upper": -0.0023845338194944665,
+              "count": 1
+            },
+            {
+              "lower": -0.0023845338194944665,
+              "upper": 0.001714010931165133,
+              "count": 0
+            },
+            {
+              "lower": 0.001714010931165133,
+              "upper": 0.005812555681824733,
+              "count": 1
+            },
+            {
+              "lower": 0.005812555681824733,
+              "upper": 0.009911100432484332,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "log_return": {
+        "1": {
+          "horizon": 1,
+          "sample_size": 3,
+          "latest_value": -0.006504184996562946,
+          "latest_origin_time": "2021-04-21T00:00:00Z",
+          "latest_available_at": "2021-04-22T21:00:00Z",
+          "mean": 0.002302795530030068,
+          "stdev": 0.006739567403302649,
+          "min": -0.006504184996562946,
+          "max": 0.00986230760545779,
+          "quantiles": [
+            {
+              "level": 0.1,
+              "value": -0.004493295201011285
+            },
+            {
+              "level": 0.5,
+              "value": 0.003550263981195359
+            },
+            {
+              "level": 0.9,
+              "value": 0.008599898880605306
+            }
+          ],
+          "histogram": [
+            {
+              "lower": -0.006504184996562946,
+              "upper": -0.0024125618460577626,
+              "count": 1
+            },
+            {
+              "lower": -0.0024125618460577626,
+              "upper": 0.0016790613044474212,
+              "count": 0
+            },
+            {
+              "lower": 0.0016790613044474212,
+              "upper": 0.005770684454952605,
+              "count": 1
+            },
+            {
+              "lower": 0.005770684454952605,
+              "upper": 0.009862307605457789,
+              "count": 1
+            }
+          ]
+        }
+      }
+    },
+    "forecast": {
+      "support": "historical_only",
+      "headline": "Probabilistic rows were available, but none could be projected into change space.",
+      "lanes": {}
+    }
+  }
+}

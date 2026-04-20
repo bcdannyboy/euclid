@@ -1,0 +1,141 @@
+version: 1
+kind: euclid_certification_fixture_spec
+status: frozen_contract
+master_plan_ref: docs/README.md
+fixture_spec_id: euclid-certification-fixtures-v1
+allowed_fixture_families:
+- single_entity_predictive
+- panel_shared_local
+- algorithmic_rediscovery
+- mechanistic
+- external_evidence
+- robustness
+- portfolio_comparison
+required_family_fields:
+- family_id
+- minimum_dataset_count
+- minimum_series_count
+- minimum_entity_count
+- minimum_evidence_bundle_count
+- required_diversity_axes
+- benchmark_task_ids
+- suite_ids
+- notes
+banned_unbound_scale_tokens:
+- medium
+- medium_size
+- medium_fixture
+- large
+- large_fixture
+rules:
+- Certification claims must cite fixture_spec_id or a declared family_id from this file.
+- Suite manifests and benchmark task manifests that close certification rows must reference fixture_spec_id.
+- Small deterministic fixtures may remain for unit and smoke tests but do not count as certification fixtures.
+families:
+- family_id: single_entity_predictive
+  minimum_dataset_count: 1
+  minimum_series_count: 1
+  minimum_entity_count: 1
+  minimum_evidence_bundle_count: 4
+  required_diversity_axes:
+  - forecast_object_type
+  - seasonality
+  - abstention_mode
+  benchmark_task_ids:
+  - seasonal_trend_medium_demo
+  - distribution_medium_positive_demo
+  - quantile_medium_misspecification_demo
+  - event_probability_medium_abstention_demo
+  suite_ids:
+  - full_vision
+  notes: Single-entity predictive certification requires at least one deterministic point case plus probabilistic breadth.
+- family_id: panel_shared_local
+  minimum_dataset_count: 1
+  minimum_series_count: 2
+  minimum_entity_count: 3
+  minimum_evidence_bundle_count: 2
+  required_diversity_axes:
+  - entity_panel
+  - positive_negative_pair
+  benchmark_task_ids:
+  - shared_local_panel_medium_positive_demo
+  - shared_local_panel_medium_negative_demo
+  suite_ids:
+  - full_vision
+  notes: Panel fixtures must expose shared and entity-local behavior under a declared panel.
+- family_id: algorithmic_rediscovery
+  minimum_dataset_count: 1
+  minimum_series_count: 1
+  minimum_entity_count: 1
+  minimum_evidence_bundle_count: 5
+  required_diversity_axes:
+  - search_class
+  - rediscovery_target
+  benchmark_task_ids:
+  - planted_analytic_demo
+  - algorithmic_last_observation_medium_demo
+  - exact_enumeration_search_medium_demo
+  - bounded_search_medium_demo
+  - equality_saturation_search_medium_demo
+  - stochastic_search_medium_demo
+  suite_ids:
+  - full_vision
+  notes: Algorithmic certification must exercise each admitted search class over a non-toy dataset.
+- family_id: mechanistic
+  minimum_dataset_count: 1
+  minimum_series_count: 1
+  minimum_entity_count: 1
+  minimum_evidence_bundle_count: 2
+  required_diversity_axes:
+  - mechanistic_floor
+  - positive_negative_pair
+  benchmark_task_ids:
+  - mechanistic_lane_medium_positive_demo
+  - mechanistic_lane_medium_negative_demo
+  - mechanistic_lane_medium_insufficient_demo
+  suite_ids:
+  - full_vision
+  notes: Mechanistic certification requires both positive and downgrade behavior on typed external evidence.
+- family_id: external_evidence
+  minimum_dataset_count: 1
+  minimum_series_count: 1
+  minimum_entity_count: 1
+  minimum_evidence_bundle_count: 2
+  required_diversity_axes:
+  - provenance_integrity
+  - independence
+  benchmark_task_ids:
+  - mechanistic_lane_medium_positive_demo
+  - mechanistic_lane_medium_negative_demo
+  - mechanistic_lane_medium_insufficient_demo
+  suite_ids:
+  - full_vision
+  notes: External evidence certification closes through the full-vision evidence-ingestion surface over mechanistic benchmark tasks with typed provenance and insufficiency evidence.
+- family_id: robustness
+  minimum_dataset_count: 1
+  minimum_series_count: 1
+  minimum_entity_count: 1
+  minimum_evidence_bundle_count: 2
+  required_diversity_axes:
+  - leakage
+  - sensitivity
+  benchmark_task_ids:
+  - robustness_medium_positive_demo
+  - robustness_medium_leakage_demo
+  - robustness_medium_sensitivity_abstention_demo
+  suite_ids:
+  - full_vision
+  notes: Robustness certification requires direct benchmark proof for positive, leakage-fail, and sensitivity-driven abstention regimes.
+- family_id: portfolio_comparison
+  minimum_dataset_count: 1
+  minimum_series_count: 1
+  minimum_entity_count: 1
+  minimum_evidence_bundle_count: 1
+  required_diversity_axes:
+  - portfolio_selection
+  - comparator_universe
+  benchmark_task_ids:
+  - portfolio_selection_medium_demo
+  suite_ids:
+  - full_vision
+  notes: Portfolio certification requires a declared comparison universe and honest portfolio proof.

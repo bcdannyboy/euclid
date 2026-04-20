@@ -1,0 +1,49 @@
+version: 1
+kind: composition_operator_semantics
+owners:
+  - id: composition_semantics_council
+    display_name: Composition Semantics Council
+global_rules:
+  reducer_object_doc: docs/search-core.md
+  shared_local_doc: docs/search-core.md
+contracts:
+  - composition_operator: piecewise
+    owner_ref: composition_semantics_council
+    combiner_mode: segment_partition
+    required_objects:
+      - ordered_partition
+      - child_reducers
+      - branch_order_law
+    evaluation_scope: active_segment_only
+    hidden_rule_forbidden: implicit_branch_reordering
+  - composition_operator: additive_residual
+    owner_ref: composition_semantics_council
+    combiner_mode: base_plus_residual
+    required_objects:
+      - base_reducer
+      - residual_reducer
+      - shared_observation_model
+    evaluation_scope: shared_origin_and_horizon_panel
+    hidden_rule_forbidden: undeclared_residual_backdoor
+  - composition_operator: regime_conditioned
+    owner_ref: composition_semantics_council
+    combiner_mode: gated_branch_selection_or_weighting
+    required_objects:
+      - gating_law
+      - branch_reducers
+      - regime_information_contract
+    requires_explicit_gating_law: true
+    hidden_rule_forbidden: implicit_regime_switching
+  - composition_operator: shared_plus_local_decomposition
+    owner_ref: composition_semantics_council
+    combiner_mode: shared_and_entity_local
+    required_objects:
+      - entity_index_set
+      - shared_component
+      - local_components
+      - explicit_sharing_map
+      - unseen_entity_rule
+    requires_entity_index_set: true
+    requires_unseen_entity_rule: true
+    singleton_entity_behavior: degenerate_one_entity_case
+    hidden_rule_forbidden: implicit_pooling_or_exchangeability

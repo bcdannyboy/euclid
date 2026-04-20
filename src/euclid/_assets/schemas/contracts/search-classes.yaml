@@ -1,0 +1,53 @@
+version: 1
+kind: search_class_semantics
+owners:
+  - id: search_class_council
+    display_name: Search Class Council
+global_rules:
+  reducer_family: algorithmic
+  heuristic_classes_require_disclosure: true
+  frontier_contract: schemas/contracts/search-frontier.yaml
+  exactness_claim_scope: declared_canonical_program_space_only
+contracts:
+  - search_class: exact_finite_enumeration
+    owner_ref: search_class_council
+    reducer_family: algorithmic
+    coverage_statement: complete_over_declared_canonical_program_space
+    exactness_ceiling: exact_over_declared_fragment_only
+    requires_finite_canonical_space_proof: true
+    requires_disclosure:
+      - fragment_bounds
+      - canonical_enumerator
+      - enumeration_cardinality
+      - stop_rule
+  - search_class: bounded_heuristic
+    owner_ref: search_class_council
+    reducer_family: algorithmic
+    coverage_statement: incomplete_search_disclosed
+    exactness_ceiling: no_global_exactness_claim
+    requires_finite_canonical_space_proof: false
+    requires_disclosure:
+      - proposer_mechanism
+      - pruning_rules
+      - stop_rule
+  - search_class: equality_saturation_heuristic
+    owner_ref: search_class_council
+    reducer_family: algorithmic
+    coverage_statement: incomplete_search_disclosed
+    exactness_ceiling: no_global_exactness_claim
+    requires_finite_canonical_space_proof: false
+    requires_disclosure:
+      - rewrite_system
+      - extractor_cost
+      - stop_rule
+  - search_class: stochastic_heuristic
+    owner_ref: search_class_council
+    reducer_family: algorithmic
+    coverage_statement: incomplete_search_disclosed
+    exactness_ceiling: no_global_exactness_claim
+    requires_finite_canonical_space_proof: false
+    requires_disclosure:
+      - proposal_distribution
+      - seed_policy
+      - restart_policy
+      - stop_rule

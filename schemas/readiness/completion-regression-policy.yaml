@@ -1,0 +1,52 @@
+version: 1
+kind: completion_regression_policy
+policy_state: full_closure
+policy_states:
+  transition:
+    blocked_allowed_until_utc: '2026-05-15T00:00:00Z'
+    minimum_completion_values:
+      full_vision_completion: 0.25
+      current_gate_completion: 0.2
+      shipped_releasable_completion: 0.3
+    minimum_policy_verdicts:
+      current_release_v1: blocked
+      full_vision_v1: blocked
+      shipped_releasable_v1: blocked
+  near_closure:
+    minimum_completion_values:
+      full_vision_completion: 0.75
+      current_gate_completion: 0.85
+      shipped_releasable_completion: 0.85
+    minimum_policy_verdicts:
+      current_release_v1: ready
+      full_vision_v1: review_required
+      shipped_releasable_v1: review_required
+  full_closure:
+    minimum_completion_values:
+      full_vision_completion: 1.0
+      current_gate_completion: 1.0
+      shipped_releasable_completion: 1.0
+    minimum_policy_verdicts:
+      current_release_v1: ready
+      full_vision_v1: ready
+      shipped_releasable_v1: ready
+minimum_completion_values:
+  full_vision_completion: 0.25
+  current_gate_completion: 0.2
+  shipped_releasable_completion: 0.3
+minimum_policy_verdicts:
+  current_release_v1: ready
+  full_vision_v1: ready
+  shipped_releasable_v1: ready
+required_clean_install_surface_ids:
+- release_status
+- operator_run
+- operator_replay
+- benchmark_execution
+- determinism_same_seed
+- performance_runtime_smoke
+- packaged_notebook_smoke
+required_row_evidence_classes:
+- row_id: evidence_lane:readiness_and_closure
+  required_evidence_classes:
+  - packaging_install

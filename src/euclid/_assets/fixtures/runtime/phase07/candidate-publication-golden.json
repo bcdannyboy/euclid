@@ -1,0 +1,49 @@
+{
+  "abstention_type": null,
+  "claim_type": "descriptive_only",
+  "comparison_universe": {
+    "baseline_score_result_ref": "point_score_result_manifest@1.0.0:point_score_result_manifest_de04e1172217ec1acaf6",
+    "candidate_beats_baseline": false,
+    "candidate_score_result_ref": "point_score_result_manifest@1.0.0:point_score_result_manifest_96f78955a30deefdd86e",
+    "comparator_score_result_refs": [
+      "point_score_result_manifest@1.0.0:point_score_result_manifest_de04e1172217ec1acaf6"
+    ],
+    "comparison_class_status": "comparable",
+    "paired_comparison_record_count": 1
+  },
+  "published_entry": {
+    "abstention_ref": null,
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_92c6e6b29ee8ef72c4a9",
+    "comparator_exposure_status": "satisfied",
+    "publication_mode": "candidate_publication"
+  },
+  "replay": {
+    "bundle_ref": "reproducibility_bundle_manifest@1.0.0:prototype_constant_candidate_bundle_v1",
+    "replay_verification_status": "verified",
+    "required_manifest_refs": [
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_97038c510321c937bcc9",
+      "scorecard_manifest@1.1.0:scorecard_manifest_a2cf33751d0bd4bc3a29",
+      "claim_card_manifest@1.1.0:claim_card_manifest_92c6e6b29ee8ef72c4a9"
+    ],
+    "stage_order": [
+      "dataset_snapshot_frozen",
+      "feature_view_materialized",
+      "search_plan_frozen",
+      "evaluation_plan_frozen",
+      "comparison_universe_resolved",
+      "evaluation_event_log_written",
+      "evaluation_governance_resolved",
+      "scorecard_resolved",
+      "publication_decision_resolved",
+      "run_result_assembled"
+    ]
+  },
+  "result_mode": "candidate_publication",
+  "run_result_ref": "run_result_manifest@1.1.0:prototype_constant_candidate_run_result_v1",
+  "run_result_refs": {
+    "abstention": null,
+    "candidate": "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_97038c510321c937bcc9",
+    "claim_card": "claim_card_manifest@1.1.0:claim_card_manifest_92c6e6b29ee8ef72c4a9",
+    "scorecard": "scorecard_manifest@1.1.0:scorecard_manifest_a2cf33751d0bd4bc3a29"
+  }
+}

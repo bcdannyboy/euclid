@@ -1,0 +1,7 @@
+version: 1
+vocabulary: abstention_types
+title: Abstention Types
+closed: true
+entries:
+  - id: no_admissible_reducer
+    description: Fixture abstention type.

@@ -1,0 +1,51 @@
+version: 1
+kind: algorithmic_dsl_semantics
+owners:
+  - id: algorithmic_dsl_council
+    display_name: Algorithmic DSL Council
+global_rules:
+  reducer_family: algorithmic
+  syntax_id: canonical_s_expression_v1
+  value_domain: exact_rational
+  loop_support: forbidden
+  recursion_support: forbidden
+  user_function_support: forbidden
+  hidden_randomness: forbidden
+  state_update_semantics: simultaneous_vector_update
+  observational_equivalence_contract: schemas/contracts/rewrite-guarantees.yaml
+contracts:
+  - fragment_id: canonical_algorithmic_reducer_fragment
+    owner_ref: algorithmic_dsl_council
+    reducer_family: algorithmic
+    admitted_surface:
+      - first_order
+      - loop_free
+      - recursion_free
+      - side_effect_free_except_simultaneous_next_state
+      - causal_observation_access
+    allowed_real_ops:
+      - lit
+      - obs
+      - state
+      - add
+      - sub
+      - mul
+      - div
+      - neg
+      - abs
+      - min
+      - max
+      - if
+    allowed_bool_ops:
+      - true
+      - false
+      - lt
+      - le
+      - eq
+      - and
+      - or
+      - not
+    observation_access_mode: obs_lag_nonnegative_only
+    state_slot_count_rule: finite_declared_nonnegative_integer
+    max_program_nodes_rule: finite_declared_positive_integer
+    hidden_rule_forbidden: implicit_runtime_state_channels

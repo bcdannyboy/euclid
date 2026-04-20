@@ -1,0 +1,12 @@
+version: 1
+kind: readiness_charter
+owners:
+  - id: readiness_council
+    display_name: Readiness Council
+checks:
+  - id: canonical_pack_compiles
+    owner_ref: readiness_council
+    claim_lane: descriptive_only
+    evidence_class: descriptive_compression
+    abstention_type: no_admissible_reducer
+    scope_axis: entity_scope

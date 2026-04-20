@@ -1,0 +1,207 @@
+version: 1
+kind: enum_registry
+owners:
+  - id: enum_registry_council
+    display_name: Enum Registry Council
+enums:
+  - enum_name: reducer_families
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/reducer-families.yaml
+    allowed_values:
+      - analytic
+      - recursive
+      - spectral
+      - algorithmic
+
+  - enum_name: composition_operators
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/composition-operators.yaml
+    allowed_values:
+      - piecewise
+      - additive_residual
+      - regime_conditioned
+      - shared_plus_local_decomposition
+
+  - enum_name: claim_lanes
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/claim-lanes.yaml
+    allowed_values:
+      - descriptive_only
+      - predictively_supported
+      - mechanistically_compatible_hypothesis
+
+  - enum_name: forecast_object_types
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/forecast-object-types.yaml
+    allowed_values:
+      - point
+      - distribution
+      - interval
+      - quantile
+      - event_probability
+
+  - enum_name: evidence_classes
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/evidence-classes.yaml
+    allowed_values:
+      - descriptive_compression
+      - predictive_generalization
+      - robustness
+      - replay_verification
+      - readiness_and_closure
+      - boundary_specific_external_evidence
+
+  - enum_name: abstention_types
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/abstention-types.yaml
+    allowed_values:
+      - no_admissible_reducer
+      - codelength_comparability_failed
+      - robustness_failed
+
+  - enum_name: scope_axes
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/core/scope-axes.yaml
+    allowed_values:
+      - entity_scope
+      - horizon_scope
+
+  - enum_name: evaluation_event_related_object_kind
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/modeling-pipeline.md
+    allowed_values:
+      - search_plan
+      - comparison_universe
+      - freeze_event
+      - frozen_shortlist
+      - prediction_artifact
+      - run_result
+
+  - enum_name: validation_scope_deferred_scope_schema_names
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/modeling-pipeline.md
+    allowed_values:
+      - mechanistic_lane_policy_manifest@1.0.0
+      - shared_plus_local_decomposition_policy_manifest@1.0.0
+      - algorithmic_search_policy_manifest@1.0.0
+      - algorithmic_frontier_policy_manifest@1.0.0
+
+  - enum_name: leakage_stage_evidence_kind
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/modeling-pipeline.md
+    allowed_values:
+      - feature_spec
+      - time_safety_audit
+      - evaluation_plan
+
+  - enum_name: leakage_downstream_evidence_kind
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/modeling-pipeline.md
+    allowed_values:
+      - search_plan
+      - frozen_shortlist
+      - evaluation_event_log
+      - prediction_artifact
+      - point_score_result
+
+  - enum_name: evaluation_event_type
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/modeling-pipeline.md
+    allowed_values:
+      - nonanalytic_retry
+      - pre_holdout_analytic_rerun
+      - holdout_materialized
+      - post_holdout_mutation
+      - fresh_replication_started
+      - fresh_replication_completed
+
+  - enum_name: replay_bundle_mode
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/runtime-cli.md
+    allowed_values:
+      - candidate_publication
+      - abstention_only_publication
+
+  - enum_name: replay_artifact_role
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/runtime-cli.md
+    allowed_values:
+      - dataset_snapshot
+      - feature_view
+      - search_plan
+      - evaluation_plan
+      - run_result
+      - candidate_or_abstention
+      - scorecard
+      - prediction_artifact
+      - robustness_report
+
+  - enum_name: replay_seed_scope
+    owner_ref: enum_registry_council
+    canonical_source_path: docs/runtime-cli.md
+    allowed_values:
+      - search
+      - surrogate_generation
+      - perturbation
+
+  - enum_name: run_lifecycle_states
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/contracts/run-lifecycle.yaml
+    allowed_values:
+      - run_declared
+      - observations_ingested
+      - external_evidence_normalized
+      - dataset_snapshot_frozen
+      - time_safety_verified
+      - feature_views_materialized
+      - evaluation_geometry_frozen
+      - search_contract_frozen
+      - candidates_realized
+      - shared_plus_local_aggregated
+      - candidate_set_frozen
+      - forecast_artifacts_materialized
+      - predictive_evidence_materialized
+      - robustness_evidence_materialized
+      - mechanistic_evidence_materialized
+      - claims_resolved
+      - replay_verified
+      - candidate_publication_completed
+      - abstention_publication_completed
+      - replay_blocked
+
+  - enum_name: candidate_lifecycle_states
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/contracts/candidate-state-machine.yaml
+    allowed_values:
+      - proposed
+      - fit
+      - frontier_retained
+      - rejected_pre_freeze
+      - shared_plus_local_aggregated
+      - frozen
+      - evaluated_point
+      - evaluated_probabilistic
+      - robustness_checked
+      - mechanistic_evaluated
+      - claim_emitted
+      - abstained
+      - replay_verified
+      - replay_failed
+      - published
+
+  - enum_name: publication_lifecycle_states
+    owner_ref: enum_registry_council
+    canonical_source_path: schemas/contracts/publication-lifecycle.yaml
+    allowed_values:
+      - publication_requested
+      - meaning_bound
+      - replay_bundle_assembled
+      - replay_verified
+      - replay_failed
+      - run_result_assembled
+      - candidate_publication_selected
+      - abstention_only_publication_selected
+      - publication_record_written
+      - catalog_projected
+      - publication_completed
+      - publication_blocked

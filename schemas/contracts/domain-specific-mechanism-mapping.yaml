@@ -1,0 +1,15 @@
+version: 1
+kind: mechanistic_reentry_contract
+schema_name: domain_specific_mechanism_mapping_manifest@1.0.0
+owners:
+  - id: domain_specific_mechanism_mapping_owner
+    display_name: Domain Specific Mechanism Mapping Owner
+contract:
+  requirement_id: mechanism_mapping
+  meaning: typed reducer-term bindings to domain entities and activities
+  required_fields:
+    - candidate_ref
+    - prediction_artifact_ref
+    - external_evidence_ref
+    - term_bindings
+  acceptance_rule: every reducer term is mapped without circular self-reference

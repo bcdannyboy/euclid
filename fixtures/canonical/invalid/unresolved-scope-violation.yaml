@@ -1,0 +1,94 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: unresolved_scope_violation_bundle
+scenario_id: unresolved-scope-violation
+scenario_class: invalid_fixture
+required_modules:
+  - search_planning
+  - shared_plus_local_decomposition
+  - algorithmic_dsl
+  - claims
+required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - shared_plus_local_decomposition_policy_manifest@1.0.0
+  - algorithmic_search_policy_manifest@1.0.0
+  - algorithmic_frontier_policy_manifest@1.0.0
+required_contract_families:
+  - schemas/contracts/reference-types.yaml
+  - schemas/contracts/run-lifecycle.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+required_evidence_classes: []
+anchor_artifacts:
+  - docs/examples/blocked-and-invalid-fixtures.md
+  - docs/examples/extension-lane-publication-fixtures.md
+expected_outcome:
+  validator_disposition: must_reject
+  publication_mode: none
+  terminal_lifecycle_state: not_applicable_fixture_rejected
+  claim_lane: null
+  forecast_object_type: null
+  abstention_type: null
+  failure_effect: scope_axes_or_deferred_scope_refs_are_incoherent_with_the_declared_bundle
+validator_errors:
+  - error_code: deferred_scope_conflicts_with_retained_scope
+    message: validation scope binds point publication while also activating deferred multi-entity shared-local scope
+    field_path: body.deferred_scope_refs
+    artifact_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: unresolved_scope_violation_validation_scope
+  - error_code: unresolved_scope_ref_violation
+    message: algorithmic frontier policy is attached to a scope that still carries unresolved shared-local deferred refs
+    field_path: body.frontier_policy_ref
+    artifact_ref:
+      schema_name: algorithmic_search_policy_manifest@1.0.0
+      object_id: unresolved_scope_violation_algorithmic_search_policy
+artifacts:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: unresolved_scope_violation_validation_scope
+    module_id: search_planning
+    body:
+      scope_id: unresolved_scope_violation_scope
+      scenario_id: unresolved-scope-violation
+      claim_lane: descriptive_only
+      forecast_object_type: point
+      deferred_scope_refs:
+        - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+          object_id: unresolved_scope_violation_shared_local_policy
+        - schema_name: algorithmic_frontier_policy_manifest@1.0.0
+          object_id: unresolved_scope_violation_algorithmic_frontier_policy
+  - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+    object_id: unresolved_scope_violation_shared_local_policy
+    module_id: shared_plus_local_decomposition
+    body:
+      policy_id: unresolved_scope_violation_shared_local_policy
+      binding_status: deferred_non_binding
+      deferred_scope_ids:
+        - multi_entity_scope
+      request_resolution:
+        status: blocked
+        reason_code: shared_plus_local_decomposition_deferred_from_scope
+  - schema_name: algorithmic_frontier_policy_manifest@1.0.0
+    object_id: unresolved_scope_violation_algorithmic_frontier_policy
+    module_id: algorithmic_dsl
+    body:
+      policy_id: unresolved_scope_violation_algorithmic_frontier_policy
+      frontier_id: algorithmic_stage_frontier
+      hard_filter_reason_codes:
+        - parse_failed
+        - type_error
+        - causal_access_violation
+  - schema_name: algorithmic_search_policy_manifest@1.0.0
+    object_id: unresolved_scope_violation_algorithmic_search_policy
+    module_id: algorithmic_dsl
+    body:
+      policy_id: unresolved_scope_violation_algorithmic_search_policy
+      public_binding_status: deferred_exploratory_only
+      frontier_policy_ref:
+        schema_name: algorithmic_frontier_policy_manifest@1.0.0
+        object_id: unresolved_scope_violation_algorithmic_frontier_policy
+      validation_scope_ref:
+        schema_name: validation_scope_manifest@1.0.0
+        object_id: unresolved_scope_violation_validation_scope
+      requested_scope_axes:
+        - multi_entity_scope
+        - single_entity_scope

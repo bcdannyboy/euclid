@@ -1,0 +1,34 @@
+version: 1
+kind: rewrite_guarantee_semantics
+owners:
+  - id: rewrite_guarantee_council
+    display_name: Rewrite Guarantee Council
+global_rules:
+  reducer_family: algorithmic
+  canonicalization_identity_scope: normalization_pipeline_output_only
+  observational_equivalence_identity_claim: heuristic_duplicate_screen_only
+  equality_saturation_not_global_identity: true
+contracts:
+  - guarantee_id: canonical_serialization
+    owner_ref: rewrite_guarantee_council
+    reducer_family: algorithmic
+    guarantee_class: deterministic_normal_form
+    statement: >-
+      Canonical serialization is deterministic over the declared normalization
+      pipeline and syntax only.
+  - guarantee_id: observational_equivalence
+    owner_ref: rewrite_guarantee_council
+    reducer_family: algorithmic
+    guarantee_class: finite_suite_duplicate_screen
+    identity_claim: heuristic_duplicate_screen_only
+    statement: >-
+      Observational equivalence compares emit and next-state behavior on a
+      finite declared suite and is not a theorem of universal semantic identity.
+  - guarantee_id: equality_saturation
+    owner_ref: rewrite_guarantee_council
+    reducer_family: algorithmic
+    guarantee_class: heuristic_rewrite_search
+    identity_claim: no_global_exactness_claim
+    statement: >-
+      Equality saturation enlarges the local rewrite search neighborhood but
+      does not certify exhaustive coverage or global semantic identity.

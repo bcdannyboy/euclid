@@ -1,0 +1,13 @@
+fixture_family_id: external_evidence
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/full_vision_certification/external_evidence/external-evidence-series.csv
+series_count: 1
+entity_count: 1
+evidence_bundle_refs:
+- fixtures/runtime/full_vision_certification/external_evidence/external-evidence-positive-evidence.yaml
+- fixtures/runtime/full_vision_certification/external_evidence/external-evidence-negative-evidence.yaml
+- fixtures/runtime/full_vision_certification/external_evidence/external-evidence-tamper-golden.json
+diversity_axes:
+- provenance_integrity
+- independence

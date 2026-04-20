@@ -1,0 +1,22 @@
+version: 1
+project_name: Fixture Euclid
+canonical_doc_refs:
+  - README.md
+  - docs/system.md
+vocabulary_refs:
+  reducer_families: schemas/core/reducer-families.yaml
+  composition_operators: schemas/core/composition-operators.yaml
+  claim_lanes: schemas/core/claim-lanes.yaml
+  forecast_object_types: schemas/core/forecast-object-types.yaml
+  evidence_classes: schemas/core/evidence-classes.yaml
+  abstention_types: schemas/core/abstention-types.yaml
+  scope_axes: schemas/core/scope-axes.yaml
+scope_statement: Fixture scope statement for the Euclid canonical-pack compiler.
+major_runtime_modules:
+  core:
+    - manifest_registry
+    - evaluation
+artifact_classes:
+  publication:
+    - claim_card
+    - publication_record

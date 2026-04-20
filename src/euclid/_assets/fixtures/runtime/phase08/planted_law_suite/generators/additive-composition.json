@@ -1,0 +1,27 @@
+{
+  "law_id": "phase08_additive_composition",
+  "family": "additive_composition",
+  "description": "Simple additive planted generator: linear trend plus seasonal sine component.",
+  "equivalence_class": "additive_component_equivalent",
+  "parameters": {
+    "intercept": 1.5,
+    "slope": 0.65,
+    "seasonal_amplitude": 2.25,
+    "seasonal_frequency": 0.6,
+    "phase_shift": 0.1
+  },
+  "variants": {
+    "exact": {
+      "recovery_class": "equivalent_generator",
+      "max_pointwise_abs_error": 1e-06,
+      "max_predictive_mae": 1e-06
+    },
+    "noisy": {
+      "recovery_class": "same_family_approximation",
+      "min_pointwise_abs_error": 0.01,
+      "max_pointwise_abs_error": 0.1,
+      "max_holdout_mae": 0.05,
+      "forbid_exact_equivalence": true
+    }
+  }
+}

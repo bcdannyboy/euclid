@@ -1,0 +1,18 @@
+version: 1
+kind: conditional_shared_local_codelength_contracts
+owners:
+  - id: conditional_shared_local_codelength_owner
+    display_name: Conditional Shared Local Codelength Owner
+global_rules:
+  code_terms_must_be_separable: true
+  shared_component_code_must_not_hide_local_complexity: true
+  cross_entity_comparison_requires_declared_entity_panel: true
+contracts:
+  - schema_name: conditional_shared_local_codelength_contract@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    required_code_terms:
+      - shared_component_bits
+      - local_component_bits
+      - entity_panel_description_bits
+    comparison_rule: shared_and_local_code_terms_must_be_reported_separately
+    publication_rule: codelength_comparability_requires_identical_entity_panel_and_freeze_protocol

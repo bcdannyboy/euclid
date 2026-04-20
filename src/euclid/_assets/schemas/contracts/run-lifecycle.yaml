@@ -1,0 +1,481 @@
+version: 1
+kind: run_lifecycle
+owners:
+  - id: run_lifecycle_council
+    display_name: Run Lifecycle Council
+global_rules:
+  initial_state: run_declared
+  terminal_states:
+    - candidate_publication_completed
+    - abstention_publication_completed
+    - replay_blocked
+  freeze_boundaries:
+    - run_declared
+    - dataset_snapshot_frozen
+    - search_contract_frozen
+    - candidate_set_frozen
+    - replay_verified
+  optional_branches:
+    mechanistic_evidence: requires_external_evidence_normalized_and_predictive_evidence_materialized
+    shared_plus_local: requires_declared_entity_panel_combiner_and_aggregation_law
+states:
+  - state_id: run_declared
+    owner_ref: run_lifecycle_council
+    stage: run_binding
+    plane: control_plane
+    responsible_modules:
+      - manifest_registry
+    required_artifacts:
+      - run_manifest
+
+  - state_id: observations_ingested
+    owner_ref: run_lifecycle_council
+    stage: intake
+    plane: worker_plane
+    responsible_modules:
+      - ingestion
+    required_artifacts:
+      - observation_record
+
+  - state_id: external_evidence_normalized
+    owner_ref: run_lifecycle_council
+    stage: intake
+    plane: worker_plane
+    responsible_modules:
+      - external_evidence_ingestion
+    required_artifacts:
+      - external_evidence_bundle
+      - source_digest
+
+  - state_id: dataset_snapshot_frozen
+    owner_ref: run_lifecycle_council
+    stage: data_freeze
+    plane: worker_plane
+    responsible_modules:
+      - snapshotting
+    required_artifacts:
+      - dataset_snapshot
+      - dataset_lineage_snapshot
+
+  - state_id: time_safety_verified
+    owner_ref: run_lifecycle_council
+    stage: data_freeze
+    plane: worker_plane
+    responsible_modules:
+      - timeguard
+    required_artifacts:
+      - time_safety_audit
+      - causal_availability_window
+
+  - state_id: feature_views_materialized
+    owner_ref: run_lifecycle_council
+    stage: data_freeze
+    plane: worker_plane
+    responsible_modules:
+      - features
+    required_artifacts:
+      - feature_view
+      - feature_materialization_report
+
+  - state_id: evaluation_geometry_frozen
+    owner_ref: run_lifecycle_council
+    stage: plan_freeze
+    plane: control_plane
+    responsible_modules:
+      - split_planning
+    required_artifacts:
+      - evaluation_plan
+      - split_manifest
+
+  - state_id: search_contract_frozen
+    owner_ref: run_lifecycle_council
+    stage: plan_freeze
+    plane: control_plane
+    responsible_modules:
+      - search_planning
+      - evaluation_governance
+    required_artifacts:
+      - search_plan
+      - canonicalization_policy
+      - search_budget
+      - comparison_universe
+      - predictive_gate_policy
+
+  - state_id: candidates_realized
+    owner_ref: run_lifecycle_council
+    stage: search
+    plane: worker_plane
+    responsible_modules:
+      - algorithmic_dsl
+      - candidate_fitting
+    required_artifacts:
+      - candidate_spec
+      - reducer_artifact
+      - frontier
+      - rejected_diagnostics
+
+  - state_id: shared_plus_local_aggregated
+    owner_ref: run_lifecycle_council
+    stage: search
+    plane: worker_plane
+    responsible_modules:
+      - shared_plus_local_decomposition
+    required_artifacts:
+      - shared_plus_local_decomposition_policy
+      - shared_plus_local_aggregation_table
+
+  - state_id: candidate_set_frozen
+    owner_ref: run_lifecycle_council
+    stage: candidate_freeze
+    plane: control_plane
+    responsible_modules:
+      - search_planning
+      - evaluation_governance
+    required_artifacts:
+      - freeze_event
+      - frozen_shortlist
+      - evaluation_event_log
+
+  - state_id: forecast_artifacts_materialized
+    owner_ref: run_lifecycle_council
+    stage: evaluation
+    plane: worker_plane
+    responsible_modules:
+      - evaluation
+      - probabilistic_evaluation
+    required_artifacts:
+      - prediction_artifact
+
+  - state_id: predictive_evidence_materialized
+    owner_ref: run_lifecycle_council
+    stage: evaluation
+    plane: worker_plane
+    responsible_modules:
+      - scoring
+    required_artifacts:
+      - point_score_result
+      - calibration_result
+
+  - state_id: robustness_evidence_materialized
+    owner_ref: run_lifecycle_council
+    stage: robustness
+    plane: worker_plane
+    responsible_modules:
+      - robustness
+    required_artifacts:
+      - robustness_report
+
+  - state_id: mechanistic_evidence_materialized
+    owner_ref: run_lifecycle_council
+    stage: mechanistic_evaluation
+    plane: worker_plane
+    responsible_modules:
+      - mechanistic_evidence
+    required_artifacts:
+      - mechanistic_evidence_dossier
+      - evidence_independence_attestation
+
+  - state_id: claims_resolved
+    owner_ref: run_lifecycle_council
+    stage: meaning
+    plane: control_plane
+    responsible_modules:
+      - gate_lifecycle
+      - claims
+    required_artifacts:
+      - scorecard
+      - lifecycle_gate_decision
+      - claim_card_or_abstention
+
+  - state_id: replay_verified
+    owner_ref: run_lifecycle_council
+    stage: replay
+    plane: worker_plane
+    responsible_modules:
+      - replay
+    required_artifacts:
+      - reproducibility_bundle
+      - run_result
+      - replay_verification_report
+
+  - state_id: candidate_publication_completed
+    owner_ref: run_lifecycle_council
+    stage: publication
+    plane: control_plane
+    responsible_modules:
+      - catalog_publishing
+    required_artifacts:
+      - claim_card
+      - publication_record
+      - catalog_entry
+    terminal: true
+
+  - state_id: abstention_publication_completed
+    owner_ref: run_lifecycle_council
+    stage: publication
+    plane: control_plane
+    responsible_modules:
+      - catalog_publishing
+    required_artifacts:
+      - abstention
+      - publication_record
+      - catalog_entry
+    terminal: true
+
+  - state_id: replay_blocked
+    owner_ref: run_lifecycle_council
+    stage: publication
+    plane: control_plane
+    responsible_modules:
+      - replay
+      - catalog_publishing
+    required_artifacts:
+      - replay_verification_report
+    terminal: true
+
+transitions:
+  - transition_id: ingestion_complete
+    owner_ref: run_lifecycle_council
+    from: run_declared
+    to: observations_ingested
+    activating_modules:
+      - ingestion
+    required_artifacts:
+      - observation_record
+    guard: raw observation payload is normalized and manifest-bound
+
+  - transition_id: external_evidence_ingestion_complete
+    owner_ref: run_lifecycle_council
+    from: run_declared
+    to: external_evidence_normalized
+    activating_modules:
+      - external_evidence_ingestion
+    required_artifacts:
+      - external_evidence_bundle
+      - source_digest
+    guard: claim ceiling includes mechanistically_compatible_hypothesis
+
+  - transition_id: snapshot_freeze_complete
+    owner_ref: run_lifecycle_council
+    from: observations_ingested
+    to: dataset_snapshot_frozen
+    activating_modules:
+      - snapshotting
+    required_artifacts:
+      - dataset_snapshot
+      - dataset_lineage_snapshot
+    guard: snapshot cutoff is sealed before search or evaluation
+
+  - transition_id: time_safety_audit_complete
+    owner_ref: run_lifecycle_council
+    from: dataset_snapshot_frozen
+    to: time_safety_verified
+    activating_modules:
+      - timeguard
+    required_artifacts:
+      - time_safety_audit
+      - causal_availability_window
+    guard: predictive coordinates are provably causal for the bound run
+
+  - transition_id: feature_materialization_complete
+    owner_ref: run_lifecycle_council
+    from: time_safety_verified
+    to: feature_views_materialized
+    activating_modules:
+      - features
+    required_artifacts:
+      - feature_view
+      - feature_materialization_report
+    guard: feature view uses only snapshot-bound and time-safe inputs
+
+  - transition_id: evaluation_geometry_freeze_complete
+    owner_ref: run_lifecycle_council
+    from: feature_views_materialized
+    to: evaluation_geometry_frozen
+    activating_modules:
+      - split_planning
+    required_artifacts:
+      - evaluation_plan
+      - split_manifest
+    guard: fold geometry and scored-origin panel are frozen
+
+  - transition_id: search_contract_freeze_complete
+    owner_ref: run_lifecycle_council
+    from: evaluation_geometry_frozen
+    to: search_contract_frozen
+    activating_modules:
+      - search_planning
+      - evaluation_governance
+    required_artifacts:
+      - search_plan
+      - canonicalization_policy
+      - comparison_universe
+      - predictive_gate_policy
+    guard: search grammar, budgets, baseline rules, and forecast object types are frozen
+
+  - transition_id: candidate_realization_complete
+    owner_ref: run_lifecycle_council
+    from: search_contract_frozen
+    to: candidates_realized
+    activating_modules:
+      - algorithmic_dsl
+      - candidate_fitting
+    required_artifacts:
+      - candidate_spec
+      - reducer_artifact
+      - frontier
+    guard: declared search space has emitted admissible candidate artifacts
+
+  - transition_id: shared_plus_local_aggregation_complete
+    owner_ref: run_lifecycle_council
+    from: candidates_realized
+    to: shared_plus_local_aggregated
+    activating_modules:
+      - shared_plus_local_decomposition
+    required_artifacts:
+      - shared_plus_local_decomposition_policy
+      - shared_plus_local_aggregation_table
+    guard: composition operator is shared_plus_local_decomposition
+
+  - transition_id: candidate_freeze_complete
+    owner_ref: run_lifecycle_council
+    from: candidates_realized
+    to: candidate_set_frozen
+    activating_modules:
+      - search_planning
+      - evaluation_governance
+    required_artifacts:
+      - freeze_event
+      - frozen_shortlist
+      - evaluation_event_log
+    guard: no shared-plus-local aggregation branch is active
+
+  - transition_id: candidate_freeze_after_shared_local
+    owner_ref: run_lifecycle_council
+    from: shared_plus_local_aggregated
+    to: candidate_set_frozen
+    activating_modules:
+      - search_planning
+      - evaluation_governance
+    required_artifacts:
+      - freeze_event
+      - frozen_shortlist
+      - evaluation_event_log
+    guard: shared-plus-local aggregation table is sealed before evaluation
+
+  - transition_id: forecast_artifacts_complete
+    owner_ref: run_lifecycle_council
+    from: candidate_set_frozen
+    to: forecast_artifacts_materialized
+    activating_modules:
+      - evaluation
+      - probabilistic_evaluation
+    required_artifacts:
+      - prediction_artifact
+    guard: point or probabilistic forecast artifacts are emitted for the frozen candidate set
+
+  - transition_id: predictive_evidence_complete
+    owner_ref: run_lifecycle_council
+    from: forecast_artifacts_materialized
+    to: predictive_evidence_materialized
+    activating_modules:
+      - scoring
+    required_artifacts:
+      - point_score_result
+      - calibration_result
+    guard: forecast objects are scored under their bound policy and calibration law
+
+  - transition_id: robustness_evidence_complete
+    owner_ref: run_lifecycle_council
+    from: predictive_evidence_materialized
+    to: robustness_evidence_materialized
+    activating_modules:
+      - robustness
+    required_artifacts:
+      - robustness_report
+    guard: null, perturbation, and leakage protocols have closed on the frozen candidate set
+
+  - transition_id: mechanistic_evidence_complete
+    owner_ref: run_lifecycle_council
+    from: robustness_evidence_materialized
+    to: mechanistic_evidence_materialized
+    activating_modules:
+      - mechanistic_evidence
+    requires_states:
+      - external_evidence_normalized
+    required_artifacts:
+      - mechanistic_evidence_dossier
+      - evidence_independence_attestation
+    guard: mechanistic lane is requested and external evidence is frozen
+
+  - transition_id: claim_resolution_without_mechanistic
+    owner_ref: run_lifecycle_council
+    from: robustness_evidence_materialized
+    to: claims_resolved
+    activating_modules:
+      - gate_lifecycle
+      - claims
+    required_artifacts:
+      - scorecard
+      - lifecycle_gate_decision
+      - claim_card_or_abstention
+    guard: mechanistic lane is not requested
+
+  - transition_id: claim_resolution_after_mechanistic
+    owner_ref: run_lifecycle_council
+    from: mechanistic_evidence_materialized
+    to: claims_resolved
+    activating_modules:
+      - gate_lifecycle
+      - claims
+    required_artifacts:
+      - scorecard
+      - lifecycle_gate_decision
+      - claim_card_or_abstention
+    guard: mechanistic evidence has been evaluated against the predictive floor
+
+  - transition_id: replay_verification_complete
+    owner_ref: run_lifecycle_council
+    from: claims_resolved
+    to: replay_verified
+    activating_modules:
+      - replay
+    required_artifacts:
+      - reproducibility_bundle
+      - run_result
+      - replay_verification_report
+    guard: replay_verification_report.status = verified
+
+  - transition_id: replay_verification_failed
+    owner_ref: run_lifecycle_council
+    from: claims_resolved
+    to: replay_blocked
+    activating_modules:
+      - replay
+    required_artifacts:
+      - replay_verification_report
+    guard: replay_verification_report.status = failed
+
+  - transition_id: candidate_publication_complete
+    owner_ref: run_lifecycle_council
+    from: replay_verified
+    to: candidate_publication_completed
+    activating_modules:
+      - catalog_publishing
+    required_artifacts:
+      - claim_card
+      - publication_record
+      - catalog_entry
+    guard: claim_card exists and publication_record.publication_mode = candidate_publication
+
+  - transition_id: abstention_publication_complete
+    owner_ref: run_lifecycle_council
+    from: replay_verified
+    to: abstention_publication_completed
+    activating_modules:
+      - catalog_publishing
+    required_artifacts:
+      - abstention
+      - publication_record
+      - catalog_entry
+    guard: abstention exists and publication_record.publication_mode = abstention_only_publication

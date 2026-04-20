@@ -1,0 +1,37 @@
+version: 1
+kind: run_lifecycle
+owners:
+  - id: run_lifecycle_council
+    display_name: Run Lifecycle Council
+states:
+  - state_id: run_declared
+    owner_ref: run_lifecycle_council
+    responsible_modules:
+      - manifest_registry
+  - state_id: search_contract_frozen
+    owner_ref: run_lifecycle_council
+    responsible_modules:
+      - search_planning
+  - state_id: claims_resolved
+    owner_ref: run_lifecycle_council
+    responsible_modules:
+      - claims
+transitions:
+  - transition_id: freeze_search_contract
+    owner_ref: run_lifecycle_council
+    from: run_declared
+    to: search_contract_frozen
+    activating_modules:
+      - search_planning
+  - transition_id: resolve_claims
+    owner_ref: run_lifecycle_council
+    from: search_contract_frozen
+    to: claims_resolved
+    activating_modules:
+      - claims
+global_rules:
+  initial_state: run_declared
+  terminal_states:
+    - claims_resolved
+  freeze_boundaries:
+    - search_contract_frozen

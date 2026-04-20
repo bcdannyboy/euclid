@@ -1,0 +1,24 @@
+{
+  "law_id": "phase08_linear_trend",
+  "family": "linear",
+  "description": "Linear planted generator y_t = intercept + slope * t.",
+  "equivalence_class": "exact_symbolic_or_simplified",
+  "parameters": {
+    "intercept": 2.0,
+    "slope": 1.5
+  },
+  "variants": {
+    "exact": {
+      "recovery_class": "equivalent_generator",
+      "max_pointwise_abs_error": 1e-06,
+      "max_predictive_mae": 1e-06
+    },
+    "noisy": {
+      "recovery_class": "same_family_approximation",
+      "min_pointwise_abs_error": 0.01,
+      "max_pointwise_abs_error": 0.1,
+      "max_holdout_mae": 0.06,
+      "forbid_exact_equivalence": true
+    }
+  }
+}

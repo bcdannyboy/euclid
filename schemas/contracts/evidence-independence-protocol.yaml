@@ -1,0 +1,14 @@
+version: 1
+kind: mechanistic_reentry_contract
+schema_name: evidence_independence_protocol_manifest@1.0.0
+owners:
+  - id: evidence_independence_protocol_owner
+    display_name: Evidence Independence Protocol Owner
+contract:
+  requirement_id: evidence_independence_attestation
+  meaning: mechanistic evidence must stay disjoint from the predictive evidence already used for lower-lane publication
+  required_fields:
+    - external_evidence_ref
+    - prediction_artifact_ref
+    - predictive_evidence_refs
+  acceptance_rule: no cited mechanistic source may be derived solely from the sealed predictive artifacts

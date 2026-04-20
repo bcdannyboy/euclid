@@ -1,0 +1,63 @@
+version: 1
+kind: completion_report_schema
+required_fields:
+  - report_id
+  - authority_snapshot_id
+  - command_contract_id
+  - closure_map_id
+  - traceability_id
+  - fixture_spec_id
+  - generated_at
+  - policy_verdicts
+  - scope_evidence_bundles
+  - completion_values
+  - clean_install_certification
+  - capability_rows
+  - residual_risk_codes
+  - unresolved_blockers
+  - confidence
+policy_verdict_required_fields:
+  - policy_id
+  - verdict
+  - reason_codes
+  - evidence_refs
+scope_evidence_bundle_required_fields:
+  - evidence_bundle_id
+  - scope_id
+  - authority_snapshot_id
+  - command_contract_id
+  - closure_map_id
+  - traceability_id
+  - fixture_spec_id
+  - producer_command_id
+  - generated_at_utc
+  - input_manifest_digests
+  - source_tree_digest_or_wheel_digest
+  - dirty_state_or_build_toolchain
+completion_value_fields:
+  - id: full_vision_completion
+    description: Fractional completion against the full admitted Euclid scope.
+  - id: current_gate_completion
+    description: Fractional completion against the narrower currently certified gate.
+  - id: shipped_releasable_completion
+    description: Fractional completion against what can honestly ship as a releasable packaged runtime.
+clean_install_surface_status_values:
+  - passed
+  - missing
+  - failed
+capability_status_values:
+  - complete
+  - partial
+  - blocked
+capability_row_required_fields:
+  - row_id
+  - status
+  - reason_codes
+  - evidence_refs
+  - required_evidence_classes
+  - available_evidence_classes
+  - non_closing_evidence_classes
+  - evidence_bundle_ids
+proof_status_values:
+  - missing_proof
+  - failed_proof

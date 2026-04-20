@@ -1,0 +1,57 @@
+version: 1
+kind: euclid_readiness_policy
+scope_id: current_release
+verdicts:
+  - id: ready
+    catalog_scope: public
+    description: All required certified release gates passed.
+  - id: review_required
+    catalog_scope: internal
+    description: Required gates passed, but non-blocking review gates still need attention.
+  - id: blocked
+    catalog_scope: internal
+    description: At least one required certified release gate failed or is missing.
+retained_core_release:
+  required_gates:
+    - gate_id: contracts.catalog
+      description: The contract catalog loads and exposes schemas, modules, enums, and contract docs.
+    - gate_id: benchmarks.rediscovery
+      description: The representative rediscovery benchmark completes within its declared budget.
+    - gate_id: benchmarks.predictive_generalization
+      description: The representative predictive-generalization benchmark completes within its declared budget.
+    - gate_id: benchmarks.adversarial_honesty
+      description: The representative adversarial-honesty benchmark completes within its declared budget.
+    - gate_id: notebook.smoke
+      description: The public notebook smoke runs end to end and emits the expected probabilistic cases.
+    - gate_id: determinism.same_seed
+      description: Same-seed runs emit stable sealed artifact hashes.
+    - gate_id: performance.runtime_smoke
+      description: The operator/runtime smoke stays within the declared wall-clock threshold.
+full_vision:
+  required_gates:
+    - gate_id: suite.full_vision
+      description: The declared full-vision benchmark suite executed and wrote its suite summary artifact.
+    - gate_id: track.rediscovery
+      description: At least one rediscovery task completed inside the full-vision suite.
+    - gate_id: track.predictive_generalization
+      description: At least one predictive-generalization task completed inside the full-vision suite.
+    - gate_id: track.adversarial_honesty
+      description: At least one adversarial-honesty task completed inside the full-vision suite.
+    - gate_id: surface.retained_core_release
+      description: The retained-core release surface has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.algorithmic_backend
+      description: The algorithmic backend has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.probabilistic_forecast_surface
+      description: The probabilistic forecast surface has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.composition_operator_semantics
+      description: Composition operators have benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.shared_plus_local_decomposition
+      description: Shared-plus-local decomposition has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.mechanistic_lane
+      description: The mechanistic lane has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.external_evidence_ingestion
+      description: External evidence ingestion has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.robustness_lane
+      description: The robustness lane has benchmark and replay evidence inside the full-vision suite.
+    - gate_id: surface.portfolio_orchestration
+      description: Portfolio orchestration has benchmark and replay evidence inside the full-vision suite.

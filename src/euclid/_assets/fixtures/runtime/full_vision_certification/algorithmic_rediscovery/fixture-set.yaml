@@ -1,0 +1,16 @@
+fixture_family_id: algorithmic_rediscovery
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/planted-analytic-series.csv
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-search-series.csv
+series_count: 2
+entity_count: 1
+evidence_bundle_refs:
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-search-demo.yaml
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-benchmark-publication-golden.json
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/duplicate-canonical-candidates.yaml
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/planted-analytic-coverage-note.yaml
+- fixtures/runtime/full_vision_certification/algorithmic_rediscovery/planted-analytic-series.csv
+diversity_axes:
+- search_class
+- rediscovery_target

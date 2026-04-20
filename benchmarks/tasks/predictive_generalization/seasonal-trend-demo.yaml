@@ -1,0 +1,62 @@
+task_id: seasonal_trend_demo
+track_id: predictive_generalization
+task_family: single_entity_point_forecast
+regime_tags:
+  - seasonal
+  - trend
+dataset_ref: fixtures/runtime/phase06/probabilistic-trend-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-12T00:00:00Z'
+generator_status: unknown_real_world
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: rolling_origin
+  initial_window: 18
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.02
+budget_policy:
+  wall_clock_seconds: 600
+  candidate_limit: 256
+baseline_registry:
+  - baseline_id: naive_last_value
+    manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
+  - baseline_id: seasonal_naive
+    manifest_path: benchmarks/baselines/predictive_generalization/seasonal-naive.yaml
+submitter_registry:
+  - submitter_id: analytic_backend
+  - submitter_id: recursive_spectral_backend
+  - submitter_id: algorithmic_search_backend
+  - submitter_id: portfolio_orchestrator
+seed_policy:
+  seed: 11
+  restarts: 5
+adversarial_tags:
+  - baseline_overclaim_guard
+abstention_policy:
+  allow_abstention: true
+  expected_mode: no_publishable_winner
+forbidden_shortcuts:
+  - leak_future_observations
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+origin_policy:
+  policy_id: rolling_origin
+  min_origins: 6
+horizon_policy:
+  horizons:
+    - 1
+    - 3
+    - 6
+baseline_comparison_policy:
+  paired_test: diebold_mariano
+  require_margin_win: true

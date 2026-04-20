@@ -1,0 +1,15 @@
+version: 1
+kind: schema_registry
+schemas:
+  - schema_name: run_manifest@1.0.0
+    owner_ref: manifest_registry_owner
+    owning_module: manifest_registry
+    canonical_source_path: docs/system.md
+  - schema_name: search_plan_manifest@1.0.0
+    owner_ref: search_planning_owner
+    owning_module: search_planning
+    canonical_source_path: docs/system.md
+  - schema_name: claim_card_manifest@1.1.0
+    owner_ref: claims_owner
+    owning_module: claims
+    canonical_source_path: docs/system.md

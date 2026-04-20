@@ -1,0 +1,15 @@
+fixture_family_id: robustness
+fixture_spec_id: euclid-certification-fixtures-v1
+dataset_refs:
+- fixtures/runtime/full_vision_certification/robustness/robustness-forecast-series.csv
+- fixtures/runtime/full_vision_certification/robustness/leakage-trap-series.csv
+- fixtures/runtime/full_vision_certification/robustness/sensitivity-series.csv
+series_count: 3
+entity_count: 1
+evidence_bundle_refs:
+- fixtures/runtime/full_vision_certification/robustness/robustness-publication-golden.json
+- fixtures/runtime/full_vision_certification/robustness/robustness-downgrade-golden.json
+- fixtures/runtime/full_vision_certification/robustness/leakage-trap-series.csv
+diversity_axes:
+- leakage
+- sensitivity

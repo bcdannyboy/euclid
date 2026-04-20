@@ -1,0 +1,4 @@
+entity,event_time,availability_time,target,revision_id
+phase03-availability,2026-01-01T00:00:00Z,2026-01-02T00:00:00Z,10.0,0
+phase03-availability,2026-01-02T00:00:00Z,2026-01-02T00:00:01Z,12.0,0
+phase03-availability,2026-01-03T00:00:00Z,2026-01-02T00:00:00Z,14.0,0

@@ -1,0 +1,70 @@
+task_id: phase08_planted_affine_lag_exact
+track_id: rediscovery
+task_family: analytic_symbolic_regression
+regime_tags:
+  - phase08_planted_law
+  - planted_generator
+  - exact_case
+  - positive_case
+dataset_ref: src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/affine-lag-exact-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-19T00:00:00Z'
+generator_status: known_generator
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: walk_forward
+  initial_window: 12
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.001
+budget_policy:
+  wall_clock_seconds: 60
+  candidate_limit: 32
+baseline_registry:
+  - baseline_id: reference_description
+    manifest_path: benchmarks/baselines/rediscovery/reference-description.yaml
+submitter_registry:
+  - submitter_id: analytic_backend
+seed_policy:
+  seed: 21
+  restarts: 0
+adversarial_tags:
+  - planted_generator
+  - recovery_threshold
+abstention_policy:
+  allow_abstention: true
+  expected_mode: structural_miss
+forbidden_shortcuts:
+  - raw_test_set_fit
+  - oracle_fit
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+  verification_mode: candidate_and_score_replay
+target_structure_ref: src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/affine-lag.json
+equivalence_policy:
+  equivalence_class: affine_lag_equivalent
+  canonicalizer: lag_affine_normal_form
+parameter_tolerance_policy:
+  absolute_tolerance: 1.0e-06
+predictive_adequacy_floor:
+  metric_id: mean_absolute_error
+  max_value: 1.0e-06
+fixture_spec_id: phase08-planted-law-fixtures-v1
+fixture_family_id: phase08_planted_law_suite
+phase08_planted_contract:
+  family: affine_lag
+  variant: exact
+  generator_ref: src/euclid/_assets/fixtures/runtime/phase08/planted_law_suite/generators/affine-lag.json
+  expected_recovery:
+    recovery_class: equivalent_generator
+    max_parameter_abs_error: 1.0e-06
+    max_predictive_mae: 1.0e-06

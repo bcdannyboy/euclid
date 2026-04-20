@@ -1,0 +1,19 @@
+version: 1
+kind: typed_pooling_contracts
+owners:
+  - id: typed_pooling_contract_owner
+    display_name: Typed Pooling Contract Owner
+global_rules:
+  pooling_requires_declared_entity_panel: true
+  hidden_shrinkage_forbidden: true
+  singleton_entity_behavior: degenerate_one_entity_case
+contracts:
+  - schema_name: typed_pooling_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    pooling_mode: declared_shared_and_entity_local_components
+    required_fields:
+      - entity_panel
+      - shared_component_scope
+      - local_component_scope
+      - sharing_map
+    publication_rule: pooling_semantics_must_be_bound_before_cross_entity_publication

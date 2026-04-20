@@ -1,0 +1,52 @@
+version: 1
+kind: evidence_strength_policy
+strength_classes:
+- id: semantic_runtime
+  rank: 10
+  description: Direct operator-runtime execution proves the declared capability in a typed Euclid run path.
+- id: benchmark_semantic
+  rank: 20
+  description: Benchmark execution proves the declared surface under the admitted semantic benchmark program.
+- id: replay
+  rank: 30
+  description: Replay and reproducibility evidence proves the emitted artifacts can be re-executed honestly.
+- id: packaging_install
+  rank: 40
+  description: Clean-install or packaged-wheel execution proves the public runtime surface is install-safe.
+- id: golden_regression
+  rank: 50
+  description: Golden fixtures and regression checks prove a surface remains stable once it is already implemented.
+- id: governance_spec
+  rank: 60
+  description: Governance and schema evidence binds vocabulary, disclosure rules, and report formats without proving runtime execution.
+- id: docs_only
+  rank: 70
+  description: Prose-only or notebook-style explanation is explanatory evidence, not closing proof.
+runtime_closing_strength_classes:
+- semantic_runtime
+- benchmark_semantic
+- replay
+- packaging_install
+non_closing_strength_classes:
+- docs_only
+- governance_spec
+benchmark_semantic_policy:
+  semantic_requires_runtime_surface: true
+  structural_only_capability_types:
+  - evidence_lane
+  structural_only_reason_codes:
+  - benchmark_governance_only
+packaging_install_policy:
+  required_for_public_installed_surfaces: true
+  required_capability_types:
+  - operator_runtime_surface
+  - clean_install_surface
+  required_row_ids:
+  - lifecycle_artifact:run_result
+  - lifecycle_artifact:publication_record
+  - lifecycle_artifact:catalog_entry
+non_closing_evidence_sources:
+- docs_only
+- spec_only
+- wording_only
+- notebook_smoke

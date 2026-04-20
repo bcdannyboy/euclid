@@ -1,0 +1,60 @@
+task_id: planted_analytic_demo
+track_id: rediscovery
+task_family: analytic_symbolic_regression
+regime_tags:
+  - planted_generator
+  - low_noise
+dataset_ref: fixtures/runtime/full_vision_certification/algorithmic_rediscovery/planted-analytic-series.csv
+snapshot_policy:
+  freeze_mode: content_addressed_copy
+  availability_cutoff: '2026-04-12T00:00:00Z'
+generator_status: known_generator
+target_transform_policy:
+  transform_id: identity
+quantization_policy:
+  lattice: decimal_1e-6
+observation_model_policy:
+  model_id: gaussian_point
+split_policy:
+  policy_id: walk_forward
+  initial_window: 12
+  step: 1
+forecast_object_type: point
+score_policy:
+  metric_id: mean_absolute_error
+practical_significance_margin: 0.01
+budget_policy:
+  wall_clock_seconds: 300
+  candidate_limit: 128
+baseline_registry:
+  - baseline_id: reference_description
+    manifest_path: benchmarks/baselines/rediscovery/reference-description.yaml
+submitter_registry:
+  - submitter_id: analytic_backend
+  - submitter_id: recursive_spectral_backend
+  - submitter_id: algorithmic_search_backend
+  - submitter_id: portfolio_orchestrator
+seed_policy:
+  seed: 7
+  restarts: 3
+adversarial_tags:
+  - equivalence_hacking
+abstention_policy:
+  allow_abstention: true
+  expected_mode: structural_miss
+forbidden_shortcuts:
+  - raw_test_set_fit
+replay_policy:
+  ledger_mode: append_only
+  persist_candidate_ledgers: true
+target_structure_ref: fixtures/runtime/phase08/generators/planted-analytic.json
+equivalence_policy:
+  equivalence_class: exact_symbolic_or_simplified
+  canonicalizer: sympy_simplify
+parameter_tolerance_policy:
+  absolute_tolerance: 1.0e-06
+predictive_adequacy_floor:
+  metric_id: mean_absolute_error
+  max_value: 0.15
+fixture_spec_id: euclid-certification-fixtures-v1
+fixture_family_id: algorithmic_rediscovery

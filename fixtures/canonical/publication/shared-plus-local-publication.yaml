@@ -1,0 +1,399 @@
+version: 1
+kind: canonical_publication_fixture_bundle
+bundle_id: shared_plus_local_publication_bundle
+scenario_id: shared-plus-local-publication
+scenario_class: positive_publication
+required_modules:
+- candidate_fitting
+- catalog_publishing
+- claims
+- evaluation
+- evaluation_governance
+- gate_lifecycle
+- replay
+- robustness
+- scoring
+- search_planning
+- shared_plus_local_decomposition
+- split_planning
+- timeguard
+required_schema_families:
+- calibration_contract_manifest@1.0.0
+- calibration_result_manifest@1.0.0
+- claim_card_manifest@1.1.0
+- comparison_universe_manifest@1.0.0
+- evaluation_event_log_manifest@1.0.0
+- evaluation_governance_manifest@1.1.0
+- evaluation_plan_manifest@1.1.0
+- point_score_policy_manifest@1.0.0
+- point_score_result_manifest@1.0.0
+- prediction_artifact_manifest@1.1.0
+- predictive_gate_policy_manifest@1.1.0
+- publication_record_manifest@1.1.0
+- readiness_judgment_manifest@1.0.0
+- reducer_artifact_manifest@1.0.0
+- reproducibility_bundle_manifest@1.0.0
+- robustness_report_manifest@1.1.0
+- run_result_manifest@1.1.0
+- schema_lifecycle_integration_closure_manifest@1.0.0
+- scope_ledger_manifest@1.0.0
+- scorecard_manifest@1.1.0
+- search_plan_manifest@1.0.0
+- shared_plus_local_decomposition_policy_manifest@1.0.0
+- validation_scope_manifest@1.0.0
+required_contract_families:
+- schemas/contracts/shared-plus-local-evaluation.yaml
+- schemas/contracts/composition-semantics.yaml
+- schemas/contracts/publication-lifecycle.yaml
+required_evidence_classes:
+- descriptive_compression
+- predictive_generalization
+- robustness
+- replay_verification
+- readiness_and_closure
+anchor_artifacts:
+- fixtures/canonical/math/shared-plus-local-predictive.yaml
+- docs/examples/extension-lane-publication-fixtures.md
+expected_outcome:
+  validator_disposition: must_accept
+  publication_mode: candidate_publication
+  terminal_lifecycle_state: publication_completed
+  claim_lane: predictively_supported
+  forecast_object_type: point
+  abstention_type: null
+  catalog_scope: internal
+lifecycle_trace:
+- state: publication_requested
+  produced_artifact_refs:
+  - schema_name: validation_scope_manifest@1.0.0
+    object_id: shared_plus_local_publication_validation_scope
+- state: meaning_bound
+  produced_artifact_refs:
+  - schema_name: claim_card_manifest@1.1.0
+    object_id: shared_plus_local_publication_claim_card
+- state: replay_bundle_assembled
+  produced_artifact_refs:
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: shared_plus_local_publication_reproducibility_bundle
+- state: replay_verified
+  produced_artifact_refs:
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    object_id: shared_plus_local_publication_reproducibility_bundle
+- state: candidate_publication_selected
+  produced_artifact_refs:
+  - schema_name: run_result_manifest@1.1.0
+    object_id: shared_plus_local_publication_run_result
+- state: publication_record_written
+  produced_artifact_refs:
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: shared_plus_local_publication_publication_record
+- state: catalog_projected
+  produced_artifact_refs:
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: shared_plus_local_publication_publication_record
+- state: publication_completed
+  produced_artifact_refs:
+  - schema_name: publication_record_manifest@1.1.0
+    object_id: shared_plus_local_publication_publication_record
+artifacts:
+- schema_name: validation_scope_manifest@1.0.0
+  object_id: shared_plus_local_publication_validation_scope
+  module_id: candidate_fitting
+  body:
+    scope_id: shared_plus_local_publication_scope
+    scenario_id: shared-plus-local-publication
+    claim_lane: predictively_supported
+    forecast_object_type: point
+    catalog_scope: internal
+    anchor_artifact_paths:
+    - fixtures/canonical/math/shared-plus-local-predictive.yaml
+    - docs/examples/extension-lane-publication-fixtures.md
+- schema_name: scope_ledger_manifest@1.0.0
+  object_id: shared_plus_local_publication_scope_ledger
+  module_id: search_planning
+  body:
+    ledger_id: shared_plus_local_publication_scope_ledger
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: shared_plus_local_publication_validation_scope
+    binding_status: retained_scope
+- schema_name: search_plan_manifest@1.0.0
+  object_id: shared_plus_local_publication_search_plan
+  module_id: search_planning
+  body:
+    plan_id: shared_plus_local_publication_search_plan
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: shared_plus_local_publication_validation_scope
+    search_class: frozen_candidate_replay
+- schema_name: evaluation_plan_manifest@1.1.0
+  object_id: shared_plus_local_publication_evaluation_plan
+  module_id: evaluation_governance
+  body:
+    plan_id: shared_plus_local_publication_evaluation_plan
+    search_plan_ref:
+      schema_name: search_plan_manifest@1.0.0
+      object_id: shared_plus_local_publication_search_plan
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: shared_plus_local_publication_validation_scope
+- schema_name: comparison_universe_manifest@1.0.0
+  object_id: shared_plus_local_publication_comparison_universe
+  module_id: evaluation_governance
+  body:
+    universe_id: shared_plus_local_publication_comparison_universe
+    primary_comparator_class: simplest_admissible_comparator
+    strongest_predictive_comparator_class: strongest_predictive_comparator
+    strongest_non_symbolic_comparator_class: strongest_non_symbolic_comparator
+- schema_name: evaluation_event_log_manifest@1.0.0
+  object_id: shared_plus_local_publication_evaluation_event_log
+  module_id: evaluation
+  body:
+    event_log_id: shared_plus_local_publication_evaluation_event_log
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: shared_plus_local_publication_evaluation_plan
+    terminal_state: publication_completed
+- schema_name: evaluation_governance_manifest@1.1.0
+  object_id: shared_plus_local_publication_evaluation_governance
+  module_id: evaluation_governance
+  body:
+    governance_id: shared_plus_local_publication_evaluation_governance
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: shared_plus_local_publication_evaluation_plan
+    comparison_universe_ref:
+      schema_name: comparison_universe_manifest@1.0.0
+      object_id: shared_plus_local_publication_comparison_universe
+- schema_name: readiness_judgment_manifest@1.0.0
+  object_id: shared_plus_local_publication_readiness_judgment
+  module_id: catalog_publishing
+  body:
+    judgment_id: shared_plus_local_publication_readiness_judgment
+    final_verdict: ready
+    catalog_scope: internal
+- schema_name: schema_lifecycle_integration_closure_manifest@1.0.0
+  object_id: shared_plus_local_publication_schema_lifecycle_closure
+  module_id: gate_lifecycle
+  body:
+    closure_id: shared_plus_local_publication_schema_lifecycle_closure
+    status: passed
+- schema_name: point_score_policy_manifest@1.0.0
+  object_id: shared_plus_local_publication_point_score_policy
+  module_id: scoring
+  body:
+    policy_id: shared_plus_local_publication_point_score_policy
+    forecast_object_type: point
+    primary_score: absolute_error
+- schema_name: point_score_result_manifest@1.0.0
+  object_id: shared_plus_local_publication_point_score_result
+  module_id: evaluation
+  body:
+    result_id: shared_plus_local_publication_point_score_result
+    score_policy_ref:
+      schema_name: point_score_policy_manifest@1.0.0
+      object_id: shared_plus_local_publication_point_score_policy
+    reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: shared_plus_local_publication_reducer_artifact
+- schema_name: calibration_contract_manifest@1.0.0
+  object_id: shared_plus_local_publication_calibration_contract
+  module_id: evaluation_governance
+  body:
+    contract_id: shared_plus_local_publication_calibration_contract
+    forecast_object_type: point
+    calibration_mode: forbidden_for_gate
+- schema_name: calibration_result_manifest@1.0.0
+  object_id: shared_plus_local_publication_calibration_result
+  module_id: evaluation
+  body:
+    result_id: shared_plus_local_publication_calibration_result
+    calibration_contract_ref:
+      schema_name: calibration_contract_manifest@1.0.0
+      object_id: shared_plus_local_publication_calibration_contract
+    status: recorded_not_gating
+- schema_name: predictive_gate_policy_manifest@1.1.0
+  object_id: shared_plus_local_publication_predictive_gate_policy
+  module_id: evaluation_governance
+  body:
+    policy_id: shared_plus_local_publication_predictive_gate_policy
+    forecast_object_type: point
+    required_time_safety_status: verified
+    required_confirmatory_status: replicated
+- schema_name: prediction_artifact_manifest@1.1.0
+  object_id: shared_plus_local_publication_prediction_artifact
+  module_id: evaluation
+  body:
+    prediction_artifact_id: shared_plus_local_publication_prediction_artifact
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: shared_plus_local_publication_evaluation_plan
+    forecast_object_type: point
+- schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+  object_id: shared_plus_local_publication_shared_local_policy
+  module_id: shared_plus_local_decomposition
+  body:
+    policy_id: shared_plus_local_publication_shared_local_policy
+    required_rule_ids:
+    - entity_panel_comparability
+    - shared_component_fit_scope
+    - local_component_fit_scope
+    - cross_entity_aggregation
+    - unseen_entity_publication
+- schema_name: reducer_artifact_manifest@1.0.0
+  object_id: shared_plus_local_publication_reducer_artifact
+  module_id: candidate_fitting
+  body:
+    artifact_id: shared_plus_local_publication_reducer_artifact
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: shared_plus_local_publication_validation_scope
+    math_fixture_path: fixtures/canonical/math/shared-plus-local-predictive.yaml
+- schema_name: robustness_report_manifest@1.1.0
+  object_id: shared_plus_local_publication_robustness_report
+  module_id: robustness
+  body:
+    report_id: shared_plus_local_publication_robustness_report
+    reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: shared_plus_local_publication_reducer_artifact
+    evidence_classes:
+    - descriptive_compression
+    - predictive_generalization
+    - robustness
+- schema_name: scorecard_manifest@1.1.0
+  object_id: shared_plus_local_publication_scorecard
+  module_id: scoring
+  body:
+    scorecard_id: shared_plus_local_publication_scorecard
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: shared_plus_local_publication_validation_scope
+    robustness_report_refs:
+    - schema_name: robustness_report_manifest@1.1.0
+      object_id: shared_plus_local_publication_robustness_report
+    evidence_classes:
+    - descriptive_compression
+    - predictive_generalization
+    - robustness
+    - replay_verification
+    - readiness_and_closure
+    point_score_policy_ref:
+      schema_name: point_score_policy_manifest@1.0.0
+      object_id: shared_plus_local_publication_point_score_policy
+    point_score_result_ref:
+      schema_name: point_score_result_manifest@1.0.0
+      object_id: shared_plus_local_publication_point_score_result
+    calibration_contract_ref:
+      schema_name: calibration_contract_manifest@1.0.0
+      object_id: shared_plus_local_publication_calibration_contract
+    calibration_result_ref:
+      schema_name: calibration_result_manifest@1.0.0
+      object_id: shared_plus_local_publication_calibration_result
+    predictive_gate_policy_ref:
+      schema_name: predictive_gate_policy_manifest@1.1.0
+      object_id: shared_plus_local_publication_predictive_gate_policy
+    shared_plus_local_policy_ref:
+      schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+      object_id: shared_plus_local_publication_shared_local_policy
+- schema_name: claim_card_manifest@1.1.0
+  object_id: shared_plus_local_publication_claim_card
+  module_id: claims
+  body:
+    claim_id: shared_plus_local_publication_claim_card
+    validation_scope_ref:
+      schema_name: validation_scope_manifest@1.0.0
+      object_id: shared_plus_local_publication_validation_scope
+    scorecard_ref:
+      schema_name: scorecard_manifest@1.1.0
+      object_id: shared_plus_local_publication_scorecard
+    claim_lane: predictively_supported
+    forecast_object_type: point
+    prediction_artifact_ref:
+      schema_name: prediction_artifact_manifest@1.1.0
+      object_id: shared_plus_local_publication_prediction_artifact
+    shared_plus_local_policy_ref:
+      schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+      object_id: shared_plus_local_publication_shared_local_policy
+- schema_name: reproducibility_bundle_manifest@1.0.0
+  object_id: shared_plus_local_publication_reproducibility_bundle
+  module_id: replay
+  body:
+    bundle_id: shared_plus_local_publication_reproducibility_bundle
+    search_plan_ref:
+      schema_name: search_plan_manifest@1.0.0
+      object_id: shared_plus_local_publication_search_plan
+    evaluation_event_log_ref:
+      schema_name: evaluation_event_log_manifest@1.0.0
+      object_id: shared_plus_local_publication_evaluation_event_log
+    reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: shared_plus_local_publication_reducer_artifact
+    replay_verification_status: verified
+- schema_name: run_result_manifest@1.1.0
+  object_id: shared_plus_local_publication_run_result
+  module_id: catalog_publishing
+  body:
+    run_id: shared_plus_local_publication_run
+    scope_ledger_ref:
+      schema_name: scope_ledger_manifest@1.0.0
+      object_id: shared_plus_local_publication_scope_ledger
+    search_plan_ref:
+      schema_name: search_plan_manifest@1.0.0
+      object_id: shared_plus_local_publication_search_plan
+    evaluation_plan_ref:
+      schema_name: evaluation_plan_manifest@1.1.0
+      object_id: shared_plus_local_publication_evaluation_plan
+    comparison_universe_ref:
+      schema_name: comparison_universe_manifest@1.0.0
+      object_id: shared_plus_local_publication_comparison_universe
+    evaluation_event_log_ref:
+      schema_name: evaluation_event_log_manifest@1.0.0
+      object_id: shared_plus_local_publication_evaluation_event_log
+    evaluation_governance_ref:
+      schema_name: evaluation_governance_manifest@1.1.0
+      object_id: shared_plus_local_publication_evaluation_governance
+    result_mode: candidate_publication
+    primary_reducer_artifact_ref:
+      schema_name: reducer_artifact_manifest@1.0.0
+      object_id: shared_plus_local_publication_reducer_artifact
+    primary_scorecard_ref:
+      schema_name: scorecard_manifest@1.1.0
+      object_id: shared_plus_local_publication_scorecard
+    primary_claim_card_ref:
+      schema_name: claim_card_manifest@1.1.0
+      object_id: shared_plus_local_publication_claim_card
+    robustness_report_refs:
+    - schema_name: robustness_report_manifest@1.1.0
+      object_id: shared_plus_local_publication_robustness_report
+    reproducibility_bundle_ref:
+      schema_name: reproducibility_bundle_manifest@1.0.0
+      object_id: shared_plus_local_publication_reproducibility_bundle
+    prediction_artifact_refs:
+    - schema_name: prediction_artifact_manifest@1.1.0
+      object_id: shared_plus_local_publication_prediction_artifact
+    deferred_scope_policy_refs:
+    - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+      object_id: shared_plus_local_publication_shared_local_policy
+- schema_name: publication_record_manifest@1.1.0
+  object_id: shared_plus_local_publication_publication_record
+  module_id: catalog_publishing
+  body:
+    publication_id: shared_plus_local_publication_publication_record
+    run_result_ref:
+      schema_name: run_result_manifest@1.1.0
+      object_id: shared_plus_local_publication_run_result
+    catalog_scope: internal
+    publication_mode: candidate_publication
+    replay_verification_status: verified
+    comparator_exposure_status: satisfied
+    reproducibility_bundle_ref:
+      schema_name: reproducibility_bundle_manifest@1.0.0
+      object_id: shared_plus_local_publication_reproducibility_bundle
+    readiness_judgment_ref:
+      schema_name: readiness_judgment_manifest@1.0.0
+      object_id: shared_plus_local_publication_readiness_judgment
+    schema_lifecycle_integration_closure_ref:
+      schema_name: schema_lifecycle_integration_closure_manifest@1.0.0
+      object_id: shared_plus_local_publication_schema_lifecycle_closure
+    published_at: '2026-04-12T00:00:00Z'

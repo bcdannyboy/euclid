@@ -1,0 +1,132 @@
+{
+  "artifact": {
+    "comparison_key": {
+      "entity_panel": [
+        "entity-a",
+        "entity-b"
+      ],
+      "entity_weights": [
+        {
+          "entity": "entity-a",
+          "weight": "0.5"
+        },
+        {
+          "entity": "entity-b",
+          "weight": "0.5"
+        }
+      ],
+      "forecast_object_type": "point",
+      "horizon_set": [
+        1
+      ],
+      "score_law_id": "absolute_error",
+      "scored_origin_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25"
+    },
+    "entity_panel": [
+      "entity-a",
+      "entity-b"
+    ],
+    "entity_weights": [
+      {
+        "entity": "entity-a",
+        "weight": "0.5"
+      },
+      {
+        "entity": "entity-b",
+        "weight": "0.5"
+      }
+    ],
+    "rows": [
+      {
+        "available_at": "2026-01-05T06:00:00Z",
+        "entity": "entity-a",
+        "horizon": 1,
+        "origin_time": "2026-01-04T00:00:00Z",
+        "point_forecast": 14.0,
+        "realized_observation": 14.0
+      },
+      {
+        "available_at": "2026-01-05T06:00:00Z",
+        "entity": "entity-b",
+        "horizon": 1,
+        "origin_time": "2026-01-04T00:00:00Z",
+        "point_forecast": 24.0,
+        "realized_observation": 24.0
+      }
+    ]
+  },
+  "claim": {
+    "allowed_interpretation_codes": [
+      "historical_structure_summary",
+      "point_forecast_within_declared_validation_scope",
+      "cross_entity_panel_forecast_within_declared_validation_scope"
+    ],
+    "claim_type": "predictively_supported",
+    "predictive_support_status": "confirmatory_supported"
+  },
+  "comparison_universe": {
+    "candidate_beats_baseline": true,
+    "candidate_comparison_key": {
+      "entity_panel": [
+        "entity-a",
+        "entity-b"
+      ],
+      "entity_weights": [
+        {
+          "entity": "entity-a",
+          "weight": "0.5"
+        },
+        {
+          "entity": "entity-b",
+          "weight": "0.5"
+        }
+      ],
+      "forecast_object_type": "point",
+      "horizon_set": [
+        1
+      ],
+      "score_policy_ref": {
+        "object_id": "point_score_policy_manifest_2c26c961f678620e51ba",
+        "schema_name": "point_score_policy_manifest@1.0.0"
+      },
+      "scored_origin_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25"
+    },
+    "comparison_class_status": "comparable",
+    "paired_comparison_records": [
+      {
+        "candidate_primary_score": 0.0,
+        "comparator_id": "constant_baseline",
+        "comparator_kind": "baseline",
+        "comparator_primary_score": 4.0,
+        "comparison_status": "comparable",
+        "failure_reason_code": null,
+        "mean_loss_differential": 4.0,
+        "paired_origin_count": 2,
+        "per_horizon_mean_loss_differentials": [
+          {
+            "horizon": 1,
+            "mean_loss_differential": 4.0
+          }
+        ],
+        "practical_significance_margin": 0.0,
+        "practical_significance_status": "candidate_better_than_margin",
+        "primary_score_delta": 4.0,
+        "score_result_ref": {
+          "object_id": "point_score_result_manifest_39583c397dd839bf2c16",
+          "schema_name": "point_score_result_manifest@1.0.0"
+        }
+      }
+    ]
+  },
+  "score": {
+    "aggregated_primary_score": 0.0,
+    "comparison_status": "comparable",
+    "per_horizon": [
+      {
+        "horizon": 1,
+        "mean_point_loss": 0.0,
+        "valid_origin_count": 2
+      }
+    ]
+  }
+}

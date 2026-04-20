@@ -1,0 +1,40 @@
+workflow_id: euclid_current_release_candidate
+target_version: 1.0.0
+package_version: 1.0.0
+benchmark_suite: benchmarks/suites/current-release.yaml
+replay_run_id: current-release-run
+notebook_path: output/jupyter-notebook/current_release.ipynb
+required_test_targets:
+- tests/unit
+- tests/integration
+- tests/golden
+- tests/benchmarks
+- tests/perf
+certification_commands:
+- python -m euclid release repo-test-matrix
+- python -m euclid benchmarks run --suite current-release.yaml --no-resume
+- python -m euclid benchmarks run --suite full-vision.yaml --no-resume
+- python -m euclid run --config examples/full_vision_run.yaml
+- python -m euclid replay --run-id full-vision-run
+- python -m euclid release certify-clean-install
+- python -m euclid release status
+- python -m euclid release verify-completion
+- python -m euclid release certify-research-readiness
+request_id: current-release-run
+dataset_csv: minimal_dataset.csv
+cutoff_available_at: null
+quantization_step: "0.5"
+minimum_description_gain_bits: 0.0
+min_train_size: 3
+horizon: 1
+seasonal_period: 2
+forecast_object_type: point
+search:
+  class: bounded_heuristic
+  seed: "0"
+  family_ids:
+  - constant
+  - drift
+  - linear_trend
+  - seasonal_naive
+authority_snapshot_id: euclid-authority-2026-04-15-b

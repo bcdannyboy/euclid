@@ -1,0 +1,17 @@
+suite_id: mvp
+description: Legacy retained-core benchmark suite kept for compatibility checks only; it does not claim current_release or portfolio closure.
+task_manifest_paths:
+  - benchmarks/tasks/rediscovery/planted-analytic-demo.yaml
+  - benchmarks/tasks/predictive_generalization/seasonal-trend-demo.yaml
+  - benchmarks/tasks/adversarial_honesty/leakage-trap-demo.yaml
+required_tracks:
+  - rediscovery
+  - predictive_generalization
+  - adversarial_honesty
+surface_requirements:
+  - surface_id: retained_core_release
+    task_ids:
+      - planted_analytic_demo
+      - seasonal_trend_demo
+      - leakage_trap_demo
+    replay_required: true

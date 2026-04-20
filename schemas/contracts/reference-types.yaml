@@ -1,0 +1,930 @@
+version: 1
+kind: reference_type_registry
+owners:
+  - id: reference_type_registry_council
+    display_name: Reference Type Registry Council
+typed_ref_shape:
+  required_fields:
+    - schema_name
+    - object_id
+  forbidden_placeholders:
+    - free_string_ref
+    - prose_only_selector
+    - schema_less_object_id
+  optional_ref_rule: omit_field_when_absent
+reference_profiles:
+  - schema_name: observation_model_manifest@1.1.0
+    owner_ref: candidate_fitting_owner
+    fields:
+      - path: target_transform_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - target_transform_manifest@1.0.0
+      - path: base_measure_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - base_measure_policy_manifest@1.0.0
+
+  - schema_name: codelength_policy_manifest@1.1.0
+    owner_ref: candidate_fitting_owner
+    fields:
+      - path: target_transform_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - target_transform_manifest@1.0.0
+      - path: base_measure_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - base_measure_policy_manifest@1.0.0
+      - path: reference_description_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reference_description_policy_manifest@1.1.0
+
+  - schema_name: null_protocol_manifest@1.1.0
+    owner_ref: robustness_owner
+    fields:
+      - path: surrogate_generator_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - surrogate_generator_manifest@1.0.0
+
+  - schema_name: perturbation_protocol_manifest@1.1.0
+    owner_ref: robustness_owner
+    fields:
+      - path: base_codelength_policy_ref
+        required: false
+        required_when: perturbations[].family_id contains quantization_coarsening
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - codelength_policy_manifest@1.1.0
+      - path: baseline_registry_ref
+        required: false
+        required_when: required_metric_refs contains outer_baseline_win_rate
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - baseline_registry_manifest@1.1.0
+      - path: point_score_policy_ref
+        required: false
+        required_when: required_metric_refs contains outer_baseline_win_rate
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - point_score_policy_manifest@1.0.0
+          - probabilistic_score_policy_manifest@1.0.0
+          - interval_score_policy_manifest@1.0.0
+          - quantile_score_policy_manifest@1.0.0
+          - event_probability_score_policy_manifest@1.0.0
+      - path: required_metric_refs[]
+        required: true
+        cardinality: one_or_more
+        unique_items: true
+        allowed_schema_names:
+          - retention_metric_manifest@1.0.0
+      - path: metric_thresholds[].metric_ref
+        required: true
+        cardinality: one_or_more
+        allowed_schema_names:
+          - retention_metric_manifest@1.0.0
+
+  - schema_name: search_plan_manifest@1.0.0
+    owner_ref: search_planning_owner
+    fields:
+      - path: canonicalization_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - canonicalization_policy_manifest@1.0.0
+      - path: codelength_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - codelength_policy_manifest@1.1.0
+      - path: reference_description_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reference_description_policy_manifest@1.1.0
+      - path: observation_model_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - observation_model_manifest@1.1.0
+
+  - schema_name: shared_plus_local_decomposition_policy_manifest@1.0.0
+    owner_ref: shared_plus_local_decomposition_owner
+    fields:
+      - path: typed_pooling_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - typed_pooling_manifest@1.0.0
+      - path: conditional_shared_local_codelength_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - conditional_shared_local_codelength_contract@1.0.0
+      - path: exchangeability_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - exchangeability_manifest@1.0.0
+      - path: unseen_entity_prediction_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - unseen_entity_prediction_policy_manifest@1.0.0
+      - path: multi_entity_predictive_evaluation_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - multi_entity_predictive_evaluation_manifest@1.0.0
+      - path: shared_local_freeze_refit_protocol_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - shared_local_freeze_refit_protocol_manifest@1.0.0
+
+  - schema_name: mechanistic_lane_policy_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    fields:
+      - path: mechanism_mapping_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - domain_specific_mechanism_mapping_manifest@1.0.0
+      - path: units_check_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - units_check_manifest@1.0.0
+      - path: invariance_test_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - invariance_test_manifest@1.0.0
+      - path: external_evidence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - external_evidence_manifest@1.0.0
+      - path: evidence_independence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evidence_independence_protocol_manifest@1.0.0
+
+  - schema_name: freeze_event_manifest@1.0.0
+    owner_ref: search_planning_owner
+    fields:
+      - path: frozen_candidate_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+      - path: frozen_shortlist_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - frozen_shortlist_manifest@1.0.0
+
+  - schema_name: frozen_shortlist_manifest@1.0.0
+    owner_ref: search_planning_owner
+    fields:
+      - path: search_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - search_plan_manifest@1.0.0
+      - path: candidate_refs[]
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+
+  - schema_name: baseline_registry_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    fields:
+      - path: compatible_point_score_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - point_score_policy_manifest@1.0.0
+          - probabilistic_score_policy_manifest@1.0.0
+          - interval_score_policy_manifest@1.0.0
+          - quantile_score_policy_manifest@1.0.0
+          - event_probability_score_policy_manifest@1.0.0
+
+  - schema_name: forecast_comparison_policy_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    fields:
+      - path: primary_score_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - point_score_policy_manifest@1.0.0
+          - probabilistic_score_policy_manifest@1.0.0
+          - interval_score_policy_manifest@1.0.0
+          - quantile_score_policy_manifest@1.0.0
+          - event_probability_score_policy_manifest@1.0.0
+
+  - schema_name: evaluation_event_log_manifest@1.0.0
+    owner_ref: evaluation_governance_owner
+    fields:
+      - path: events[].related_object_ref
+        required: true
+        cardinality: one_per_event
+        discriminator_field: ref_kind
+        allowed_schema_names_by_discriminator:
+          search_plan:
+            - search_plan_manifest@1.0.0
+          comparison_universe:
+            - comparison_universe_manifest@1.0.0
+          freeze_event:
+            - freeze_event_manifest@1.0.0
+          frozen_shortlist:
+            - frozen_shortlist_manifest@1.0.0
+          prediction_artifact:
+            - prediction_artifact_manifest@1.1.0
+          run_result:
+            - run_result_manifest@1.1.0
+
+  - schema_name: evaluation_governance_manifest@1.1.0
+    owner_ref: evaluation_governance_owner
+    fields:
+      - path: comparison_universe_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - comparison_universe_manifest@1.0.0
+      - path: event_log_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_event_log_manifest@1.0.0
+      - path: freeze_event_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - freeze_event_manifest@1.0.0
+      - path: frozen_shortlist_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - frozen_shortlist_manifest@1.0.0
+
+  - schema_name: external_evidence_record_manifest@1.0.0
+    owner_ref: external_evidence_ingestion_owner
+    fields:
+      - path: source_digest_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - source_digest_manifest@1.0.0
+
+  - schema_name: external_evidence_manifest@1.0.0
+    owner_ref: external_evidence_ingestion_owner
+    fields:
+      - path: record_refs[]
+        required: true
+        cardinality: one_or_more
+        allowed_schema_names:
+          - external_evidence_record_manifest@1.0.0
+      - path: source_digest_refs[]
+        required: true
+        cardinality: one_or_more
+        allowed_schema_names:
+          - source_digest_manifest@1.0.0
+
+  - schema_name: domain_specific_mechanism_mapping_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    fields:
+      - path: candidate_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+      - path: prediction_artifact_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+      - path: external_evidence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - external_evidence_manifest@1.0.0
+
+  - schema_name: units_check_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    fields:
+      - path: mechanism_mapping_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - domain_specific_mechanism_mapping_manifest@1.0.0
+
+  - schema_name: invariance_test_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    fields:
+      - path: mechanism_mapping_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - domain_specific_mechanism_mapping_manifest@1.0.0
+      - path: external_evidence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - external_evidence_manifest@1.0.0
+
+  - schema_name: evidence_independence_protocol_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    fields:
+      - path: external_evidence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - external_evidence_manifest@1.0.0
+      - path: prediction_artifact_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+      - path: predictive_evidence_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+          - point_score_result_manifest@1.0.0
+          - probabilistic_score_result_manifest@1.0.0
+          - calibration_result_manifest@1.0.0
+      - path: overlap_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+          - point_score_result_manifest@1.0.0
+          - probabilistic_score_result_manifest@1.0.0
+          - calibration_result_manifest@1.0.0
+
+  - schema_name: mechanistic_evidence_dossier_manifest@1.0.0
+    owner_ref: mechanistic_evidence_owner
+    fields:
+      - path: candidate_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+      - path: prediction_artifact_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+      - path: external_evidence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - external_evidence_manifest@1.0.0
+      - path: mechanism_mapping_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - domain_specific_mechanism_mapping_manifest@1.0.0
+      - path: units_check_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - units_check_manifest@1.0.0
+      - path: invariance_test_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - invariance_test_manifest@1.0.0
+      - path: evidence_independence_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evidence_independence_protocol_manifest@1.0.0
+
+  - schema_name: prediction_artifact_manifest@1.1.0
+    owner_ref: evaluation_owner
+    fields:
+      - path: score_policy_ref
+        required: true
+        cardinality: exactly_one
+        discriminator_field: forecast_object_type
+        allowed_schema_names_by_discriminator:
+          point:
+            - point_score_policy_manifest@1.0.0
+          distribution:
+            - probabilistic_score_policy_manifest@1.0.0
+          interval:
+            - interval_score_policy_manifest@1.0.0
+          quantile:
+            - quantile_score_policy_manifest@1.0.0
+          event_probability:
+            - event_probability_score_policy_manifest@1.0.0
+
+  - schema_name: point_score_result_manifest@1.0.0
+    owner_ref: scoring_owner
+    fields:
+      - path: score_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - point_score_policy_manifest@1.0.0
+      - path: prediction_artifact_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+
+  - schema_name: probabilistic_score_result_manifest@1.0.0
+    owner_ref: scoring_owner
+    fields:
+      - path: score_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - probabilistic_score_policy_manifest@1.0.0
+          - interval_score_policy_manifest@1.0.0
+          - quantile_score_policy_manifest@1.0.0
+          - event_probability_score_policy_manifest@1.0.0
+      - path: prediction_artifact_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+
+  - schema_name: calibration_result_manifest@1.0.0
+    owner_ref: scoring_owner
+    fields:
+      - path: calibration_contract_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - calibration_contract_manifest@1.0.0
+      - path: prediction_artifact_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+
+  - schema_name: algorithmic_dsl_manifest@1.1.0
+    owner_ref: algorithmic_dsl_owner
+    fields:
+      - path: semantics_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - dsl_semantics_manifest@1.0.0
+      - path: rewrite_system_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - dsl_rewrite_system_manifest@1.0.0
+      - path: canonical_serialization_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - canonical_serialization_manifest@1.0.0
+      - path: observational_equivalence_suite_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - observational_equivalence_suite_manifest@1.0.0
+
+  - schema_name: dsl_rewrite_system_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    fields:
+      - path: semantics_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - dsl_semantics_manifest@1.0.0
+
+  - schema_name: observational_equivalence_suite_manifest@1.0.0
+    owner_ref: algorithmic_dsl_owner
+    fields:
+      - path: semantics_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - dsl_semantics_manifest@1.0.0
+
+  - schema_name: validation_scope_manifest@1.0.0
+    owner_ref: claims_owner
+    fields:
+      - path: scope_ledger_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - scope_ledger_manifest@1.0.0
+      - path: evaluation_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_plan_manifest@1.1.0
+      - path: baseline_registry_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - baseline_registry_manifest@1.1.0
+      - path: forecast_comparison_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - forecast_comparison_policy_manifest@1.1.0
+      - path: comparison_universe_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - comparison_universe_manifest@1.0.0
+      - path: evaluation_event_log_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_event_log_manifest@1.0.0
+      - path: evaluation_governance_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_governance_manifest@1.1.0
+      - path: predictive_gate_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - predictive_gate_policy_manifest@1.1.0
+      - path: null_protocol_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - null_protocol_manifest@1.1.0
+      - path: perturbation_protocol_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - perturbation_protocol_manifest@1.1.0
+      - path: time_safety_audit_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - time_safety_audit_manifest@1.0.0
+      - path: point_score_policy_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - point_score_policy_manifest@1.0.0
+          - probabilistic_score_policy_manifest@1.0.0
+          - interval_score_policy_manifest@1.0.0
+          - quantile_score_policy_manifest@1.0.0
+          - event_probability_score_policy_manifest@1.0.0
+      - path: calibration_contract_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - calibration_contract_manifest@1.0.0
+      - path: deferred_scope_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - mechanistic_lane_policy_manifest@1.0.0
+          - shared_plus_local_decomposition_policy_manifest@1.0.0
+          - algorithmic_search_policy_manifest@1.0.0
+          - algorithmic_frontier_policy_manifest@1.0.0
+
+  - schema_name: scorecard_manifest@1.1.0
+    owner_ref: gate_lifecycle_owner
+    fields:
+      - path: mechanistic_evidence_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - mechanistic_evidence_dossier_manifest@1.0.0
+
+  - schema_name: claim_card_manifest@1.1.0
+    owner_ref: claims_owner
+    fields:
+      - path: candidate_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+      - path: scorecard_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - scorecard_manifest@1.1.0
+      - path: validation_scope_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - validation_scope_manifest@1.0.0
+      - path: mechanistic_evidence_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - mechanistic_evidence_dossier_manifest@1.0.0
+
+  - schema_name: abstention_manifest@1.1.0
+    owner_ref: claims_owner
+    fields:
+      - path: governing_refs[]
+        required: true
+        cardinality: one_or_more
+        allowed_schema_names:
+          - scorecard_manifest@1.1.0
+
+  - schema_name: leakage_canary_result_manifest@1.0.0
+    owner_ref: robustness_owner
+    fields:
+      - path: canary_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - leakage_canary_manifest@1.0.0
+      - path: stage_evidence_ref
+        required: false
+        cardinality: zero_or_one
+        discriminator_field: ref_kind
+        allowed_schema_names_by_discriminator:
+          feature_spec:
+            - feature_spec@1.0.0
+          time_safety_audit:
+            - time_safety_audit_manifest@1.0.0
+          evaluation_plan:
+            - evaluation_plan_manifest@1.1.0
+      - path: downstream_evidence_refs[]
+        required: false
+        cardinality: zero_or_more
+        unique_discriminator_values: true
+        discriminator_field: ref_kind
+        allowed_schema_names_by_discriminator:
+          search_plan:
+            - search_plan_manifest@1.0.0
+          frozen_shortlist:
+            - frozen_shortlist_manifest@1.0.0
+          evaluation_event_log:
+            - evaluation_event_log_manifest@1.0.0
+          prediction_artifact:
+            - prediction_artifact_manifest@1.1.0
+          point_score_result:
+            - point_score_result_manifest@1.0.0
+
+  - schema_name: null_result_manifest@1.0.0
+    owner_ref: robustness_owner
+    fields:
+      - path: null_protocol_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - null_protocol_manifest@1.1.0
+
+  - schema_name: perturbation_family_result_manifest@1.0.0
+    owner_ref: robustness_owner
+    fields:
+      - path: perturbation_protocol_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - perturbation_protocol_manifest@1.1.0
+      - path: metric_results[].metric_ref
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - retention_metric_manifest@1.0.0
+
+  - schema_name: sensitivity_analysis_manifest@1.0.0
+    owner_ref: robustness_owner
+    fields:
+      - path: perturbation_family_result_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - perturbation_family_result_manifest@1.0.0
+
+  - schema_name: robustness_report_manifest@1.1.0
+    owner_ref: robustness_owner
+    fields:
+      - path: null_protocol_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - null_protocol_manifest@1.1.0
+      - path: perturbation_protocol_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - perturbation_protocol_manifest@1.1.0
+      - path: null_result_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - null_result_manifest@1.0.0
+      - path: perturbation_family_result_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - perturbation_family_result_manifest@1.0.0
+      - path: leakage_canary_result_refs[]
+        required: true
+        cardinality: one_or_more
+        allowed_schema_names:
+          - leakage_canary_result_manifest@1.0.0
+      - path: sensitivity_analysis_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - sensitivity_analysis_manifest@1.0.0
+
+  - schema_name: reproducibility_bundle_manifest@1.0.0
+    owner_ref: replay_owner
+    fields:
+      - path: dataset_snapshot_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - dataset_snapshot_manifest@1.0.0
+      - path: feature_view_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - feature_view_manifest@1.0.0
+      - path: search_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - search_plan_manifest@1.0.0
+      - path: evaluation_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_plan_manifest@1.1.0
+      - path: comparison_universe_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - comparison_universe_manifest@1.0.0
+      - path: evaluation_event_log_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_event_log_manifest@1.0.0
+      - path: evaluation_governance_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_governance_manifest@1.1.0
+      - path: run_result_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - run_result_manifest@1.1.0
+      - path: required_manifest_refs[]
+        required: true
+        cardinality: one_or_more
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+          - scorecard_manifest@1.1.0
+          - claim_card_manifest@1.1.0
+          - abstention_manifest@1.1.0
+          - prediction_artifact_manifest@1.1.0
+          - validation_scope_manifest@1.0.0
+          - point_score_result_manifest@1.0.0
+          - probabilistic_score_result_manifest@1.0.0
+          - calibration_result_manifest@1.0.0
+          - external_evidence_manifest@1.0.0
+          - mechanistic_evidence_dossier_manifest@1.0.0
+
+  - schema_name: run_result_manifest@1.1.0
+    owner_ref: catalog_publishing_owner
+    fields:
+      - path: scope_ledger_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - scope_ledger_manifest@1.0.0
+      - path: search_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - search_plan_manifest@1.0.0
+      - path: evaluation_plan_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_plan_manifest@1.1.0
+      - path: comparison_universe_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - comparison_universe_manifest@1.0.0
+      - path: evaluation_event_log_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_event_log_manifest@1.0.0
+      - path: evaluation_governance_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - evaluation_governance_manifest@1.1.0
+      - path: primary_validation_scope_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - validation_scope_manifest@1.0.0
+      - path: primary_reducer_artifact_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - reducer_artifact_manifest@1.0.0
+      - path: primary_scorecard_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - scorecard_manifest@1.1.0
+      - path: primary_claim_card_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - claim_card_manifest@1.1.0
+      - path: primary_abstention_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - abstention_manifest@1.1.0
+      - path: prediction_artifact_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - prediction_artifact_manifest@1.1.0
+      - path: primary_score_result_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - point_score_result_manifest@1.0.0
+          - probabilistic_score_result_manifest@1.0.0
+      - path: primary_calibration_result_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - calibration_result_manifest@1.0.0
+      - path: primary_external_evidence_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - external_evidence_manifest@1.0.0
+      - path: primary_mechanistic_evidence_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - mechanistic_evidence_dossier_manifest@1.0.0
+      - path: robustness_report_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - robustness_report_manifest@1.1.0
+      - path: reproducibility_bundle_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reproducibility_bundle_manifest@1.0.0
+      - path: deferred_scope_policy_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - mechanistic_lane_policy_manifest@1.0.0
+          - shared_plus_local_decomposition_policy_manifest@1.0.0
+          - algorithmic_search_policy_manifest@1.0.0
+          - algorithmic_frontier_policy_manifest@1.0.0
+
+  - schema_name: publication_record_manifest@1.1.0
+    owner_ref: catalog_publishing_owner
+    fields:
+      - path: run_result_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - run_result_manifest@1.1.0
+      - path: reproducibility_bundle_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - reproducibility_bundle_manifest@1.0.0
+      - path: readiness_judgment_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - readiness_judgment_manifest@1.0.0
+      - path: schema_lifecycle_integration_closure_ref
+        required: true
+        cardinality: exactly_one
+        allowed_schema_names:
+          - schema_lifecycle_integration_closure_manifest@1.0.0

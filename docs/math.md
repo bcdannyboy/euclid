@@ -83,12 +83,12 @@ $$
 with $x_t=\text{lag}_1$, by weighted least squares closed-form moments:
 
 $$
-\bar x_w=\frac{\sum_t w_t x_t}{\sum_t w_t},\quad
-\bar y_w=\frac{\sum_t w_t y_t}{\sum_t w_t},
-$$
-$$
-\beta_1=\frac{\sum_t w_t(x_t-\bar x_w)(y_t-\bar y_w)}{\sum_t w_t(x_t-\bar x_w)^2},\quad
-\beta_0=\bar y_w-\beta_1\bar x_w.
+\begin{aligned}
+\bar x_w&=\frac{\sum_t w_t x_t}{\sum_t w_t}, &
+\bar y_w&=\frac{\sum_t w_t y_t}{\sum_t w_t},\\
+\beta_1&=\frac{\sum_t w_t(x_t-\bar x_w)(y_t-\bar y_w)}{\sum_t w_t(x_t-\bar x_w)^2}, &
+\beta_0&=\bar y_w-\beta_1\bar x_w.
+\end{aligned}
 $$
 (If denominator is zero, slope is set to 0.)
 

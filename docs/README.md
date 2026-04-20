@@ -11,6 +11,7 @@ The through-line is consistent across the reference set: Euclid derives descript
 - `system.md`: the full subsystem map and execution planes
 - `runtime-cli.md`: the main command-line surface, workspace layout, replay model, and operational behavior
 - `modeling-pipeline.md`: the stage-by-stage path from ordered observations to scored forecasts and publishable outcomes
+- `math.md`: Euclid’s scoring, fitting, coding, and calibration mathematics across the pipeline
 - `search-core.md`: Euclid’s mathematical core, including CIR normalization, reducer semantics, description gain, and adapters
 - `contracts-manifests.md`: the formal specification layer for schemas, manifests, object identity, and registries
 - `benchmarks-readiness.md`: benchmark semantics, release scopes, readiness rules, and compiler outputs
@@ -40,8 +41,9 @@ If you are changing search, fitting, or publication logic:
 If you want the equation story end to end:
 
 1. `modeling-pipeline.md`
-2. `search-core.md`
-3. `workbench.md`
+2. `math.md`
+3. `search-core.md`
+4. `workbench.md`
 
 If you are changing the local UI:
 

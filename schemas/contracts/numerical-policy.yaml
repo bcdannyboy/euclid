@@ -1,0 +1,16 @@
+kind: numerical_policy_contract
+schema_version: numerical-policy-v1
+default_policy:
+  policy_id: euclid_numerical_policy_v1
+  absolute_tolerance: 1.0e-09
+  relative_tolerance: 1.0e-09
+  optimizer_max_iterations: 10000
+  deterministic_seed_namespace: euclid-numerical-v1
+  failure_thresholds:
+    max_condition_number: 1.0e+12
+    max_replay_score_delta: 1.0e-09
+    max_optimizer_failure_rate: 0.0
+  allowed_instability_downgrades:
+    - optimizer_nonconvergence
+    - ill_conditioned_design
+    - external_runtime_unavailable

@@ -1,0 +1,76 @@
+phase_id: P01
+phase_status: complete
+covered_ids:
+  - P01-T01
+  - P01-T01-S01
+  - P01-T01-S02
+  - P01-T01-S03
+  - P01-T01-S04
+  - P01-T01-S05
+  - P01-T01-S06
+  - P01-T01-S07
+  - P01-T01-S08
+  - P01-T01-S09
+  - P01-T01-S10
+  - P01-T01-S11
+  - P01-T01-S12
+  - P01-T01-S13
+  - P01-T01-S14
+  - P01-T01-S15
+  - P01-T01-S16
+  - P01-T01-S17
+  - P01-T02
+  - P01-T02-S01
+  - P01-T02-S02
+  - P01-T02-S03
+  - P01-T02-S04
+  - P01-T02-S05
+  - P01-T02-S06
+  - P01-T02-S07
+  - P01-T03
+  - P01-T03-S01
+  - P01-T03-S02
+  - P01-T03-S03
+  - P01-T03-S04
+  - P01-T03-S05
+fixture_unit:
+  commands:
+    - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q tests/unit/runtime/test_numerical_environment.py tests/unit/manifests/test_numerical_policy.py
+fixture_integration:
+  commands:
+    - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q tests/integration/test_operator_replay_pipeline.py
+fixture_regression:
+  commands:
+    - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q tests/regression/test_live_api_evidence_redaction.py
+live_api:
+  commands:
+    - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q tests/live/test_dependency_runtime_live.py
+    - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 ./scripts/live_api_smoke.sh
+  required_env:
+    - FMP_API_KEY
+    - OPENAI_API_KEY
+redaction:
+  assertions:
+    - no_secret_in_dependency_diagnostics
+    - no_secret_in_live_runtime_artifact
+replay:
+  assertions:
+    - numerical_environment_metadata_recorded
+    - replay_mismatch_diagnostics_include_library_versions
+claim_scope:
+  assertions:
+    - numerical_dependency_success_does_not_promote_claims
+edge_cases:
+  required:
+    - missing_optional_julia_runtime
+    - pysr_top_level_import_deferred
+    - blas_lapack_metadata_unavailable
+    - library_version_mismatch
+    - live_provider_failure_preserves_dependency_diagnostics
+artifact_outputs:
+  - schemas/contracts/numerical-runtime.yaml
+  - schemas/contracts/numerical-policy.yaml
+  - build/reports/dependency-runtime-live-evidence.json
+known_external_provider_volatility:
+  - Julia may be unavailable locally; PySR package metadata is still captured and runtime absence is typed.
+  - Live provider failures must preserve redaction and dependency diagnostics.

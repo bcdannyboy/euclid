@@ -21,7 +21,6 @@ import yaml
 
 from euclid._version import (
     PACKAGE_VERSION,
-    RELEASE_CERTIFICATION_COMMANDS,
     RELEASE_CERTIFICATION_TEST_TARGETS,
     RELEASE_TARGET_VERSION,
     RELEASE_WORKFLOW_ID,
@@ -29,13 +28,9 @@ from euclid._version import (
 from euclid.benchmarks import profile_benchmark_suite, profile_benchmark_task
 from euclid.contracts import load_contract_catalog
 from euclid.operator_runtime._compat_runtime import profile_operator_run
-from euclid.operator_runtime.models import (
-    DEFAULT_ADMISSIBILITY_RULE_IDS,
-    DEFAULT_RUN_SUPPORT_OBJECT_IDS,
-)
 from euclid.operator_runtime.resources import (
-    resolve_checkout_root,
     resolve_asset_root,
+    resolve_checkout_root,
     resolve_example_path,
     resolve_notebook_path,
 )

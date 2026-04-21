@@ -9,7 +9,7 @@ from typing import Any, Mapping
 
 import yaml
 
-from euclid.artifacts import FilesystemArtifactStore
+from euclid.artifacts import ArtifactIntegrityError, FilesystemArtifactStore
 from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.loader import ContractCatalog, load_contract_catalog
 from euclid.contracts.refs import TypedRef
@@ -659,11 +659,26 @@ def replay_demo(
     effective_bundle_ref = _coerce_typed_ref(
         bundle_ref if bundle_ref is not None else summary_payload["bundle_ref"]
     )
-    replay_result = _replay_registered_run(
-        bundle_ref=effective_bundle_ref,
-        catalog=catalog,
-        registry=registry,
-    )
+    try:
+        replay_result = _replay_registered_run(
+            bundle_ref=effective_bundle_ref,
+            catalog=catalog,
+            registry=registry,
+        )
+    except ArtifactIntegrityError as exc:
+        replay_result = OperatorReplayResult(
+            bundle_ref=effective_bundle_ref,
+            run_result_ref=_coerce_typed_ref(summary_payload["run_result_ref"]),
+            selected_candidate_ref=_coerce_typed_ref(
+                summary_payload.get("selected_candidate_ref")
+                or summary_payload["run_result_ref"]
+            ),
+            replay_verification_status="failed",
+            confirmatory_primary_score=float(
+                summary_payload["confirmatory_primary_score"]
+            ),
+            failure_reason_codes=(_replay_integrity_reason_code(exc),),
+        )
     summary = DemoReplaySummary(
         bundle_ref=effective_bundle_ref,
         run_result_ref=replay_result.run_result_ref,
@@ -676,6 +691,15 @@ def replay_demo(
         failure_reason_codes=replay_result.failure_reason_codes,
     )
     return DemoReplayResult(paths=paths, summary=summary, replay_result=replay_result)
+
+
+def _replay_integrity_reason_code(exc: ArtifactIntegrityError) -> str:
+    message = str(exc).lower()
+    if "content hash mismatch" in message:
+        return "artifact_hash_mismatch"
+    if "artifact is missing" in message:
+        return "missing_required_hash"
+    return "replay_artifact_integrity_error"
 
 
 def _replay_registered_run(

@@ -1,0 +1,13 @@
+schema_id: fixture_provenance
+version: 1.0.0
+required_fields:
+  - source_kind
+  - source_ref
+  - license
+  - edge_cases
+  - regression_reason
+allowed_source_kinds:
+  - synthetic
+  - sanitized_live
+  - public_benchmark
+  - hand_authored_adversarial

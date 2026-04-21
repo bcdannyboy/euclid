@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 
 from euclid.benchmarks import profile_benchmark_task
+from euclid.benchmarks import runtime as benchmark_runtime
+from euclid.benchmarks.manifests import BenchmarkSuiteSurfaceRequirement
 from euclid.control_plane import SQLiteExecutionStateStore
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -44,6 +46,62 @@ def test_profile_benchmark_task_emits_telemetry_and_report_artifacts(
         "portfolio_selection",
         "reporting",
     }
+
+    task_result = json.loads(
+        result.report_paths.task_result_path.read_text(encoding="utf-8")
+    )
+    semantic_summary = task_result["semantic_summary"]
+    assert semantic_summary["run_support_object_ids"] == [
+        "observation_model:gaussian_point",
+        "quantization:decimal_1e-6",
+        "target_transform:identity",
+    ]
+    assert semantic_summary["claim_lane_ids"] == ["forecast_object:point"]
+    assert semantic_summary["replay_ids"] == ["replay:ledger_only"]
+    assert semantic_summary["engine_ids"] == [
+        "algorithmic_search_backend",
+        "analytic_backend",
+        "portfolio_orchestrator",
+        "recursive_spectral_backend",
+    ]
+    assert semantic_summary["score_policy_ids"] == ["score:mean_absolute_error"]
+    assert semantic_summary["threshold_ids"] == [
+        "practical_significance_margin",
+        "predictive_adequacy_floor:mean_absolute_error",
+    ]
+
+
+def test_surface_status_fails_when_task_result_file_lacks_semantic_summary(
+    tmp_path: Path,
+) -> None:
+    result = profile_benchmark_task(
+        manifest_path=(
+            PROJECT_ROOT / "benchmarks/tasks/rediscovery/planted-analytic-demo.yaml"
+        ),
+        benchmark_root=tmp_path / "benchmarks",
+    )
+    result.report_paths.task_result_path.write_text(
+        json.dumps(
+            {
+                "artifact_type": "benchmark_task_result",
+                "status": "completed",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    status = benchmark_runtime._surface_status(
+        requirement=BenchmarkSuiteSurfaceRequirement(
+            surface_id="retained_core_release",
+            task_ids=("planted_analytic_demo",),
+            replay_required=True,
+        ),
+        task_results=(result,),
+    )
+
+    assert status.benchmark_status == "failed"
+    assert status.evidence["semantic_status"] == "missing"
 
 
 def test_profile_benchmark_task_resume_reuses_cached_context_and_submitters(

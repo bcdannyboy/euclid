@@ -22,7 +22,7 @@ def test_completion_regression_policy_declares_required_scores_and_surfaces() ->
 
     assert payload["version"] == 1
     assert payload["kind"] == "completion_regression_policy"
-    assert payload["policy_state"] == "full_closure"
+    assert payload["policy_state"] == "transition"
     assert set(payload["minimum_completion_values"]) == {
         "full_vision_completion",
         "current_gate_completion",
@@ -43,6 +43,11 @@ def test_completion_regression_policy_declares_required_scores_and_surfaces() ->
         "packaged_notebook_smoke",
     }
     assert set(payload["policy_states"]) == {"transition", "near_closure", "full_closure"}
+    assert payload["policy_states"]["transition"]["minimum_policy_verdicts"] == {
+        "current_release_v1": "blocked",
+        "full_vision_v1": "blocked",
+        "shipped_releasable_v1": "blocked",
+    }
     assert payload["required_row_evidence_classes"] == [
         {
             "row_id": "evidence_lane:readiness_and_closure",

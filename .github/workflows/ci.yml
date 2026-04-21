@@ -1,0 +1,102 @@
+name: Euclid CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python3.11 -m pip install -e ".[dev]"
+      - run: >-
+          python3.11 -m ruff check --select F,I
+          src/euclid/benchmarks/reporting.py
+          src/euclid/benchmarks/runtime.py
+          src/euclid/fmp_smoke.py
+          src/euclid/manifests/numerical.py
+          src/euclid/modules/replay.py
+          src/euclid/operator_runtime/_compat_runtime.py
+          src/euclid/operator_runtime/resources.py
+          src/euclid/release.py
+          src/euclid/runtime/env.py
+          src/euclid/runtime/numerical_environment.py
+          src/euclid/testing
+          src/euclid/workbench/server.py
+          tests/integration/test_cli_end_to_end.py
+          tests/integration/test_completion_report_generation.py
+          tests/integration/test_live_api_gate_fixture_mode.py
+          tests/integration/test_operator_replay_pipeline.py
+          tests/live
+          tests/regression
+          tests/unit/benchmarks/test_runtime.py
+          tests/unit/manifests/test_numerical_policy.py
+          tests/unit/runtime/test_env_loading.py
+          tests/unit/runtime/test_numerical_environment.py
+          tests/unit/testing
+          tests/unit/test_fmp_euclid_smoke.py
+          tests/unit/test_runtime_package_layout.py
+
+  python-fixtures:
+    name: python unit and integration fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python3.11 -m pip install -e ".[dev]"
+      - run: python3.11 -m pytest -q tests/unit tests/integration
+
+  frontend:
+    name: frontend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: npm test
+
+  benchmark-smoke:
+    name: benchmark smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python3.11 -m pip install -e ".[dev]"
+      - run: python3.11 -m euclid benchmarks run --suite "current-release.yaml"
+
+  release-status-smoke:
+    name: release status smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python3.11 -m pip install -e ".[dev]"
+      - run: python3.11 -m euclid release repo-test-matrix
+      - run: python3.11 -m euclid release certify-clean-install
+      - run: python3.11 -m euclid release status
+      - run: python3.11 -m euclid release verify-completion
+      - run: python3.11 -m euclid release certify-research-readiness
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-evidence
+          path: |
+            build/reports/repo_test_matrix.json
+            build/reports/completion-report.json
+            build/reports/clean-install-certification.json
+            build/reports/verify-completion.json
+            build/reports/research-readiness.json

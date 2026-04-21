@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from euclid.fmp_smoke import (
+    _read_api_key,
     build_benchmark_task_manifest,
     build_csv_rows_from_fmp_history,
     build_operator_manifest,
@@ -159,3 +160,14 @@ def test_format_smoke_report_includes_modes_and_artifact_locations() -> None:
     assert "Replay verification: verified" in report
     assert "Mode: benchmark" in report
     assert "Report path: /tmp/fmp-smoke/report.md" in report
+
+
+def test_read_api_key_uses_approved_env_loader_for_dotenv_values(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    env_path = tmp_path / ".env"
+    env_path.write_text("FMP_API_KEY=dotenv-fmp-key\n", encoding="utf-8")
+    monkeypatch.delenv("FMP_API_KEY", raising=False)
+
+    assert _read_api_key("FMP_API_KEY", env_file=env_path) == "dotenv-fmp-key"

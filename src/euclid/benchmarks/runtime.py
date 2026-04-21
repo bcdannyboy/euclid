@@ -19,14 +19,14 @@ from euclid.benchmarks.reporting import (
     BenchmarkTaskReportArtifactPaths,
     build_benchmark_suite_task_semantics,
     build_benchmark_surface_diagnostics,
+    build_benchmark_task_semantic_summary,
     build_benchmark_task_track_summary,
     write_benchmark_task_report_artifacts,
 )
 from euclid.benchmarks.submitters import (
-    ALGORITHMIC_SEARCH_SUBMITTER_ID,
+    PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID,
     BenchmarkHarnessContext,
     BenchmarkSubmitterResult,
-    PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID,
     run_benchmark_submitter,
 )
 from euclid.contracts.errors import ContractValidationError
@@ -264,8 +264,12 @@ def _surface_status(
         for result in task_results
         if result.task_manifest.task_id in requirement.task_ids
     )
+    task_semantic_status = {
+        result.task_manifest.task_id: _task_semantic_status(result)
+        for result in matched
+    }
     benchmark_passed = len(matched) == len(requirement.task_ids) and all(
-        result.report_paths.task_result_path.is_file() for result in matched
+        status == "verified" for status in task_semantic_status.values()
     )
     if not requirement.replay_required:
         replay_passed = True
@@ -294,6 +298,13 @@ def _surface_status(
             "task_result_paths": [
                 str(result.report_paths.task_result_path) for result in matched
             ],
+            "semantic_status": (
+                "verified"
+                if task_semantic_status
+                and all(status == "verified" for status in task_semantic_status.values())
+                else "missing"
+            ),
+            "task_semantic_status": task_semantic_status,
             **build_benchmark_surface_diagnostics(
                 tuple(result.task_manifest for result in matched),
                 replay_verification_status=replay_verification_status,
@@ -760,7 +771,91 @@ def _suite_semantic_summary(
         "abstention_modes": abstention_modes,
         "replay_obligations": replay_obligations,
         "calibration_expectations": calibration_expectations,
+        "run_support_object_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["run_support_object_ids"]
+            }
+        ),
+        "claim_lane_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["claim_lane_ids"]
+            }
+        ),
+        "replay_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["replay_ids"]
+            }
+        ),
+        "engine_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["engine_ids"]
+            }
+        ),
+        "score_policy_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["score_policy_ids"]
+            }
+        ),
+        "threshold_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["threshold_ids"]
+            }
+        ),
     }
+
+
+def _task_semantic_status(result: ProfiledBenchmarkTaskResult) -> str:
+    if not result.report_paths.task_result_path.is_file():
+        return "missing"
+    try:
+        payload = json.loads(
+            result.report_paths.task_result_path.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return "missing"
+    if payload.get("status") not in {"completed", "passed"}:
+        return "failed"
+    semantic_summary = payload.get("semantic_summary")
+    if not isinstance(semantic_summary, dict):
+        return "missing"
+    required_keys = {
+        "run_support_object_ids",
+        "claim_lane_ids",
+        "replay_ids",
+        "engine_ids",
+        "score_policy_ids",
+        "threshold_ids",
+    }
+    if any(
+        not isinstance(semantic_summary.get(key), list) or not semantic_summary[key]
+        for key in required_keys
+    ):
+        return "missing"
+    return "verified"
 
 
 def _search_class_coverage(

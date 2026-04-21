@@ -19,6 +19,7 @@ from euclid.manifests.runtime_models import (
 from euclid.modules.external_evidence_ingestion import (
     verify_external_evidence_bundle_integrity,
 )
+from euclid.runtime.numerical_environment import flatten_numerical_environment
 
 _DEFAULT_REPLAY_ENTRYPOINT = "retained_scope_replay_v1"
 _DEFAULT_REQUIRED_SEED_SCOPES = (
@@ -79,13 +80,15 @@ class ReplayVerificationResult:
 
 
 def build_runtime_environment_metadata() -> dict[str, str]:
-    return {
+    metadata = {
         "python_version": platform.python_version(),
         "python_implementation": platform.python_implementation(),
         "platform": sys.platform,
         "platform_release": platform.release(),
         "machine": platform.machine(),
     }
+    metadata.update(flatten_numerical_environment())
+    return metadata
 
 
 def build_replay_seed_records(seed_value: str) -> tuple[SeedRecord, ...]:

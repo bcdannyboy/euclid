@@ -14,11 +14,11 @@ from euclid.benchmarks.manifests import (
     ensure_benchmark_repository_tree,
 )
 from euclid.benchmarks.submitters import (
-    ANALYTIC_BACKEND_SUBMITTER_ID,
     ALGORITHMIC_SEARCH_SUBMITTER_ID,
-    BenchmarkSubmitterResult,
+    ANALYTIC_BACKEND_SUBMITTER_ID,
     PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID,
     RECURSIVE_SPECTRAL_BACKEND_SUBMITTER_ID,
+    BenchmarkSubmitterResult,
 )
 
 _ARTIFACT_VERSION = "1.0.0"
@@ -204,6 +204,7 @@ class BenchmarkTaskResultArtifact:
     local_winner_submitter_id: str | None = None
     local_winner_candidate_id: str | None = None
     track_summary: Mapping[str, Any] | None = None
+    semantic_summary: Mapping[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -231,6 +232,8 @@ class BenchmarkTaskResultArtifact:
             payload["local_winner_candidate_id"] = self.local_winner_candidate_id
         if self.track_summary is not None:
             payload["track_summary"] = _json_ready(self.track_summary)
+        if self.semantic_summary is not None:
+            payload["semantic_summary"] = _json_ready(self.semantic_summary)
         return payload
 
 
@@ -295,6 +298,44 @@ def build_benchmark_suite_task_semantics(
         "abstention_mode": task_manifest.abstention_mode,
         "replay_obligation": task_manifest.replay_obligation,
         "replay_verification": replay_verification_status,
+    }
+
+
+def build_benchmark_task_semantic_summary(
+    task_manifest: BenchmarkTaskManifest,
+) -> dict[str, Any]:
+    target_transform_id = _policy_id(
+        task_manifest.frozen_protocol.target_transform_policy,
+        "transform_id",
+    )
+    quantization_id = _policy_id(
+        task_manifest.frozen_protocol.quantization_policy,
+        "lattice",
+    )
+    observation_model_id = _policy_id(
+        task_manifest.frozen_protocol.observation_model_policy,
+        "model_id",
+    )
+    predictive_floor_metric = _policy_id(
+        getattr(task_manifest, "predictive_adequacy_floor", {}),
+        "metric_id",
+    )
+    threshold_ids = ["practical_significance_margin"]
+    if predictive_floor_metric != "unknown":
+        threshold_ids.append(f"predictive_adequacy_floor:{predictive_floor_metric}")
+    return {
+        "run_support_object_ids": [
+            f"observation_model:{observation_model_id}",
+            f"quantization:{quantization_id}",
+            f"target_transform:{target_transform_id}",
+        ],
+        "claim_lane_ids": [
+            f"forecast_object:{task_manifest.frozen_protocol.forecast_object_type}"
+        ],
+        "replay_ids": [f"replay:{task_manifest.replay_obligation}"],
+        "engine_ids": sorted(task_manifest.submitter_ids),
+        "score_policy_ids": [f"score:{task_manifest.score_law}"],
+        "threshold_ids": threshold_ids,
     }
 
 
@@ -523,6 +564,7 @@ def _build_reporting_bundle(
         local_winner_submitter_id=local_winner_submitter_id,
         local_winner_candidate_id=local_winner_candidate_id,
         track_summary=track_summary,
+        semantic_summary=build_benchmark_task_semantic_summary(task_manifest),
     )
 
     report_text = _render_report(
@@ -856,6 +898,14 @@ def _json_ready(value: Any) -> Any:
     return value
 
 
+def _policy_id(policy: Any, key: str) -> str:
+    if isinstance(policy, Mapping):
+        value = policy.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return "unknown"
+
+
 __all__ = [
     "BenchmarkArtifactRef",
     "BenchmarkPortfolioSelectionArtifact",
@@ -863,5 +913,6 @@ __all__ = [
     "BenchmarkSubmitterResultArtifact",
     "BenchmarkTaskReportArtifactPaths",
     "BenchmarkTaskResultArtifact",
+    "build_benchmark_task_semantic_summary",
     "write_benchmark_task_report_artifacts",
 ]

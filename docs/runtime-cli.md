@@ -33,6 +33,33 @@ The most important certified commands are:
 
 The demo tree remains packaged because the repo still ships retained local demos and inspection helpers, but the CLI help text explicitly treats them as non-certified surfaces. Those commands live in `src/euclid/demo.py` and the parallel orchestration code in `src/euclid/operator_runtime/_compat_runtime.py`.
 
+## Canonical Assets
+
+Runtime assets resolve through `euclid.operator_runtime.resources`. Packaged
+assets under `src/euclid/_assets` are canonical for examples, fixtures,
+contracts, readiness policies, notebooks, and workbench files. Root-level public
+mirrors are not assumed by runtime code; tests must use the resolver instead of
+hard-coded checkout paths such as `examples/current_release_run.yaml`.
+
+Missing packaged assets raise `EuclidAssetError` with code
+`euclid_asset_missing`. This replaces generic file-existence behavior so release
+and replay failures carry typed evidence.
+
+## Numerical Runtime
+
+The runtime dependency foundation includes NumPy, pandas, SciPy, SymPy, Pint,
+statsmodels, scikit-learn, PySINDy, PySR, egglog, joblib, SQLAlchemy, Pydantic,
+PyYAML, Typer, PyArrow, httpx, python-dotenv, vcrpy, responses/respx,
+pytest-timeout, pytest-xdist, and Hypothesis. Ray is intentionally optional via
+the `distributed` extra because distributed execution is a policy decision, not
+a default local requirement.
+
+Replay bundles record numerical environment metadata through
+`euclid.runtime.numerical_environment`: Python version, package versions, Julia
+availability for PySR, BLAS/LAPACK status, platform, and CPU metadata. PySR
+package metadata is captured even when Julia is unavailable; Julia absence is a
+typed runtime diagnostic rather than a silent import failure.
+
 ## Operator request model
 
 The certified request model is `OperatorRequest` in `src/euclid/operator_runtime/models.py`.

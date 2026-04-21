@@ -24,6 +24,10 @@ The codebase is organized around five cooperating surfaces:
 - Formal specs, manifests, benchmarks, readiness, and packaging in `src/euclid/contracts`, `src/euclid/manifests`, `src/euclid/benchmarks`, `src/euclid/readiness`, and `schemas`
 - Local workbench UI in `src/euclid/workbench` and `src/euclid/_assets/workbench`
 
+Runtime assets are resolved from packaged resources under `src/euclid/_assets`
+through `euclid.operator_runtime.resources`. Checkout-root asset mirrors are not
+part of the runtime contract unless explicitly documented.
+
 ## Scope model
 
 Euclid distinguishes three release scopes in code and packaged policies:

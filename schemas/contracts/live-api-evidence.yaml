@@ -1,0 +1,25 @@
+schema_id: live_api_evidence
+version: 1.0.0
+required_fields:
+  - evidence_kind
+  - gate_id
+  - provider
+  - endpoint_class
+  - status
+  - reason_codes
+  - generated_at_utc
+  - latency_ms
+  - credential_presence
+  - semantic_checks
+redaction_policy:
+  secrets_forbidden_in:
+    - stdout
+    - stderr
+    - artifact_json
+    - urls
+    - headers
+    - exception_messages
+allowed_statuses:
+  - passed
+  - failed
+  - skipped

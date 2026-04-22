@@ -51,7 +51,7 @@ def redact_mapping(value: Any, *, secrets: Sequence[str]) -> Any:
     if isinstance(value, Mapping):
         redacted: dict[str, Any] = {}
         for key, child in value.items():
-            key_text = str(key)
+            key_text = redact_text(str(key), secrets=secrets)
             if key_text.lower() in _SECRET_HEADER_NAMES:
                 redacted[key_text] = REDACTION_TOKEN if child else child
             else:

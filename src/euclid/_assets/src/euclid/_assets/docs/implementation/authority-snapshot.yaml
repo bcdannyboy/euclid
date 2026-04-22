@@ -1,0 +1,48 @@
+version: 1
+kind: euclid_authority_snapshot
+status: frozen_contract
+authority_snapshot_id: euclid-authority-2026-04-15-b
+generated_at_utc: '2026-04-16T00:00:00Z'
+scope_authority_docs:
+- path: EUCLID.md
+  sha256: e73ed1e2901c367b7f24960154397bd043b76c799a98b4e0739993078e20bdd6
+  last_updated_on: '2026-04-15'
+- path: docs/system.md
+  sha256: e8167bac9322fab14e8e43e6617e5f50ea2ed1e22d41a5da39c767ad4b06013e
+  last_updated_on: '2026-04-15'
+master_plan:
+  path: docs/README.md
+  sha256: fb01cc51393099937e2e662da70927c07d977d4c5ad45bb04bc30291a08ad0d6
+dependent_contracts:
+- path: schemas/readiness/full-vision-matrix.yaml
+  sha256: beb0c44d5afab10b0001f9161b12468d4beb96bc6057b87970591e282f37b3b2
+- path: schemas/readiness/current-release-v1.yaml
+  sha256: 71a4b57fba98a47cc84623e74c1de2e77e7ae35086607cda3039c88d91f19046
+- path: schemas/readiness/full-vision-v1.yaml
+  sha256: 2d139ced5f1f0b584d160963ff80039069a10daf2435fd70f60219914f29f7c8
+- path: schemas/readiness/shipped-releasable-v1.yaml
+  sha256: 2024cb92f8f65111f311e9d9cbbe6e6a4886b682c852c8c459f1b4e8b45ced6f
+- path: schemas/readiness/euclid-readiness.yaml
+  sha256: 2d6c48039343b76d752238664a01d8599f31581f3569edfda240f4ae6d6a06cc
+- path: schemas/readiness/evidence-strength-policy.yaml
+  sha256: 11d2a7d1967d183797d815c61139476331e3070c6340996e6af2e269deddee75
+- path: schemas/readiness/completion-regression-policy.yaml
+  sha256: 545c7ba839f9b1d247c80350db5557e5e9b1cdbeadd84bb4cef9f304b305f7b0
+- path: schemas/readiness/completion-report.schema.yaml
+  sha256: af61ce483e9a2a1c4eea9d644c8a2bfc4c48544caafd0e986ddb8399f1532485
+- path: docs/implementation/euclid-closure-map.yaml
+  sha256: 64450b3c8fe14c896cdb12fb731816f9f374c10e0f435b3ddadad366de9dbe1b
+- path: docs/implementation/subtask-test-traceability.yaml
+  sha256: bf0cfd975b41c98f93c44f09dff5801b328e4101c1d31f3ce81d35619e9dec33
+- path: docs/implementation/certification-fixture-spec.yaml
+  sha256: 04856fff7d7b2b17650328bcb9aa0d0a13dae23700336da1016dc225930f5814
+- path: docs/implementation/lifecycle-artifact-closure-contract.yaml
+  sha256: 702cdf3aa6a8c8ce3cef1f4752951569934538350ac77cc284e66302a5f78ad2
+- path: docs/implementation/certification-evidence-contract.yaml
+  sha256: fb3b5ea66a6a98bfaf50bf1c068c8df2462451dd97525783a2262f53bb31c0a8
+- path: docs/implementation/certification-command-contract.yaml
+  sha256: 2e68448ebc85fa4a154bd6abd7854864813f27e63b1b7c46056be16e8eaadd9f
+rules:
+- Any change to a scope authority document invalidates this snapshot until the dependent contracts and the master plan are reconciled in the same patch.
+- Final certification output must reference authority_snapshot_id.
+- Certification suites, example manifests, and command-contract rows that claim closing power must reference authority_snapshot_id.

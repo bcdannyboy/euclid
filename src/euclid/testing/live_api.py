@@ -14,6 +14,12 @@ from euclid.testing.redaction import collect_secret_values, redact_mapping, reda
 
 LiveApiCheck = Callable[[Mapping[str, str]], Mapping[str, Any]]
 
+NON_CLAIM_EVIDENCE_BOUNDARY = {
+    "counts_as_scientific_claim_evidence": False,
+    "reason_code": "live_api_gate_validates_access_and_payload_shape_only",
+    "status": "non_claim_evidence",
+}
+
 
 @dataclass(frozen=True)
 class LiveApiGateResult:
@@ -119,6 +125,8 @@ class LiveApiGate:
             "endpoint_class": self.endpoint_class,
             "status": result.status,
             "reason_codes": list(result.reason_codes),
+            "claim_evidence_status": "not_claim_evidence",
+            "claim_boundary": dict(NON_CLAIM_EVIDENCE_BOUNDARY),
             "generated_at_utc": datetime.now(timezone.utc).isoformat(),
             "latency_ms": elapsed_ms,
             "credential_presence": credential_presence,
@@ -156,4 +164,33 @@ def _reason_code_for_exception(exc: Exception) -> str:
     return "provider_error"
 
 
-__all__ = ["LiveApiGate", "LiveApiGateResult"]
+def validate_ordered_provider_rows(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    timestamp_key: str,
+) -> dict[str, Any]:
+    if not rows:
+        raise ValueError("empty payload from provider")
+    timestamps: list[str] = []
+    for index, row in enumerate(rows):
+        timestamp = str(row.get(timestamp_key, "")).strip()
+        if not timestamp:
+            raise ValueError(f"missing timestamp at row {index}")
+        timestamps.append(timestamp)
+    if len(set(timestamps)) != len(timestamps):
+        raise ValueError("duplicate timestamp in provider payload")
+    if timestamps != sorted(timestamps):
+        raise ValueError("out-of-order timestamp in provider payload")
+    return {
+        "row_count": len(rows),
+        "timestamps_ordered": True,
+        "timestamps_unique": True,
+    }
+
+
+__all__ = [
+    "LiveApiGate",
+    "LiveApiGateResult",
+    "NON_CLAIM_EVIDENCE_BOUNDARY",
+    "validate_ordered_provider_rows",
+]

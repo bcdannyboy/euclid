@@ -3,14 +3,14 @@
   "scope_statement": "Fixture scope statement for the Euclid canonical-pack compiler.",
   "canonical_docs": [
     {
-      "path": "README.md",
+      "path": "docs/canonical/euclid-project.md",
       "title": "Fixture Euclid Project",
       "related": [
         "[[Fixture System Map]]"
       ]
     },
     {
-      "path": "docs/system.md",
+      "path": "docs/canonical/system-map.md",
       "title": "Fixture System Map",
       "related": [
         "[[Fixture Euclid Project]]"

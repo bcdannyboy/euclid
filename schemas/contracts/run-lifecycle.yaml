@@ -253,7 +253,7 @@ transitions:
     required_artifacts:
       - external_evidence_bundle
       - source_digest
-    guard: claim ceiling includes mechanistically_compatible_hypothesis
+    guard: claim ceiling includes mechanistically_compatible_law
 
   - transition_id: snapshot_freeze_complete
     owner_ref: run_lifecycle_council

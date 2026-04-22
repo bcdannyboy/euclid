@@ -1,0 +1,17 @@
+request_id: full-vision-run
+dataset_csv: minimal_dataset.csv
+cutoff_available_at: null
+quantization_step: '0.5'
+minimum_description_gain_bits: 0.0
+min_train_size: 3
+horizon: 1
+seasonal_period: 2
+search:
+  class: bounded_heuristic
+  seed: '0'
+  family_ids:
+  - algorithmic_last_observation
+  - algorithmic_running_half_average
+probabilistic:
+  forecast_object_type: distribution
+authority_snapshot_id: euclid-authority-2026-04-15-b

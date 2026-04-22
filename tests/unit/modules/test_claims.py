@@ -14,8 +14,8 @@ def test_resolve_claim_publication_downgrades_failed_predictive_support() -> Non
     )
 
     assert decision.publication_mode == "candidate_publication"
-    assert decision.claim_type == "descriptive_only"
-    assert decision.claim_ceiling == "descriptive_only"
+    assert decision.claim_type == "descriptive_structure"
+    assert decision.claim_ceiling == "descriptive_structure"
     assert decision.predictive_support_status == "blocked"
     assert decision.abstention_type is None
     assert decision.allowed_interpretation_codes == ("historical_structure_summary",)
@@ -32,8 +32,8 @@ def test_resolve_claim_publication_emits_predictive_lane_only_on_passed_gate() -
     )
 
     assert decision.publication_mode == "candidate_publication"
-    assert decision.claim_type == "predictively_supported"
-    assert decision.claim_ceiling == "predictively_supported"
+    assert decision.claim_type == "predictive_within_declared_scope"
+    assert decision.claim_ceiling == "predictive_within_declared_scope"
     assert decision.predictive_support_status == "confirmatory_supported"
     assert decision.allowed_interpretation_codes == (
         "historical_structure_summary",

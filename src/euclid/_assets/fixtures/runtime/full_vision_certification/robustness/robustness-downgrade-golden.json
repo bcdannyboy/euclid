@@ -14,7 +14,7 @@
     "allowed_interpretation_codes": [
       "historical_structure_summary"
     ],
-    "claim_type": "descriptive_only",
+    "claim_type": "descriptive_structure",
     "predictive_support_status": "blocked"
   },
   "comparison": {

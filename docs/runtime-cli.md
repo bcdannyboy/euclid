@@ -2,7 +2,7 @@
 
 The main way to run Euclid is through `euclid` and `python -m euclid`.
 
-The certified runtime is the governed path from ordered observations to replayable symbolic outputs: descriptive equations, predictive laws, and, when a publishable point law and a publishable probabilistic lane clear the same scope, the unified deterministic-plus-stochastic equation surface shown downstream.
+The certified runtime is the governed path from ordered observations to replayable symbolic outputs: descriptive equations, predictive-within-scope symbolic claims, and, when a publishable point-lane claim and a publishable probabilistic lane clear the same scope, the unified deterministic-plus-stochastic equation surface shown downstream.
 
 The root CLI is defined in `src/euclid/cli/__init__.py`. It exposes the main operator workflow and labels `demo` as compatibility-only tooling.
 
@@ -130,7 +130,7 @@ Replay is then executed and must verify before publication completes. The main r
 - `src/euclid/operator_runtime/replay.py`
 - `src/euclid/modules/replay.py`
 
-That matters because Euclid only publishes symbolic claims that close under replay. Predictive laws and unified equations are governed runtime artifacts with seed, manifest, and stage-order provenance, not post hoc renderings layered on after the run.
+That matters because Euclid only publishes symbolic claims that close under replay. Predictive-within-scope symbolic claims and unified equations are governed runtime artifacts with seed, manifest, and stage-order provenance, not post hoc renderings layered on after the run.
 
 ## Extension lanes
 
@@ -142,7 +142,7 @@ The runtime can extend beyond plain point evaluation:
 - shared-plus-local decomposition
 - robustness override lanes
 
-These lanes change required artifacts, admissibility rules, and publication behavior. Shared-plus-local runs require declared entity panel equality, mechanistic publication requires external evidence, and residual structure can block predictive-law publication even when descriptive status passes. A unified deterministic-plus-stochastic equation only appears when the probabilistic lane also reaches publishable status on the same validation scope and publication record.
+These lanes change required artifacts, admissibility rules, and publication behavior. Shared-plus-local runs require declared entity panel equality, mechanistic publication requires external evidence, and residual structure can block predictive-within-scope publication even when descriptive status passes. A unified deterministic-plus-stochastic equation only appears when the probabilistic lane also reaches publishable status on the same validation scope and publication record.
 
 ## Smoke and packaging surfaces
 

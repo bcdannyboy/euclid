@@ -18,10 +18,10 @@ def test_validate_enum_value_accepts_known_closed_vocabulary_value() -> None:
         validate_enum_value(
             catalog,
             "claim_lanes",
-            "predictively_supported",
+            "predictive_within_declared_scope",
             field_path="body.claim_lane",
         )
-        == "predictively_supported"
+        == "predictive_within_declared_scope"
     )
 
 

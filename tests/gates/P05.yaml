@@ -1,0 +1,529 @@
+phase_id: P05
+phase_title: PySINDy Backend
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P05-T01
+- P05-T01-S01
+- P05-T01-S02
+- P05-T01-S03
+- P05-T01-S04
+- P05-T01-S05
+- P05-T01-S06
+- P05-T02
+- P05-T02-S01
+- P05-T02-S02
+- P05-T02-S03
+- P05-T02-S04
+- P05-T02-S05
+- P05-T02-S06
+- P05-T02-S07
+- P05-T03
+- P05-T03-S01
+- P05-T03-S02
+- P05-T03-S03
+- P05-T03-S04
+- P05-T03-S05
+- P05-T04
+- P05-T04-S01
+- P05-T04-S02
+- P05-T04-S03
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/search/engines/test_pysindy_engine.py tests/unit/search/engines/test_pysindy_lowering.py
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/integration/test_pysindy_pipeline.py
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/golden tests/regression
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_pysindy_live_backend.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions: &id002
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+replay:
+  assertions: &id003
+  - replay_metadata_complete
+  - replay_identity_stable
+  - replay_mismatch_fails_closed
+claim_scope:
+  assertions: &id004
+  - no_unjustified_claim_promotion
+  - phase_incomplete_blocks_exit
+  - live_api_success_is_not_scientific_truth
+edge_cases:
+  required: &id001
+  - empty_input
+  - single_row_input
+  - missing_values
+  - nonfinite_values
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - invalid_credentials
+  - rate_limit
+  - timeout
+  - malformed_payload
+  - empty_payload
+  - replay_mismatch
+artifact_outputs:
+- build/reports/p05-gate-evidence.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and
+  claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P05-T01:
+    status: complete
+    implementation_files: &id005
+    - schemas/contracts/pysindy-engine-trace.yaml
+    - src/euclid/adapters/sparse_library.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysindy_lowering.py
+    test_files: &id006
+    - tests/unit/cir/test_backend_adapters.py
+    - tests/unit/search/engines/test_pysindy_engine.py
+    - tests/unit/search/engines/test_pysindy_lowering.py
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T01-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01-S01
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T01-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01-S02
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T01-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01-S03
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T01-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01-S04
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T01-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01-S05
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T01-S06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T01-S06
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T01-S06
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S01
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S02
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S03
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S04
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S05
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S06
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S06
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T02-S07:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T02-S07
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T02-S07
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T03
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T03-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T03-S01
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T03-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T03-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T03-S02
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T03-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T03-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T03-S03
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T03-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T03-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T03-S04
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T03-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T03-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T03-S05
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T03-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T04
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T04-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T04-S01
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T04-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T04-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T04-S02
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T04-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P05-T04-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P05.yaml#P05-T04-S03
+    evidence_refs:
+    - gate:tests/gates/P05.yaml#P05-T04-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/cir/test_backend_adapters.py
+    - test:tests/unit/search/engines/test_pysindy_engine.py
+    - test:tests/unit/search/engines/test_pysindy_lowering.py
+    - artifact:build/reports/p05-gate-evidence.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004

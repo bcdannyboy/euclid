@@ -1,0 +1,1080 @@
+phase_id: P12
+phase_title: Falsification And Residual Diagnostics
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P12-T01
+- P12-T01-S01
+- P12-T01-S02
+- P12-T01-S03
+- P12-T01-S04
+- P12-T01-S05
+- P12-T02
+- P12-T02-S01
+- P12-T02-S02
+- P12-T02-S03
+- P12-T02-S04
+- P12-T02-S05
+- P12-T03
+- P12-T03-S01
+- P12-T03-S02
+- P12-T03-S03
+- P12-T03-S04
+- P12-T03-S05
+- P12-T04
+- P12-T04-S01
+- P12-T04-S02
+- P12-T04-S03
+- P12-T04-S04
+- P12-T04-S05
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/falsification
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/integration/test_falsification_dossier.py
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/golden tests/regression
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_falsification_live.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions: &id002
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+replay:
+  assertions: &id003
+  - replay_metadata_complete
+  - replay_identity_stable
+  - replay_mismatch_fails_closed
+claim_scope:
+  assertions: &id004
+  - no_unjustified_claim_promotion
+  - phase_incomplete_blocks_exit
+  - live_api_success_is_not_scientific_truth
+edge_cases:
+  required: &id001
+  - empty_input
+  - single_row_input
+  - missing_values
+  - nonfinite_values
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - invalid_credentials
+  - rate_limit
+  - timeout
+  - malformed_payload
+  - empty_payload
+  - replay_mismatch
+artifact_outputs:
+- build/reports/p12-gate-evidence.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and
+  claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P12-T01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T01
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T01
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T01-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T01-S01
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T01-S01
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T01-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T01-S02
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T01-S02
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T01-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T01-S03
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T01-S03
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T01-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T01-S04
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T01-S04
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T01-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T01-S05
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T01-S05
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T02
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T02
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T02-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T02-S01
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T02-S01
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T02-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T02-S02
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T02-S02
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T02-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T02-S03
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T02-S03
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T02-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T02-S04
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T02-S04
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T02-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T02-S05
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T02-S05
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T03
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T03
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T03-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T03-S01
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T03-S01
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T03-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T03-S02
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T03-S02
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T03-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T03-S03
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T03-S03
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T03-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T03-S04
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T03-S04
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T03-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T03-S05
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T03-S05
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T04
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T04
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T04-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T04-S01
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T04-S01
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T04-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T04-S02
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T04-S02
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T04-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T04-S03
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T04-S03
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T04-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T04-S04
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T04-S04
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P12-T04-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/falsification-dossier.yaml
+    - src/euclid/falsification/__init__.py
+    - src/euclid/falsification/counterexamples.py
+    - src/euclid/falsification/dossier.py
+    - src/euclid/falsification/perturbations.py
+    - src/euclid/falsification/residuals.py
+    - src/euclid/falsification/surrogate_tests.py
+    - src/euclid/modules/gate_lifecycle.py
+    - src/euclid/modules/claims.py
+    test_files:
+    - tests/integration/test_falsification_dossier.py
+    - tests/unit/falsification/test_counterexamples.py
+    - tests/unit/falsification/test_dossier.py
+    - tests/unit/falsification/test_residuals.py
+    - tests/unit/falsification/test_surrogate_tests.py
+    - tests/unit/modules/test_falsification_gate_lifecycle.py
+    gate_refs:
+    - tests/gates/P12.yaml#P12-T04-S05
+    evidence_refs:
+    - tests/gates/P12.yaml#P12-T04-S05
+    - implementation:src/euclid/falsification/counterexamples.py
+    - implementation:src/euclid/falsification/dossier.py
+    - implementation:src/euclid/falsification/perturbations.py
+    - implementation:src/euclid/falsification/residuals.py
+    - implementation:src/euclid/falsification/surrogate_tests.py
+    - implementation:src/euclid/modules/gate_lifecycle.py
+    - schema:schemas/contracts/falsification-dossier.yaml
+    - test:tests/integration/test_falsification_dossier.py
+    - test:tests/unit/falsification/test_counterexamples.py
+    - test:tests/unit/falsification/test_dossier.py
+    - test:tests/unit/falsification/test_residuals.py
+    - test:tests/unit/falsification/test_surrogate_tests.py
+    - test:tests/unit/modules/test_falsification_gate_lifecycle.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004

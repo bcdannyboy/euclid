@@ -30268,7 +30268,7 @@
       "residual_label": "\\sum_{i=0}^{1254} c_i \\prod_{j \\ne i}\\frac{\\tau(t)-j}{i-j}"
     },
     "exactness": "sample_exact_closure",
-    "honesty_note": "Holistic equation combines the compact deterministic law with an exact residual-closure term over the observed sample. It is a descriptive closure, not a publishable predictive law.",
+    "honesty_note": "Holistic equation combines the compact deterministic lane with an exact residual-closure term over the observed sample. It is a descriptive closure, not a publishable predictive-within-scope claim.",
     "residual_series": [
       {
         "event_time": "2021-04-20T00:00:00Z",
@@ -35489,7 +35489,7 @@
     "abstention": {
       "abstention_id": "operator_abstention_v1",
       "abstention_type": "robustness_failed",
-      "blocked_ceiling": "descriptive_only",
+      "blocked_ceiling": "descriptive_structure",
       "governing_refs": [
         {
           "object_id": "scorecard_manifest_f9b6030952fa455c30f6",

@@ -385,6 +385,19 @@ def release_status(
             )
         ),
     ]
+    enhancement_gate_lines = ["Enhancement phase gates:"]
+    for phase_gate in status.enhancement_phase_gates:
+        status_counts = phase_gate.get("id_gate_status_counts", {})
+        if isinstance(status_counts, dict):
+            status_summary = ", ".join(
+                f"{key}={value}" for key, value in sorted(status_counts.items())
+            )
+        else:
+            status_summary = "status_counts=malformed"
+        enhancement_gate_lines.append(
+            f"- {phase_gate['phase_id']}: {phase_gate['phase_status']} "
+            f"({phase_gate['id_gate_count']} ids; {status_summary})"
+        )
     lines = [
         "Euclid release status",
         f"Project root: {status.project_root}",
@@ -418,6 +431,7 @@ def release_status(
         ),
         f"Shipped or releasable catalog scope: {shipped_releasable.catalog_scope}",
         *release_gate_lines,
+        *enhancement_gate_lines,
         f"Blocked reason: {status.blocked_reason}",
     ]
     typer.echo("\n".join(lines))

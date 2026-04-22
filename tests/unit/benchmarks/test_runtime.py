@@ -35,6 +35,14 @@ def test_profile_benchmark_task_emits_telemetry_and_report_artifacts(
         and record["declared_candidate_limit"] == 128
         for record in payload["budget_records"]
     )
+    assert payload["attributes"]["benchmark_budget_report"] == {
+        "budget_id": "benchmark_task_budget:planted_analytic_demo",
+        "candidate_limit": 128,
+        "wall_clock_seconds": 300,
+        "parallel_workers": 1,
+        "submitter_count": 4,
+        "status": "reported",
+    }
     assert any(
         record["submitter_id"] == "analytic_backend"
         and record["declared_restarts"] == 3

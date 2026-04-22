@@ -306,6 +306,21 @@ def test_resolve_confirmatory_promotion_blocks_failed_calibration() -> None:
     )
 
 
+def test_resolve_confirmatory_promotion_rejects_boolean_only_evidence() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    predictive_gate_policy = build_predictive_gate_policy(
+        allowed_forecast_object_types=("point",)
+    ).to_manifest(catalog)
+
+    assert (
+        resolve_confirmatory_promotion_allowed(
+            candidate_beats_baseline=True,
+            predictive_gate_policy_manifest=predictive_gate_policy,
+        )
+        is False
+    )
+
+
 def test_event_log_records_search_isolation_and_holdout_access() -> None:
     catalog = load_contract_catalog(PROJECT_ROOT)
     freeze_event_manifest = _freeze_event_manifest(catalog)

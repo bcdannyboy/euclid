@@ -36,6 +36,8 @@ from euclid.inspection import (
 )
 from euclid.operator_runtime import replay_operator, run_operator
 from euclid.operator_runtime.resources import resolve_asset_root
+from euclid.testing.live_api import NON_CLAIM_EVIDENCE_BOUNDARY
+from euclid.testing.redaction import redact_mapping
 
 DEFAULT_TARGET_ID = "daily_return"
 DEFAULT_DATE_RANGE_YEARS = 5
@@ -59,7 +61,7 @@ _RECONSTRUCTION_MIN_R2_VS_MEAN_BASELINE = 0.5
 _DESCRIPTIVE_RECONSTRUCTION_CANDIDATE_ID = "descriptive_fourier_reconstruction"
 _DESCRIPTIVE_RECONSTRUCTION_SOURCE = "workbench_descriptive_reconstruction"
 _DESCRIPTIVE_RECONSTRUCTION_REASON_CODE = (
-    "explicit_time_reconstruction_descriptive_only"
+    "explicit_time_reconstruction_descriptive_structure"
 )
 _DESCRIPTIVE_RECONSTRUCTION_TARGET_R2 = 0.97
 _DESCRIPTIVE_RECONSTRUCTION_HARMONIC_LADDER = (
@@ -79,6 +81,21 @@ _PREDICTIVE_LAW_BANNED_CANDIDATE_ID_FRAGMENTS = (
     "exact_closure",
     "symbolic_synthesis",
     "holistic_",
+)
+_WORKBENCH_LIVE_EVIDENCE_KEYS = ("live_api_evidence", "live_evidence")
+_INLINE_SECRET_VALUE_KEYS = frozenset(
+    {
+        "fmp_api_key",
+        "openai_api_key",
+        "api_key",
+        "apikey",
+        "authorization",
+        "x-api-key",
+        "api-key",
+        "openai-api-key",
+        "token",
+        "access_token",
+    }
 )
 
 TARGET_SPECS: dict[str, dict[str, Any]] = {
@@ -261,6 +278,7 @@ def build_equation_summary(
         dataset_rows=dataset_rows,
         literals=literals,
         state=state,
+        use_observed_lag_values=True,
     )
     intercept = _float_or_none(parameter_summary.get("intercept"))
     lag_coefficient = _float_or_none(parameter_summary.get("lag_coefficient"))
@@ -376,7 +394,7 @@ def _build_descriptive_reconstruction(
         "Workbench-generated descriptive reconstruction from an explicit time-index "
         f"Fourier series with {harmonic_count} retained harmonics over {sample_size} "
         "observations. This is descriptive-only, not an operator publication, not a "
-        "benchmark-local compact winner, and not a predictive law."
+        "benchmark-local compact winner, and not a predictive-within-scope claim."
     )
     if not target_cleared:
         honesty_note += (
@@ -785,6 +803,7 @@ def normalize_analysis_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
         analysis=analysis,
         raw_holistic_equation=raw_holistic_equation,
     )
+    analysis["evidence_studio"] = _build_evidence_studio(analysis=analysis)
 
     change_atlas = _build_change_atlas(
         analysis=analysis,
@@ -1193,7 +1212,7 @@ def _build_predictive_law_evidence_summary(
         "validation_scope": {
             "ref": validation_scope_ref,
             "headline": (
-                "Predictive-law interpretation is bounded by the declared "
+                "Predictive-within-scope interpretation is bounded by the declared "
                 "validation scope reference."
             ),
         },
@@ -1211,11 +1230,11 @@ def _claim_card_is_predictive_capable(claim_card: Mapping[str, Any]) -> bool:
     claim_ceiling = _string_or_none(claim_card.get("claim_ceiling"))
     if (
         claim_type is None
-        or claim_type == "descriptive_only"
+        or claim_type == "descriptive_structure"
         or claim_ceiling is None
     ):
         return False
-    return claim_ceiling != "descriptive_only"
+    return claim_ceiling != "descriptive_structure"
 
 
 def _predictive_law_evidence_summary_is_complete(
@@ -1464,6 +1483,370 @@ def _apply_claim_taxonomy(
     )
 
 
+def _build_evidence_studio(*, analysis: Mapping[str, Any]) -> dict[str, Any]:
+    studio = {
+        "surface_version": "1.0.0",
+        "redaction_status": "sanitized",
+        "claim_surface": _build_evidence_claim_surface(analysis=analysis),
+        "live_evidence": _build_evidence_live_surface(analysis=analysis),
+        "replay_artifacts": _build_evidence_replay_artifacts(analysis=analysis),
+        "engine_provenance": _build_evidence_engine_provenance(analysis=analysis),
+        "diagnostics": _build_evidence_diagnostics(analysis=analysis),
+    }
+    secrets = _collect_inline_secret_values(studio)
+    sanitized = redact_mapping(studio, secrets=secrets)
+    if isinstance(sanitized, Mapping):
+        result = dict(sanitized)
+        result["redaction_status"] = "sanitized"
+        return result
+    return studio
+
+
+def _build_evidence_claim_surface(*, analysis: Mapping[str, Any]) -> dict[str, Any]:
+    operator_point = analysis.get("operator_point")
+    point = operator_point if isinstance(operator_point, Mapping) else {}
+    publication = point.get("publication") if isinstance(point, Mapping) else None
+    publication_payload = publication if isinstance(publication, Mapping) else {}
+    claim_card = point.get("claim_card") if isinstance(point, Mapping) else None
+    claim_card_payload = claim_card if isinstance(claim_card, Mapping) else {}
+    claim_class = _string_or_none(analysis.get("claim_class"))
+    claim_ceiling = (
+        _string_or_none(claim_card_payload.get("claim_ceiling"))
+        or _claim_ceiling_from_class(claim_class)
+    )
+    return {
+        "claim_class": claim_class,
+        "claim_lane": _claim_lane_from_class(claim_class),
+        "publishable": bool(analysis.get("publishable")),
+        "publication_status": (
+            _string_or_none(publication_payload.get("status")) or "unavailable"
+        ),
+        "claim_type": _string_or_none(claim_card_payload.get("claim_type")),
+        "claim_ceiling": claim_ceiling,
+        "claim_ceiling_explanation": _claim_ceiling_explanation(
+            claim_ceiling=claim_ceiling,
+        ),
+        "downgrade_reason_codes": _string_list(analysis.get("gap_report")),
+        "abstention_reason_codes": _string_list(
+            analysis.get("would_have_abstained_because")
+        ),
+        "not_holistic_because": _string_list(analysis.get("not_holistic_because")),
+        "live_evidence_boundary": _non_claim_evidence_boundary(),
+    }
+
+
+def _claim_lane_from_class(claim_class: str | None) -> str:
+    if claim_class == "holistic_equation":
+        return "holistic"
+    if claim_class == "predictive_law":
+        return "predictive"
+    if claim_class in {"descriptive_fit", "descriptive_reconstruction"}:
+        return "descriptive"
+    return "none"
+
+
+def _claim_ceiling_from_class(claim_class: str | None) -> str | None:
+    if claim_class == "holistic_equation":
+        return "holistic_equation"
+    if claim_class == "predictive_law":
+        return "predictive_within_declared_scope"
+    if claim_class in {"descriptive_fit", "descriptive_reconstruction"}:
+        return "descriptive_structure"
+    return None
+
+
+def _claim_ceiling_explanation(*, claim_ceiling: str | None) -> str:
+    if claim_ceiling == "holistic_equation":
+        return "Claim lane cleared the backend-authored joint claim gate."
+    if claim_ceiling == "predictive_within_declared_scope":
+        return "Claim is bounded to the declared validation scope."
+    if claim_ceiling == "descriptive_structure":
+        return "Evidence supports descriptive structure only, not a predictive-within-scope claim."
+    return "No publishable scientific claim ceiling is available."
+
+
+def _build_evidence_live_surface(*, analysis: Mapping[str, Any]) -> dict[str, Any]:
+    present, raw_evidence = _resolve_live_evidence_payload(analysis=analysis)
+    if not present:
+        return {
+            "status": "unavailable",
+            "reason_codes": ["live_evidence_missing"],
+            "claim_evidence_status": "not_claim_evidence",
+            "claim_boundary": _non_claim_evidence_boundary(),
+        }
+    if not isinstance(raw_evidence, Mapping):
+        return {
+            "status": "malformed",
+            "reason_codes": ["live_evidence_malformed"],
+            "claim_evidence_status": "not_claim_evidence",
+            "claim_boundary": _non_claim_evidence_boundary(),
+        }
+
+    raw_payload = dict(_jsonable(raw_evidence))
+    secrets = _collect_inline_secret_values(raw_payload)
+    sanitized = redact_mapping(raw_payload, secrets=secrets)
+    sanitized_payload = dict(sanitized) if isinstance(sanitized, Mapping) else {}
+    sanitized_payload["claim_evidence_status"] = "not_claim_evidence"
+    sanitized_payload["claim_boundary"] = _non_claim_evidence_boundary()
+    return {
+        "status": _string_or_none(sanitized_payload.get("status")) or "available",
+        "provider": _string_or_none(sanitized_payload.get("provider")),
+        "endpoint_class": _string_or_none(
+            sanitized_payload.get("endpoint_class")
+        ),
+        "reason_codes": _string_list(sanitized_payload.get("reason_codes")),
+        "claim_evidence_status": "not_claim_evidence",
+        "claim_boundary": _non_claim_evidence_boundary(),
+        "sanitized_evidence": sanitized_payload,
+    }
+
+
+def _resolve_live_evidence_payload(
+    *,
+    analysis: Mapping[str, Any],
+) -> tuple[bool, Any]:
+    for key in _WORKBENCH_LIVE_EVIDENCE_KEYS:
+        if key in analysis:
+            return True, analysis.get(key)
+    return False, None
+
+
+def _non_claim_evidence_boundary() -> dict[str, Any]:
+    return dict(NON_CLAIM_EVIDENCE_BOUNDARY)
+
+
+def _build_evidence_replay_artifacts(
+    *,
+    analysis: Mapping[str, Any],
+) -> dict[str, Any]:
+    links: list[dict[str, str]] = []
+    for section, payload in _evidence_artifact_sections(analysis=analysis):
+        if not isinstance(payload, Mapping):
+            continue
+        links.extend(_artifact_links_from_mapping(section=section, payload=payload))
+    return {
+        "status": "available" if links else "unavailable",
+        "links": links,
+    }
+
+
+def _evidence_artifact_sections(
+    *,
+    analysis: Mapping[str, Any],
+) -> list[tuple[str, Any]]:
+    sections: list[tuple[str, Any]] = [
+        ("analysis", analysis),
+        ("dataset", analysis.get("dataset")),
+        ("operator_point", analysis.get("operator_point")),
+        ("benchmark", analysis.get("benchmark")),
+        ("descriptive_fit", analysis.get("descriptive_fit")),
+        ("predictive_law", analysis.get("predictive_law")),
+        ("holistic_equation", analysis.get("holistic_equation")),
+    ]
+    probabilistic = analysis.get("probabilistic")
+    if isinstance(probabilistic, Mapping):
+        for lane_name, lane_payload in sorted(probabilistic.items()):
+            sections.append((f"probabilistic.{lane_name}", lane_payload))
+    return sections
+
+
+def _artifact_links_from_mapping(
+    *,
+    section: str,
+    payload: Mapping[str, Any],
+) -> list[dict[str, str]]:
+    links: list[dict[str, str]] = []
+    for key, value in sorted(payload.items(), key=lambda item: str(item[0])):
+        role = str(key)
+        if not _is_artifact_reference_role(role):
+            continue
+        rendered = _render_artifact_reference(value)
+        if rendered is None:
+            continue
+        link = {"section": section, "role": role, "value": rendered}
+        if link not in links:
+            links.append(link)
+    return links
+
+
+def _is_artifact_reference_role(role: str) -> bool:
+    return (
+        role.endswith("_path")
+        or role.endswith("_ref")
+        or role
+        in {
+            "analysis_path",
+            "dataset_csv",
+            "manifest_path",
+            "raw_history_path",
+            "replay_ref",
+            "workspace_root",
+        }
+    )
+
+
+def _render_artifact_reference(value: Any) -> str | None:
+    typed_ref = _typed_ref_string(value)
+    if typed_ref is not None:
+        return typed_ref
+    if isinstance(value, str):
+        return value.strip() or None
+    if isinstance(value, Path):
+        return str(value)
+    return None
+
+
+def _build_evidence_engine_provenance(
+    *,
+    analysis: Mapping[str, Any],
+) -> dict[str, Any]:
+    operator_point = analysis.get("operator_point")
+    point = operator_point if isinstance(operator_point, Mapping) else {}
+    explicit_provenance = point.get("engine_provenance")
+    point_lane: dict[str, Any] = (
+        dict(_jsonable(explicit_provenance))
+        if isinstance(explicit_provenance, Mapping)
+        else {}
+    )
+    for key in (
+        "candidate_id",
+        "selected_candidate_id",
+        "selected_family",
+        "result_mode",
+        "search_scope",
+        "backend_origin_record",
+    ):
+        if key in point and key not in point_lane:
+            point_lane[key] = _jsonable(point[key])
+
+    benchmark = analysis.get("benchmark")
+    submitters = benchmark.get("submitters") if isinstance(benchmark, Mapping) else None
+    submitter_summaries: list[dict[str, Any]] = []
+    if isinstance(submitters, Sequence) and not isinstance(submitters, (str, bytes)):
+        for submitter in submitters:
+            if not isinstance(submitter, Mapping):
+                continue
+            submitter_summaries.append(
+                {
+                    "submitter_id": _string_or_none(submitter.get("submitter_id")),
+                    "submitter_class": _string_or_none(
+                        submitter.get("submitter_class")
+                    ),
+                    "status": _string_or_none(submitter.get("status")),
+                    "selected_candidate_id": _string_or_none(
+                        submitter.get("selected_candidate_id")
+                    ),
+                    "replay_contract": _jsonable(
+                        submitter.get("replay_contract")
+                    ),
+                }
+            )
+    return {
+        "status": "available" if point_lane or submitter_summaries else "unavailable",
+        "point_lane": point_lane,
+        "benchmark_submitters": submitter_summaries,
+    }
+
+
+def _build_evidence_diagnostics(*, analysis: Mapping[str, Any]) -> dict[str, Any]:
+    operator_point = analysis.get("operator_point")
+    point = operator_point if isinstance(operator_point, Mapping) else {}
+    scorecard = point.get("scorecard") if isinstance(point, Mapping) else None
+    scorecard_payload = (
+        dict(_jsonable(scorecard)) if isinstance(scorecard, Mapping) else {}
+    )
+    descriptive_fit = analysis.get("descriptive_fit")
+    descriptive_payload = (
+        dict(_jsonable(descriptive_fit))
+        if isinstance(descriptive_fit, Mapping)
+        else {}
+    )
+    return {
+        "fitting": {
+            "status": _string_or_none(descriptive_payload.get("status"))
+            or "unavailable",
+            "source": _string_or_none(descriptive_payload.get("source")),
+            "metrics": _jsonable(descriptive_payload.get("metrics") or {}),
+            "reconstruction_metrics": _jsonable(
+                descriptive_payload.get("reconstruction_metrics") or {}
+            ),
+            "semantic_audit": _jsonable(
+                descriptive_payload.get("semantic_audit") or {}
+            ),
+        },
+        "scoring": {
+            "scorecard": scorecard_payload,
+            "probabilistic_lanes": _probabilistic_diagnostic_summaries(
+                analysis=analysis
+            ),
+        },
+        "falsification": {
+            "gap_report": _string_list(analysis.get("gap_report")),
+            "not_holistic_because": _string_list(
+                analysis.get("not_holistic_because")
+            ),
+            "abstention_reason_codes": _string_list(
+                analysis.get("would_have_abstained_because")
+            ),
+            "falsification": _jsonable(scorecard_payload.get("falsification") or {}),
+            "residual_diagnostics": _jsonable(
+                analysis.get("residual_diagnostics")
+                or scorecard_payload.get("residual_diagnostics")
+                or {}
+            ),
+        },
+    }
+
+
+def _probabilistic_diagnostic_summaries(
+    *,
+    analysis: Mapping[str, Any],
+) -> dict[str, Any]:
+    probabilistic = analysis.get("probabilistic")
+    if not isinstance(probabilistic, Mapping):
+        return {}
+    summaries: dict[str, Any] = {}
+    for lane_name, lane_payload in sorted(probabilistic.items()):
+        if not isinstance(lane_payload, Mapping):
+            continue
+        summaries[str(lane_name)] = {
+            "status": _string_or_none(lane_payload.get("status")),
+            "replay_verification": _string_or_none(
+                lane_payload.get("replay_verification")
+            ),
+            "evidence": _jsonable(lane_payload.get("evidence") or {}),
+            "calibration": _jsonable(lane_payload.get("calibration") or {}),
+        }
+    return summaries
+
+
+def _collect_inline_secret_values(value: Any) -> tuple[str, ...]:
+    secrets: list[str] = []
+
+    def visit(item: Any, *, key_name: str | None = None) -> None:
+        if isinstance(item, Mapping):
+            for child_key, child_value in item.items():
+                visit(child_value, key_name=str(child_key).lower())
+            return
+        if isinstance(item, Sequence) and not isinstance(item, (str, bytes)):
+            for child in item:
+                visit(child)
+            return
+        if key_name not in _INLINE_SECRET_VALUE_KEYS or not isinstance(item, str):
+            return
+        text = item.strip()
+        if not text:
+            return
+        secrets.append(text)
+        if text.lower().startswith("bearer "):
+            token = text.split(None, 1)[1].strip()
+            if token:
+                secrets.append(token)
+
+    visit(value)
+    return tuple(dict.fromkeys(secrets))
+
+
 def _build_gap_report(
     *,
     analysis: Mapping[str, Any],
@@ -1569,7 +1952,7 @@ def _claim_ceiling_blocker_code(analysis: Mapping[str, Any]) -> str | None:
         if isinstance(claim_card, Mapping)
         else None
     )
-    if claim_ceiling == "descriptive_only":
+    if claim_ceiling == "descriptive_structure":
         return claim_ceiling
     return None
 
@@ -2220,6 +2603,7 @@ def _normalize_descriptive_fit_payload(
     reconstruction_curve = _descriptive_fit_equation_curve(
         descriptive_fit=normalized,
         dataset_rows=dataset_rows,
+        use_observed_lag_values=True,
     )
     if reconstruction_curve is not None:
         equation = (
@@ -2848,6 +3232,7 @@ def _run_benchmark_analysis(
     descriptive_fit = _build_descriptive_fit_from_submitter_results(
         submitter_results=benchmark_result.submitter_results,
         dataset_rows=dataset_rows,
+        allow_best_effort=True,
     )
     descriptive_fit_materialization_reason = (
         "reconstruction_floor_failed"
@@ -2940,6 +3325,7 @@ def _build_descriptive_fit_from_submitter_results(
     *,
     submitter_results: Sequence[BenchmarkSubmitterResult],
     dataset_rows: Sequence[Mapping[str, Any]],
+    allow_best_effort: bool = False,
 ) -> dict[str, Any] | None:
     if dataset_rows:
         ranked_payloads: list[tuple[dict[str, Any], dict[str, float | None]]] = []
@@ -2976,8 +3362,25 @@ def _build_descriptive_fit_from_submitter_results(
             selected_payload["reconstruction_metrics"] = dict(
                 _jsonable(selected_metrics)
             )
+            selected_payload["reconstruction_floor_cleared"] = True
             return selected_payload
         if ranked_payloads:
+            if allow_best_effort:
+                selected_payload, selected_metrics = min(
+                    ranked_payloads,
+                    key=lambda item: _descriptive_fit_reconstruction_sort_key(
+                        descriptive_fit=item[0],
+                        metrics=item[1],
+                    ),
+                )
+                selected_payload["reconstruction_metrics"] = dict(
+                    _jsonable(selected_metrics)
+                )
+                selected_payload["reconstruction_floor_cleared"] = False
+                selected_payload["materialization_reason"] = (
+                    "best_effort_benchmark_local_selection"
+                )
+                return selected_payload
             return None
 
     selected = _select_descriptive_fit_submitter_result(submitter_results)
@@ -2993,6 +3396,7 @@ def _descriptive_fit_equation_curve(
     *,
     descriptive_fit: Mapping[str, Any],
     dataset_rows: Sequence[Mapping[str, Any]],
+    use_observed_lag_values: bool = False,
 ) -> list[dict[str, Any]] | None:
     equation = descriptive_fit.get("equation")
     candidate_id = _string_or_none(descriptive_fit.get("candidate_id")) or (
@@ -3029,6 +3433,7 @@ def _descriptive_fit_equation_curve(
             dataset_rows=dataset_rows,
             literals=literals,
             state=state,
+            use_observed_lag_values=use_observed_lag_values,
         )
         if rebuilt_curve:
             return rebuilt_curve
@@ -4768,6 +5173,7 @@ def _build_equation_curve(
     dataset_rows: Sequence[Mapping[str, Any]],
     literals: Mapping[str, Any] | None = None,
     state: Mapping[str, Any] | None = None,
+    use_observed_lag_values: bool = False,
 ) -> list[dict[str, Any]]:
     if not dataset_rows:
         return []
@@ -4827,8 +5233,13 @@ def _build_equation_curve(
         lag_coefficient = float(parameter_summary["lag_coefficient"])
         fitted_values = [observed_values[0]]
         previous_fitted = observed_values[0]
-        for _ in observed_values[1:]:
-            next_fitted = intercept + (lag_coefficient * previous_fitted)
+        for index in range(1, len(observed_values)):
+            lag_value = (
+                observed_values[index - 1]
+                if use_observed_lag_values
+                else previous_fitted
+            )
+            next_fitted = intercept + (lag_coefficient * lag_value)
             fitted_values.append(next_fitted)
             previous_fitted = next_fitted
     elif candidate_id == "algorithmic_last_observation":
@@ -4839,34 +5250,38 @@ def _build_equation_curve(
     elif candidate_id == "algorithmic_running_half_average":
         running = float(state_values.get("state_0", 0.0))
         fitted_values = []
-        for _ in observed_values:
+        for index, observed in enumerate(observed_values):
             fitted_values.append(running)
-            running = 0.5 * (running + fitted_values[-1])
+            lag_value = (
+                observed
+                if use_observed_lag_values
+                else fitted_values[index]
+            )
+            running = 0.5 * (running + lag_value)
     elif candidate_id == "recursive_level_smoother" and "alpha" in literal_values:
         alpha = float(literal_values["alpha"])
         level = float(state_values.get("level", observed_values[0]))
-        fitted_values = []
-        for index, _ in enumerate(observed_values):
-            if index == 0:
-                fitted_values.append(level)
-                continue
-            previous_fitted = fitted_values[index - 1]
-            level = (alpha * previous_fitted) + ((1.0 - alpha) * level)
+        fitted_values = [level]
+        for index in range(1, len(observed_values)):
+            lag_value = (
+                observed_values[index - 1]
+                if use_observed_lag_values
+                else fitted_values[index - 1]
+            )
+            level = (alpha * lag_value) + ((1.0 - alpha) * level)
             fitted_values.append(level)
     elif candidate_id == "recursive_running_mean":
         running_mean = float(state_values.get("running_mean", observed_values[0]))
         step_count = int(state_values.get("step_count", 1))
         fitted_values = []
-        for index, _ in enumerate(observed_values):
-            if index == 0:
-                fitted_values.append(running_mean)
-                continue
+        for observed in observed_values:
+            fitted_values.append(running_mean)
+            lag_value = observed if use_observed_lag_values else running_mean
             next_step_count = step_count + 1
             running_mean = (
-                (running_mean * step_count) + fitted_values[index - 1]
+                (running_mean * step_count) + lag_value
             ) / next_step_count
             step_count = next_step_count
-            fitted_values.append(running_mean)
     elif family_id == "spectral" and {
         "cosine_coefficient",
         "sine_coefficient",

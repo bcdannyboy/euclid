@@ -54,7 +54,7 @@ def test_positive_case_requires_mechanistic_dossier_semantics(tmp_path: Path) ->
     assert entry.mechanistic_evidence_ref is not None
     assert inspection.claim_card is not None
     assert inspection.claim_card.manifest.body["claim_type"] == (
-        "mechanistically_compatible_hypothesis"
+        "mechanistically_compatible_law"
     )
 
 
@@ -90,10 +90,10 @@ def test_negative_case_detects_contradictory_mechanistic_support(
     )
 
     assert benchmark.task_manifest.task_family == "mechanistic_lane_negative"
-    assert dossier.body["status"] == "downgraded_to_predictively_supported"
+    assert dossier.body["status"] == "downgraded_to_predictive_within_declared_scope"
     assert "invariance_check_failed" in dossier.body["reason_codes"]
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictively_supported"
+    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
 
 
 def test_insufficient_case_lowers_claim_ceiling_without_false_pass(
@@ -128,13 +128,13 @@ def test_insufficient_case_lowers_claim_ceiling_without_false_pass(
     )
 
     assert benchmark.task_manifest.task_family == "mechanistic_lane_insufficient"
-    assert dossier.body["status"] == "downgraded_to_predictively_supported"
+    assert dossier.body["status"] == "downgraded_to_predictive_within_declared_scope"
     assert "units_check_incomplete" in dossier.body["reason_codes"]
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictively_supported"
+    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
     assert (
         inspection.claim_card.manifest.body["claim_type"]
-        != "mechanistically_compatible_hypothesis"
+        != "mechanistically_compatible_law"
     )
 
 

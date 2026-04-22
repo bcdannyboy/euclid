@@ -4,8 +4,8 @@ owners:
   - id: composition_semantics_council
     display_name: Composition Semantics Council
 global_rules:
-  reducer_object_doc: docs/search-core.md
-  shared_local_doc: docs/search-core.md
+  reducer_object_doc: docs/reference/search-core.md
+  shared_local_doc: docs/reference/search-core.md
 contracts:
   - composition_operator: piecewise
     owner_ref: composition_semantics_council

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import math
-from statistics import NormalDist, fmean
+from statistics import fmean
 from typing import Any, Mapping
+
+from scipy import stats
 
 from euclid.contracts.loader import ContractCatalog
 from euclid.manifests.base import ManifestEnvelope
@@ -10,8 +12,6 @@ from euclid.manifests.runtime_models import (
     CalibrationContractManifest,
     CalibrationResultManifest,
 )
-
-_STANDARD_NORMAL = NormalDist()
 
 _CALIBRATION_POLICIES = {
     "point": {
@@ -170,7 +170,7 @@ def _distribution_diagnostic(
         scale = float(row["scale"])
         realized_observation = float(row["realized_observation"])
         z = (realized_observation - location) / scale
-        pit_values.append(_STANDARD_NORMAL.cdf(z))
+        pit_values.append(float(stats.norm.cdf(z)))
     ks_distance = _ks_uniform_distance(tuple(pit_values))
     threshold = float(thresholds.get("max_ks_distance", 0.25))
     return {

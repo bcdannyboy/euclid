@@ -45,8 +45,10 @@ def test_general_optimizer_outperforms_baseline_when_structure_requires_it() -> 
         random_seed="0",
     )
 
-    assert summary.backend_id == "deterministic_shared_local_panel_optimizer_v1"
-    assert summary.baseline_backend_id == "deterministic_shared_local_mean_offsets_v1"
+    assert summary.backend_id == "legacy_non_claim_shared_local_panel_optimizer_v1"
+    assert summary.baseline_backend_id == "legacy_non_claim_shared_local_mean_offsets_v1"
+    assert summary.evidence_role == "legacy_non_claim_adapter"
+    assert summary.universal_law_evidence_allowed is False
     assert summary.final_loss == pytest.approx(0.0)
     assert summary.parameter_summary["shared_intercept"] == pytest.approx(1.0)
     assert summary.parameter_summary["shared_lag_coefficient"] == pytest.approx(2.0)
@@ -73,10 +75,13 @@ def test_selected_backend_is_persisted_in_diagnostics() -> None:
     )
 
     assert summary.as_diagnostics()["baseline_backend_id"] == (
-        "deterministic_shared_local_mean_offsets_v1"
+        "legacy_non_claim_shared_local_mean_offsets_v1"
     )
     assert summary.as_diagnostics()["selected_backend_id"] == (
-        "deterministic_shared_local_panel_optimizer_v1"
+        "legacy_non_claim_shared_local_panel_optimizer_v1"
+    )
+    assert summary.as_diagnostics()["legacy_adapter_status"] == (
+        "legacy_non_claim_adapter"
     )
 
 

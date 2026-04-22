@@ -5,7 +5,7 @@ owners:
     display_name: Robustness Policy Council
 global_rules:
   final_status_rule: failed_overrides_abstained_over_passed
-  null_results_are_descriptive_only: true
+  null_results_are_descriptive_structure: true
   leakage_canaries_are_structural: true
   holdout_reuse_forbidden: true
 null_families:
@@ -13,7 +13,7 @@ null_families:
     owner_ref: robustness_policy_council
     generator: without_replacement_random_permutation
     statistic: description_gain_bits
-    interpretation: candidate_relative_descriptive_only
+    interpretation: candidate_relative_descriptive_structure
 perturbation_families:
   - family_id: recent_history_truncation
     owner_ref: robustness_policy_council

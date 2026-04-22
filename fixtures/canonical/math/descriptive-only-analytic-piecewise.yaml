@@ -1,7 +1,7 @@
 version: 1
 kind: canonical_math_fixture
-fixture_id: descriptive_only_analytic_piecewise
-claim_lane: descriptive_only
+fixture_id: descriptive_structure_analytic_piecewise
+claim_lane: descriptive_structure
 admitted_data_object:
   object_id: single_entity_series
   entity_index_set:

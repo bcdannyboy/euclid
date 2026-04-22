@@ -1,14 +1,14 @@
 {
   "dossier": {
-    "status": "downgraded_to_predictively_supported",
-    "resolved_claim_ceiling": "predictively_supported",
+    "status": "downgraded_to_predictive_within_declared_scope",
+    "resolved_claim_ceiling": "predictive_within_declared_scope",
     "reason_codes": [
       "predictive_evidence_overlap"
     ]
   },
   "claim": {
-    "claim_type": "predictively_supported",
-    "claim_ceiling": "predictively_supported",
+    "claim_type": "predictive_within_declared_scope",
+    "claim_ceiling": "predictive_within_declared_scope",
     "allowed_interpretation_codes": [
       "historical_structure_summary",
       "point_forecast_within_declared_validation_scope"

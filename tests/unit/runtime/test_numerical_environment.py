@@ -130,3 +130,26 @@ def test_replay_environment_metadata_includes_numerical_versions() -> None:
     assert metadata["library.numpy.status"] == "available"
     assert metadata["library.scipy.version"]
     assert "blas_lapack.status" in metadata
+
+
+def test_replay_identity_metadata_is_stable_for_repeated_capture() -> None:
+    first = build_runtime_environment_metadata()
+    second = build_runtime_environment_metadata()
+
+    stable_identity_keys = {
+        "numerical_schema_version",
+        "python_version",
+        "python_implementation",
+        "library.numpy.version",
+        "library.scipy.version",
+        "library.sympy.version",
+        "library.pysindy.version",
+        "library.pysr.version",
+        "blas_lapack.status",
+        "platform.system",
+        "platform.machine",
+    }
+
+    assert {key: first[key] for key in stable_identity_keys} == {
+        key: second[key] for key in stable_identity_keys
+    }

@@ -19,7 +19,17 @@ DEFAULT_FRONTIER_AXES: tuple[str, ...] = (
     "description_gain_bits",
     "inner_primary_score",
 )
-SUPPORTED_FRONTIER_AXES: tuple[str, ...] = DEFAULT_FRONTIER_AXES
+SUPPORTED_FRONTIER_AXES: tuple[str, ...] = (
+    *DEFAULT_FRONTIER_AXES,
+    "fit_loss",
+    "out_of_sample_score",
+    "parameter_count",
+    "support_stability",
+    "parameter_stability",
+    "invariance_score",
+    "robustness_score",
+    "calibration_score",
+)
 DEFAULT_FORBIDDEN_FRONTIER_AXES: tuple[str, ...] = (
     "holdout_results",
     "outer_fold_results",

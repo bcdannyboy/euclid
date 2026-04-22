@@ -31,7 +31,7 @@ LIVE_ENTRY_RELATIVE_PATHS = (
 )
 MATH_FIXTURE_RELATIVE_DIRECTORY = Path("fixtures/canonical/math")
 FIXTURE_COVERAGE_RELATIVE_PATH = Path("fixtures/canonical/fixture-coverage.yaml")
-FIXTURE_WALKTHROUGH_RELATIVE_DIRECTORY = Path("docs/examples")
+FIXTURE_WALKTHROUGH_RELATIVE_DIRECTORY = Path("docs/reference/examples")
 DOC_FRONT_MATTER_PATTERN = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
 DOUBLE_QUOTE_PATTERN = re.compile(r'"([^"]+)"')
 IDENTIFIER_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_@\.\-\[\]]+$")
@@ -1342,7 +1342,13 @@ def _validate_predictive_fixture_requirements(
     contract_lookup: dict[str, Any],
 ) -> None:
     claim_lane = payload["claim_lane"]
-    if claim_lane not in {"predictively_supported", "mechanistically_compatible_hypothesis"}:
+    predictive_claim_lanes = {
+        "predictively_supported",
+        "predictive_within_declared_scope",
+        "mechanistically_compatible_hypothesis",
+        "mechanistically_compatible_law",
+    }
+    if claim_lane not in predictive_claim_lanes:
         return
 
     required_fields = [
@@ -1439,7 +1445,7 @@ def _validate_mechanistic_fixture_requirements(
     payload: dict[str, Any],
     contract_lookup: dict[str, Any],
 ) -> None:
-    if payload["claim_lane"] != "mechanistically_compatible_hypothesis":
+    if payload["claim_lane"] not in {"mechanistically_compatible_hypothesis", "mechanistically_compatible_law"}:
         return
 
     expected_lower_lane = contract_lookup["mechanistic_global_rules"].get("requires_lower_lane_support")
@@ -1642,6 +1648,19 @@ def _load_fixture_walkthroughs(
         relative_path = path.relative_to(root).as_posix()
         scenario_ids = payload.get("scenario_ids", [])
         fixture_bundles = payload.get("fixture_bundles", [])
+        body_scenario_ids = {
+            match.group("scenario_id")
+            for match in re.finditer(
+                r"(?m)^\s*-\s+(?P<scenario_id>[A-Za-z0-9_.-]+):",
+                body,
+            )
+        }
+        unknown_body_scenario_ids = sorted(body_scenario_ids - set(scenario_map))
+        if unknown_body_scenario_ids:
+            raise SpecCompilerError(
+                "walkthrough references unknown scenario "
+                f"'{unknown_body_scenario_ids[0]}' in {relative_path}"
+            )
 
         if not scenario_ids and not fixture_bundles:
             fixture_bundles = _infer_fixture_bundle_links(root, path, body)

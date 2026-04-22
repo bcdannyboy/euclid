@@ -1,3 +1,12 @@
+---
+title: Euclid
+status: active_reference
+related:
+- docs/reference/README.md
+- docs/reference/system.md
+- schemas/core/euclid-system.yaml
+- schemas/core/source-map.yaml
+---
 # Euclid
 
 Most forecasting stacks give you a score, a chart, and a request for trust. Euclid tries to give you an equation and then make that equation earn the right to be believed.
@@ -9,7 +18,7 @@ Euclid keeps a descriptive equation separate from predictive claims, so a curve 
 ## Why Euclid is unusual
 
 - It treats symbolic equations as first-class runtime artifacts, not decorative labels pasted on after scoring.
-- It distinguishes descriptive fits, predictive laws, and unified deterministic-plus-stochastic equations instead of collapsing them into one vague result type.
+- It distinguishes descriptive fits, predictive-within-scope symbolic claims, and unified deterministic-plus-stochastic equations instead of collapsing them into one vague result type.
 - It requires replayable evidence before publication completes.
 - It states search guarantees honestly: exact, bounded, equality-saturation, and stochastic backends do not promise the same thing.
 - It ships a local workbench where the equation story, uncertainty story, and publication status can be inspected together.
@@ -61,15 +70,15 @@ Compatibility-only entrypoints:
 
 ## Start here
 
-- `docs/README.md`: the release-to-implementation bridge and recommended reading paths through the docs
-- `docs/system.md`: the big picture, the main subsystems, and the end-to-end lifecycle
-- `docs/runtime-cli.md`: the main CLI surface, replay model, workspace layout, and extension lanes
-- `docs/modeling-pipeline.md`: how Euclid turns ordered data into candidate laws, scores, and publication outcomes
-- `docs/search-core.md`: the mathematical search layer, CIR, reducer families, description gain, and algorithmic DSL
-- `docs/contracts-manifests.md`: the formal specification layer for schemas, manifests, object identity, and registries
-- `docs/benchmarks-readiness.md`: benchmarks, release scopes, readiness rules, and packaging outputs
-- `docs/workbench.md`: the local analysis studio, saved-analysis model, and explainer flow
-- `docs/testing-truthfulness.md`: executable documentation anchored in tests
+- `docs/reference/README.md`: the release-to-implementation bridge and recommended reading paths through the docs
+- `docs/reference/system.md`: the big picture, the main subsystems, and the end-to-end lifecycle
+- `docs/reference/runtime-cli.md`: the main CLI surface, replay model, workspace layout, and extension lanes
+- `docs/reference/modeling-pipeline.md`: how Euclid turns ordered data into candidate laws, scores, and publication outcomes
+- `docs/reference/search-core.md`: the mathematical search layer, CIR, reducer families, description gain, and algorithmic DSL
+- `docs/reference/contracts-manifests.md`: the formal specification layer for schemas, manifests, object identity, and registries
+- `docs/reference/benchmarks-readiness.md`: benchmarks, release scopes, readiness rules, and packaging outputs
+- `docs/reference/workbench.md`: the local analysis studio, saved-analysis model, and explainer flow
+- `docs/reference/testing-truthfulness.md`: executable documentation anchored in tests
 - `schemas/core/euclid-system.yaml`: canonical document spine, vocabulary roots, runtime module map, and artifact classes
 - `schemas/core/source-map.yaml`: code-to-document routing table for the live reference workspace
 
@@ -87,7 +96,7 @@ Compatibility-only entrypoints:
 
 Euclid emits typed, replayable research artifacts rather than one opaque prediction blob. The main families include:
 
-- symbolic descriptive fits, predictive laws, and, when scope-aligned deterministic and probabilistic evidence clears, unified equations for a time series
+- symbolic descriptive fits, predictive-within-scope symbolic claims, and, when scope-aligned deterministic and probabilistic evidence clears, unified equations for a time series
 - dataset snapshots and feature views
 - search and evaluation plans
 - fitted candidate specs and prediction artifacts

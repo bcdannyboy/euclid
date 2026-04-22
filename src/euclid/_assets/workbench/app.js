@@ -763,8 +763,52 @@ function renderWorkspaceEvidenceRail({ analysis, activeOverlay, selectedLaneEntr
       ${selectedLaneEntry?.[1]?.evidence?.headline
         ? banner("Selected lane", selectedLaneEntry[1].evidence.headline)
         : ""}
+      ${renderEvidenceStudioSummary(analysis)}
     </section>
   `;
+}
+
+function renderEvidenceStudioSummary(analysis) {
+  const studio = analysis?.evidence_studio;
+  if (!studio) return "";
+  const claim = studio.claim_surface || {};
+  const live = studio.live_evidence || {};
+  const replayLinks = Array.isArray(studio.replay_artifacts?.links)
+    ? studio.replay_artifacts.links
+    : [];
+  const engine = studio.engine_provenance?.point_lane || {};
+  const abstentions = Array.isArray(claim.abstention_reason_codes)
+    ? claim.abstention_reason_codes
+    : [];
+  const downgrades = Array.isArray(claim.downgrade_reason_codes)
+    ? claim.downgrade_reason_codes
+    : [];
+  const boundary = live.claim_boundary || claim.live_evidence_boundary || {};
+  return `
+    <div class="stack-tight evidence-studio-summary">
+      <div class="detail-label">Evidence Studio</div>
+      <div class="pill-row">
+        ${pill(humanizePhrase(claim.claim_lane || "none"), claim.publishable ? "ok" : "warn")}
+        ${pill(humanizePhrase(live.status || "live evidence unavailable"), "sea")}
+        ${boundary.counts_as_scientific_claim_evidence === false ? pill("non-claim live evidence", "accent") : ""}
+      </div>
+      <div class="detail-grid">
+        ${detail("Claim ceiling", humanizePhrase(claim.claim_ceiling || "none"))}
+        ${detail("Abstention", summarizeReasonCodes(abstentions))}
+        ${detail("Downgrade", summarizeReasonCodes(downgrades))}
+        ${detail("Replay links", String(replayLinks.length))}
+        ${detail("Engine", engine.engine_id || engine.selected_family || "n/a")}
+      </div>
+    </div>
+  `;
+}
+
+function summarizeReasonCodes(items) {
+  const normalized = Array.isArray(items)
+    ? items.map((item) => humanizeGapItem(item)).filter(Boolean)
+    : [];
+  if (!normalized.length) return "none";
+  return normalized.slice(0, 3).join(", ");
 }
 
 function renderStatusMatrix(analysis) {
@@ -4737,7 +4781,7 @@ function sanitizeNarrativeText(value) {
   if (!text) return "";
   return text
     .replace(/\bHolistic law\b/gi, HOLISTIC_EQUATION_LABEL)
-    .replace(/\bPredictive law\b/gi, PREDICTIVE_SYMBOLIC_LAW_LABEL)
+    .replace(/\bPredictive claim\b/gi, PREDICTIVE_SYMBOLIC_LAW_LABEL)
     .replace(/\bTop-line law\b/gi, "Top-line claim")
     .replace(/\btop-line law\b/gi, "top-line claim")
     .replace(/\bactive deterministic law\b/gi, "active deterministic overlay")

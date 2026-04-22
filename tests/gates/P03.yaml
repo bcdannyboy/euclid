@@ -1,0 +1,2107 @@
+phase_id: P03
+phase_title: Unified Fitting Layer
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P03-T01
+- P03-T01-S01
+- P03-T01-S02
+- P03-T01-S03
+- P03-T01-S04
+- P03-T02
+- P03-T02-S01
+- P03-T02-S02
+- P03-T02-S03
+- P03-T02-S04
+- P03-T02-S05
+- P03-T03
+- P03-T03-S01
+- P03-T03-S02
+- P03-T03-S03
+- P03-T03-S04
+- P03-T03-S05
+- P03-T03-S06
+- P03-T04
+- P03-T04-S01
+- P03-T04-S02
+- P03-T04-S03
+- P03-T04-S04
+- P03-T04-S05
+- P03-T04-S06
+- P03-T05
+- P03-T05-S01
+- P03-T05-S02
+- P03-T05-S03
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12 -m pytest -q tests/unit/fit tests/unit/expr tests/unit/search tests/unit/testing
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12 -m pytest -q tests/integration
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12 -m pytest -q tests/regression
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12 -m pytest -q tests/golden
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q tests/live/test_constant_fitting_live.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions:
+  - fit_evidence_excludes_raw_rows
+  - fit_evidence_excludes_train_target_values
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+replay:
+  assertions:
+  - fit_replay_identity_stable
+  - optimizer_replay_metadata_complete
+  - optimizer_library_versions_recorded
+  - replay_mismatch_fails_closed
+claim_scope:
+  assertions:
+  - fit_is_not_claim_authority
+  - search_proposes_structures_only
+  - unified_fit_required_before_candidate_fit_artifacts
+  - live_api_success_is_not_scientific_truth
+edge_cases:
+  required:
+  - singular_underdetermined_fitting
+  - optimizer_non_convergence
+  - invalid_domains
+  - missing_values
+  - nonfinite_values
+  - leakage_prevention
+  - train_only_overfit_candidates
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - replay_determinism
+  - redacted_evidence
+  - invalid_credentials
+  - rate_limit
+  - timeout
+  - malformed_payload
+  - empty_payload
+artifact_outputs:
+- build/reports/p03-gate-evidence.json
+- schemas/contracts/optimizer-diagnostics.yaml
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P03-T01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T01
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T01
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T01-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T01-S01
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T01-S01
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T01-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T01-S02
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T01-S02
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T01-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T01-S03
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T01-S03
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T01-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T01-S04
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T01-S04
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T02
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T02
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T02-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T02-S01
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T02-S01
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T02-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T02-S02
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T02-S02
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T02-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T02-S03
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T02-S03
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T02-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T02-S04
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T02-S04
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T02-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T02-S05
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T02-S05
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03-S01
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03-S01
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03-S02
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03-S02
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03-S03
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03-S03
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03-S04
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03-S04
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03-S05
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03-S05
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T03-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T03-S06
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T03-S06
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04-S01
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04-S01
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04-S02
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04-S02
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04-S03
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04-S03
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04-S04
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04-S04
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04-S05
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04-S05
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T04-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T04-S06
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T04-S06
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T05
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T05
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T05-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T05-S01
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T05-S01
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T05-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T05-S02
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T05-S02
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth
+  P03-T05-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/optimizer-diagnostics.yaml
+    - src/euclid/fit/__init__.py
+    - src/euclid/fit/diagnostics.py
+    - src/euclid/fit/objectives.py
+    - src/euclid/fit/parameterization.py
+    - src/euclid/fit/refit.py
+    - src/euclid/fit/scipy_optimizers.py
+    - src/euclid/modules/candidate_fitting.py
+    - src/euclid/search/backends.py
+    - src/euclid/search/descriptive_coding.py
+    test_files:
+    - tests/unit/fit/test_objectives.py
+    - tests/unit/fit/test_parameterization.py
+    - tests/unit/fit/test_refit.py
+    - tests/unit/fit/test_scipy_optimizers.py
+    - tests/unit/modules/test_candidate_fitting.py
+    - tests/unit/modules/test_candidate_fitting_enhanced.py
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_fitting_boundary.py
+    gate_refs:
+    - tests/gates/P03.yaml#P03-T05-S03
+    evidence_refs:
+    - gate:tests/gates/P03.yaml#P03-T05-S03
+    - artifact:build/reports/completion-report.json
+    - artifact:schemas/contracts/optimizer-diagnostics.yaml
+    - test:tests/unit/fit/test_objectives.py
+    - test:tests/unit/fit/test_parameterization.py
+    - test:tests/unit/fit/test_refit.py
+    - test:tests/unit/fit/test_scipy_optimizers.py
+    - test:tests/unit/modules/test_candidate_fitting_enhanced.py
+    - test:tests/unit/search/test_fitting_boundary.py
+    edge_cases:
+    - singular_underdetermined_fitting
+    - optimizer_non_convergence
+    - invalid_domains
+    - missing_values
+    - nonfinite_values
+    - leakage_prevention
+    - train_only_overfit_candidates
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_determinism
+    - redacted_evidence
+    - invalid_credentials
+    - rate_limit
+    - timeout
+    - malformed_payload
+    - empty_payload
+    redaction_assertions:
+    - fit_evidence_excludes_raw_rows
+    - fit_evidence_excludes_train_target_values
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_secret_in_url
+    - no_secret_in_header
+    replay_assertions:
+    - fit_replay_identity_stable
+    - optimizer_replay_metadata_complete
+    - optimizer_library_versions_recorded
+    - replay_mismatch_fails_closed
+    claim_scope_assertions:
+    - fit_is_not_claim_authority
+    - search_proposes_structures_only
+    - unified_fit_required_before_candidate_fit_artifacts
+    - live_api_success_is_not_scientific_truth

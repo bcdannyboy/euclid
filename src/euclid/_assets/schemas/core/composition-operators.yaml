@@ -3,18 +3,22 @@ vocabulary: composition_operators
 title: Composition Operators
 closed: true
 source_doc_refs:
-  - README.md
-  - docs/search-core.md
+- README.md
+- docs/reference/search-core.md
 entries:
-  - id: piecewise
-    binding_status: retained
-    description: Retained composition operator for segmented structure over ordered numeric sequences.
-  - id: additive_residual
-    binding_status: retained
-    description: Retained composition operator for residual correction layered onto a primary reducer.
-  - id: regime_conditioned
-    binding_status: retained
-    description: Composition operator that switches or weights child reducers under an explicit declared regime law.
-  - id: shared_plus_local_decomposition
-    binding_status: extension_surface
-    description: Composition operator that combines shared structure with entity-local structure under explicit sharing and unseen-entity laws.
+- id: piecewise
+  binding_status: retained
+  description: Retained composition operator for segmented structure over ordered
+    numeric sequences.
+- id: additive_residual
+  binding_status: retained
+  description: Retained composition operator for residual correction layered onto
+    a primary reducer.
+- id: regime_conditioned
+  binding_status: retained
+  description: Composition operator that switches or weights child reducers under
+    an explicit declared regime law.
+- id: shared_plus_local_decomposition
+  binding_status: extension_surface
+  description: Composition operator that combines shared structure with entity-local
+    structure under explicit sharing and unseen-entity laws.

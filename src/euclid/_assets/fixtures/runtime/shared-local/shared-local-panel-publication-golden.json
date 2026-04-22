@@ -1,6 +1,7 @@
 {
   "artifact": {
     "comparison_key": {
+      "composition_signature": "sha256:e4435ba85116221364a79abb91c3050d1d848d60651880ed27501889c8e6f002",
       "entity_panel": [
         "entity-a",
         "entity-b"
@@ -61,12 +62,13 @@
       "point_forecast_within_declared_validation_scope",
       "cross_entity_panel_forecast_within_declared_validation_scope"
     ],
-    "claim_type": "predictively_supported",
+    "claim_type": "predictive_within_declared_scope",
     "predictive_support_status": "confirmatory_supported"
   },
   "comparison_universe": {
     "candidate_beats_baseline": true,
     "candidate_comparison_key": {
+      "composition_signature": "sha256:e4435ba85116221364a79abb91c3050d1d848d60651880ed27501889c8e6f002",
       "entity_panel": [
         "entity-a",
         "entity-b"
@@ -102,6 +104,20 @@
         "failure_reason_code": null,
         "mean_loss_differential": 4.0,
         "paired_origin_count": 2,
+        "paired_predictive_test_result": {
+          "confidence_interval": [
+            4.0,
+            4.0
+          ],
+          "mean_loss_differential": 4.0,
+          "practical_margin": 0.0,
+          "promotion_allowed": true,
+          "raw_metric_comparison_role": "diagnostic_only",
+          "reason_codes": [],
+          "replay_identity": "predictive-promotion:1a7b599d297aca9de711e1928b68dd44f9214a2326b5d549bdc43593f7022fcd",
+          "schema_name": "paired_predictive_test_result@1.0.0",
+          "status": "passed"
+        },
         "per_horizon_mean_loss_differentials": [
           {
             "horizon": 1,

@@ -369,7 +369,7 @@ def test_build_descriptive_fit_from_submitter_results_rejects_flat_return_rollou
     assert descriptive_fit is None
 
 
-def test_build_descriptive_reconstruction_is_descriptive_only_and_non_exact() -> None:
+def test_build_descriptive_reconstruction_is_descriptive_structure_and_non_exact() -> None:
     values = [
         (0.8 * math.cos((2.0 * math.pi * 3.0 * index) / 64.0))
         + (0.4 * math.sin((2.0 * math.pi * 7.0 * index) / 64.0))
@@ -385,7 +385,7 @@ def test_build_descriptive_reconstruction_is_descriptive_only_and_non_exact() ->
     assert reconstruction["is_law_claim"] is False
     assert reconstruction["law_eligible"] is False
     assert reconstruction["law_rejection_reason_codes"] == [
-        "explicit_time_reconstruction_descriptive_only"
+        "explicit_time_reconstruction_descriptive_structure"
     ]
     assert reconstruction["equation"]["candidate_id"] == "descriptive_fourier_reconstruction"
     assert reconstruction["equation"]["literals"]["harmonic_count"] < len(values) // 2
@@ -1198,7 +1198,7 @@ def _predictive_law_candidate_publication_payload(
     *,
     operator_equation: dict[str, Any],
 ) -> dict[str, Any]:
-    dataset_csv = tmp_path / "spy-price-close-predictive-law.csv"
+    dataset_csv = tmp_path / "spy-price-close-predictive-scope.csv"
     with dataset_csv.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
@@ -1322,8 +1322,8 @@ def _predictive_law_candidate_publication_payload(
             ),
             "equation": operator_equation,
             "claim_card": {
-                "claim_type": "predictively_supported",
-                "claim_ceiling": "predictively_supported",
+                "claim_type": "predictive_within_declared_scope",
+                "claim_ceiling": "predictive_within_declared_scope",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -1342,14 +1342,14 @@ def _predictive_law_candidate_publication_payload(
     ("claim_type", "allowed_interpretation_codes"),
     [
         (
-            "predictively_supported",
+            "predictive_within_declared_scope",
             [
                 "historical_structure_summary",
                 "point_forecast_within_declared_validation_scope",
             ],
         ),
         (
-            "mechanistically_compatible_hypothesis",
+            "mechanistically_compatible_law",
             [
                 "historical_structure_summary",
                 "point_forecast_within_declared_validation_scope",
@@ -1609,7 +1609,7 @@ def test_normalize_analysis_payload_projects_predictive_law_without_holistic_fal
         "validation_scope": {
             "ref": "validation_scope_manifest@1.0.0:scope-1",
             "headline": (
-                "Predictive-law interpretation is bounded by the declared "
+                "Predictive-within-scope interpretation is bounded by the declared "
                 "validation scope reference."
             ),
         },
@@ -1864,7 +1864,7 @@ def test_normalize_analysis_payload_rejects_stale_saved_predictive_law_without_o
     assert normalized["publishable"] is False
 
 
-def test_normalize_analysis_payload_rejects_descriptive_only_claim_card_for_predictive_law(
+def test_normalize_analysis_payload_rejects_descriptive_structure_claim_card_for_predictive_law(
     tmp_path: Path,
 ) -> None:
     dataset_csv = tmp_path / "spy-price-close-descriptive-only.csv"
@@ -1977,8 +1977,8 @@ def test_normalize_analysis_payload_rejects_descriptive_only_claim_card_for_pred
                 ],
             },
             "claim_card": {
-                "claim_type": "descriptive_only",
-                "claim_ceiling": "descriptive_only",
+                "claim_type": "descriptive_structure",
+                "claim_ceiling": "descriptive_structure",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -1987,7 +1987,7 @@ def test_normalize_analysis_payload_rejects_descriptive_only_claim_card_for_pred
             },
             "abstention": {
                 "reason_codes": ["robustness_failed"],
-                "blocked_ceiling": "descriptive_only",
+                "blocked_ceiling": "descriptive_structure",
             },
             "scorecard": {
                 "descriptive_status": "passed",
@@ -2001,8 +2001,8 @@ def test_normalize_analysis_payload_rejects_descriptive_only_claim_card_for_pred
     assert normalized["predictive_law"] is None
     assert normalized["claim_class"] == "descriptive_fit"
     assert normalized["publishable"] is False
-    assert "descriptive_only" in normalized["would_have_abstained_because"]
-    assert "descriptive_only" in normalized["not_holistic_because"]
+    assert "descriptive_structure" in normalized["would_have_abstained_because"]
+    assert "descriptive_structure" in normalized["not_holistic_because"]
 
 
 def test_normalize_analysis_payload_rejects_exact_closure_operator_point_for_predictive_law(
@@ -2292,8 +2292,8 @@ def test_normalize_analysis_payload_does_not_infer_holistic_from_saved_alignment
                 ],
             },
             "claim_card": {
-                "claim_type": "predictively_supported",
-                "claim_ceiling": "predictively_supported",
+                "claim_type": "predictive_within_declared_scope",
+                "claim_ceiling": "predictive_within_declared_scope",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -2463,7 +2463,7 @@ def test_normalize_analysis_payload_rejects_non_predictive_deterministic_source_
         "publication_record_ref": "publication_record_manifest@1.1.0:publication-1",
         "honesty_note": (
             "Saved joint payload should not survive unless the deterministic "
-            "source is the backend-backed predictive law and an explicit "
+            "source is the backend-backed predictive-within-scope claim and an explicit "
             "backend joint-claim gate is present."
         ),
         "equation": {
@@ -2871,8 +2871,8 @@ def test_normalize_analysis_payload_projects_workflow_native_nested_raw_surfaces
     payload["operator_point"]["claim_card"]["predictive_law"] = {
         "status": "publishable",
         "claim_class": "predictive_law",
-        "claim_type": "predictively_supported",
-        "claim_ceiling": "predictively_supported",
+        "claim_type": "predictive_within_declared_scope",
+        "claim_ceiling": "predictive_within_declared_scope",
         "predictive_support_status": "confirmatory_supported",
         "allowed_interpretation_codes": [
             "point_forecast_within_declared_validation_scope"
@@ -3411,8 +3411,8 @@ def test_normalize_analysis_payload_rejects_incomplete_backend_holistic_claim(
                 ],
             },
             "claim_card": {
-                "claim_type": "predictively_supported",
-                "claim_ceiling": "predictively_supported",
+                "claim_type": "predictive_within_declared_scope",
+                "claim_ceiling": "predictive_within_declared_scope",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",

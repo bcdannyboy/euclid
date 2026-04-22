@@ -69,7 +69,7 @@ Primary code:
 - `src/euclid/workbench`
 - `src/euclid/_assets/workbench`
 
-This surface serves a local UI for exploring saved or freshly computed analyses, with explicit distinctions between descriptive equations, predictive laws, the internal `holistic_equation` payload that backs the public unified-equation surface, and uncertainty attachments. It is also where the repo's unified-equation story becomes visible: a published deterministic law joined to a publishable probabilistic lane only when both sides clear the same scope.
+This surface serves a local UI for exploring saved or freshly computed analyses, with explicit distinctions between descriptive equations, predictive-within-scope symbolic claims, the internal `holistic_equation` payload that backs the public unified-equation surface, and uncertainty attachments. It is also where the repo's unified-equation story becomes visible: a published deterministic point-lane claim joined to a publishable probabilistic lane only when both sides clear the same scope.
 
 ## Execution planes
 

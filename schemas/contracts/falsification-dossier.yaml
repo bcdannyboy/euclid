@@ -1,0 +1,48 @@
+schema_name: falsification_dossier@1.0.0
+kind: contract_schema
+owner_ref: robustness_owner
+owning_module: gate_lifecycle
+canonical_source_path: docs/reference/contracts-manifests.md
+phase_ref: P12
+description: 'Replayable falsification and residual-diagnostics dossier. Failed diagnostics,
+  counterexamples, extrapolation failures, domain violations, parameter instability,
+  transport failures, and stochastic miscalibration must downgrade or block claim
+  publication.
+
+  '
+required_fields:
+- candidate_id
+- status
+- reason_codes
+- claim_effect
+- replay_identity
+status_values:
+- passed
+- failed
+- blocked
+- abstained
+claim_effect_values:
+- allow_claim
+- downgrade_predictive_claim
+- block_claim
+blocking_reason_codes:
+- domain_violation
+- nonfinite_residual
+- insufficient_residual_support
+downgrade_reason_codes:
+- structured_residuals
+- counterexample_discovered
+- extrapolation_failure
+- parameter_instability
+- transport_failed
+- stochastic_miscalibration
+claim_boundary:
+  falsification_dossier_alone_can_publish_claim: false
+  failed_dossier_can_promote_claim: false
+  failed_dossier_blocks_or_downgrades_claim: true
+replay:
+  required_fields:
+  - replay_identity
+  - reason_codes
+  - residual_diagnostics
+  - counterexamples

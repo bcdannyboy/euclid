@@ -13,7 +13,7 @@ contracts:
   - forecast_object_type: point
     owner_ref: forecast_object_semantics_council
     semantic_family: point_functional
-    minimum_claim_lane: descriptive_only
+    minimum_claim_lane: descriptive_structure
     meaning: Location-parameter point statement over the admitted target at a declared origin and horizon; the emitted object is the location_parameter itself.
     calibration_mode: not_applicable_for_point_only_publication
     scoring_semantics: point_loss_only
@@ -23,7 +23,7 @@ contracts:
   - forecast_object_type: distribution
     owner_ref: forecast_object_semantics_council
     semantic_family: probabilistic
-    minimum_claim_lane: predictively_supported
+    minimum_claim_lane: predictive_within_declared_scope
     meaning: Full predictive distribution over the admitted target domain.
     calibration_mode: required
     scoring_semantics: full_distribution_scoring
@@ -33,7 +33,7 @@ contracts:
   - forecast_object_type: interval
     owner_ref: forecast_object_semantics_council
     semantic_family: probabilistic
-    minimum_claim_lane: predictively_supported
+    minimum_claim_lane: predictive_within_declared_scope
     meaning: Predictive interval statement with declared coverage semantics and interval construction rule.
     calibration_mode: required
     scoring_semantics: interval_scoring
@@ -43,7 +43,7 @@ contracts:
   - forecast_object_type: quantile
     owner_ref: forecast_object_semantics_council
     semantic_family: probabilistic
-    minimum_claim_lane: predictively_supported
+    minimum_claim_lane: predictive_within_declared_scope
     meaning: Predictive quantile statement for one or more declared probability levels.
     calibration_mode: required
     scoring_semantics: quantile_scoring
@@ -53,7 +53,7 @@ contracts:
   - forecast_object_type: event_probability
     owner_ref: forecast_object_semantics_council
     semantic_family: probabilistic
-    minimum_claim_lane: predictively_supported
+    minimum_claim_lane: predictive_within_declared_scope
     meaning: Predictive probability statement for a declared event functional.
     calibration_mode: required
     scoring_semantics: event_probability_scoring

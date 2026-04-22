@@ -3,8 +3,8 @@ kind: packaged_readiness_policy
 policy_id: full_vision_v1
 authority_snapshot_id: euclid-authority-2026-04-15-b
 scope_authority_refs:
-- docs/system.md
-- docs/benchmarks-readiness.md
+- docs/reference/system.md
+- docs/reference/benchmarks-readiness.md
 matrix_path: schemas/readiness/full-vision-matrix.yaml
 evidence_strength_policy_path: schemas/readiness/evidence-strength-policy.yaml
 required_row_ids:

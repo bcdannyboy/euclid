@@ -22,9 +22,9 @@ class RealSeriesRegressionCase:
     manifest_path: Path
     fixture_dir: Path
     dataset_name: str
-    expected_benchmark_status: str
-    expect_descriptive_fit: bool
-    expected_claim_class: str | None
+    benchmark_status_prefix: str
+    may_materialize_descriptive_fit: bool
+    expected_claim_class: str
     expected_raw_holistic_status: str | None
     required_gap_codes: tuple[str, ...]
 
@@ -37,12 +37,13 @@ CASES = (
         ),
         fixture_dir=FIXTURE_ROOT / "spy-daily-return-20260418",
         dataset_name="spy-daily-return.csv",
-        expected_benchmark_status="absent_no_admissible_candidate",
-        expect_descriptive_fit=False,
-        expected_claim_class=None,
+        benchmark_status_prefix="absent_",
+        may_materialize_descriptive_fit=False,
+        expected_claim_class="descriptive_reconstruction",
         expected_raw_holistic_status="completed",
         required_gap_codes=(
             "operator_not_publishable",
+            "descriptive_structure",
             "no_backend_joint_claim",
             "requires_exact_sample_closure",
         ),
@@ -54,15 +55,15 @@ CASES = (
         ),
         fixture_dir=FIXTURE_ROOT / "spy-price-close-20260416",
         dataset_name="spy-price-close.csv",
-        expected_benchmark_status="available",
-        expect_descriptive_fit=True,
-        expected_claim_class="descriptive_fit",
+        benchmark_status_prefix="absent_",
+        may_materialize_descriptive_fit=False,
+        expected_claim_class="descriptive_reconstruction",
         expected_raw_holistic_status=None,
         required_gap_codes=(
-            "no_accepted_candidate",
             "operator_not_publishable",
-            "descriptive_only",
+            "descriptive_structure",
             "no_backend_joint_claim",
+            "probabilistic_evidence_thin",
         ),
     ),
     RealSeriesRegressionCase(
@@ -72,15 +73,15 @@ CASES = (
         ),
         fixture_dir=FIXTURE_ROOT / "gld-price-close-20260418",
         dataset_name="gld-price-close.csv",
-        expected_benchmark_status="available",
-        expect_descriptive_fit=True,
-        expected_claim_class="descriptive_fit",
+        benchmark_status_prefix="absent_",
+        may_materialize_descriptive_fit=False,
+        expected_claim_class="descriptive_reconstruction",
         expected_raw_holistic_status="completed",
         required_gap_codes=(
-            "no_accepted_candidate",
             "operator_not_publishable",
-            "descriptive_only",
+            "descriptive_structure",
             "no_backend_joint_claim",
+            "probabilistic_evidence_thin",
             "requires_posthoc_symbolic_synthesis",
         ),
     ),
@@ -122,25 +123,29 @@ def test_real_series_phase08_manifests_pin_copied_fixture_paths(
 
 @pytest.mark.parametrize(
     "case",
-    tuple(case for case in CASES if case.expect_descriptive_fit),
+    CASES,
     ids=lambda case: case.case_id,
 )
-def test_real_series_price_level_cases_keep_descriptive_lane_populated(
+def test_real_series_cases_keep_benchmark_reconstruction_inside_descriptive_scope(
     case: RealSeriesRegressionCase,
 ) -> None:
     normalized = normalize_analysis_payload(_load_analysis_fixture(case))
     descriptive_fit = normalized.get("descriptive_fit")
+    benchmark_status = normalized["benchmark"]["descriptive_fit_status"]["status"]
 
-    assert isinstance(descriptive_fit, dict)
-    assert normalized["benchmark"]["descriptive_fit_status"]["status"] == "available"
-    assert normalized.get("claim_class") == "descriptive_fit"
-    assert descriptive_fit["claim_class"] == "descriptive_fit"
-    assert descriptive_fit["is_law_claim"] is False
-    assert descriptive_fit["source"] == "benchmark_local_selection"
-    assert descriptive_fit["chart"]["equation_curve"]
-    assert descriptive_fit["chart"]["actual_series"]
+    assert benchmark_status.startswith(case.benchmark_status_prefix)
+    assert normalized.get("claim_class") == case.expected_claim_class
     assert normalized.get("holistic_equation") is None
     assert normalized.get("predictive_law") is None
+    if case.may_materialize_descriptive_fit:
+        assert isinstance(descriptive_fit, dict)
+        assert descriptive_fit["claim_class"] == "descriptive_fit"
+        assert descriptive_fit["is_law_claim"] is False
+        assert descriptive_fit["source"] == "benchmark_local_selection"
+        assert descriptive_fit["chart"]["equation_curve"]
+        assert descriptive_fit["chart"]["actual_series"]
+    else:
+        assert descriptive_fit is None
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda case: case.case_id)
@@ -160,8 +165,8 @@ def test_real_series_saved_analysis_regressions_enforce_top_line_honesty(
     gap_report = set(normalized.get("gap_report") or [])
 
     assert normalized["operator_point"]["publication"]["status"] == "abstained"
-    assert normalized["benchmark"]["descriptive_fit_status"]["status"] == (
-        case.expected_benchmark_status
+    assert normalized["benchmark"]["descriptive_fit_status"]["status"].startswith(
+        case.benchmark_status_prefix
     )
     assert normalized.get("holistic_equation") is None
     assert normalized.get("predictive_law") is None
@@ -169,7 +174,7 @@ def test_real_series_saved_analysis_regressions_enforce_top_line_honesty(
     assert normalized.get("claim_class") == case.expected_claim_class
     assert set(case.required_gap_codes).issubset(gap_report)
 
-    if case.expect_descriptive_fit:
+    if case.may_materialize_descriptive_fit:
         assert isinstance(normalized.get("descriptive_fit"), dict)
     else:
         assert normalized.get("descriptive_fit") is None

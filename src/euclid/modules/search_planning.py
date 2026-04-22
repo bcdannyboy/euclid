@@ -157,10 +157,15 @@ def build_search_plan(
             message="candidate_family_ids must declare at least one retained family",
             field_path="candidate_family_ids",
         )
-    if predictive_mode not in {"descriptive_only", "predictive_requested"}:
+    if predictive_mode == "descriptive_only":
+        predictive_mode = "descriptive_structure"
+    if predictive_mode not in {"descriptive_structure", "predictive_requested"}:
         raise ContractValidationError(
             code="invalid_predictive_mode",
-            message="predictive_mode must be descriptive_only or predictive_requested",
+            message=(
+                "predictive_mode must be descriptive_structure or "
+                "predictive_requested"
+            ),
             field_path="predictive_mode",
         )
     _validate_object_type_search_class_pair(

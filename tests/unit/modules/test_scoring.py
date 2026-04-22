@@ -166,7 +166,11 @@ def test_evaluate_point_comparators_emits_paired_records_and_significance() -> N
     assert result.comparison_universe.body["baseline_score_result_ref"] == (
         result.comparator_score_results[0].ref.as_dict()
     )
-    assert result.comparison_universe.body["paired_comparison_records"] == [
+    paired_records = result.comparison_universe.body["paired_comparison_records"]
+    predictive_tests = [
+        record.pop("paired_predictive_test_result") for record in paired_records
+    ]
+    assert paired_records == [
         {
             "comparator_id": "constant_baseline",
             "comparator_kind": "baseline",
@@ -202,6 +206,13 @@ def test_evaluate_point_comparators_emits_paired_records_and_significance() -> N
             "score_result_ref": result.comparator_score_results[1].ref.as_dict(),
         },
     ]
+    assert predictive_tests[0]["schema_name"] == "paired_predictive_test_result@1.0.0"
+    assert predictive_tests[0]["status"] == "passed"
+    assert predictive_tests[0]["promotion_allowed"] is True
+    assert predictive_tests[0]["raw_metric_comparison_role"] == "diagnostic_only"
+    assert predictive_tests[0]["replay_identity"].startswith("predictive-promotion:")
+    assert predictive_tests[1]["status"] == "downgraded"
+    assert predictive_tests[1]["promotion_allowed"] is False
 
 
 def test_evaluate_point_comparators_rejects_mismatched_primary_baseline_geometry() -> (

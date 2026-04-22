@@ -1,0 +1,1272 @@
+phase_id: P10
+phase_title: Stochastic Model Replacement
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P10-T01
+- P10-T01-S01
+- P10-T01-S02
+- P10-T01-S03
+- P10-T01-S04
+- P10-T01-S05
+- P10-T01-S06
+- P10-T01-S07
+- P10-T01-S08
+- P10-T01-S09
+- P10-T01-S10
+- P10-T02
+- P10-T02-S01
+- P10-T02-S02
+- P10-T02-S03
+- P10-T02-S04
+- P10-T02-S05
+- P10-T02-S06
+- P10-T03
+- P10-T03-S01
+- P10-T03-S02
+- P10-T03-S03
+- P10-T03-S04
+- P10-T03-S05
+- P10-T04
+- P10-T04-S01
+- P10-T04-S02
+- P10-T04-S03
+- P10-T04-S04
+- P10-T04-S05
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/stochastic
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/integration/test_stochastic_law_pipeline.py
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/golden tests/regression
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_stochastic_models_live.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions: &id002
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+replay:
+  assertions: &id003
+  - replay_metadata_complete
+  - replay_identity_stable
+  - replay_mismatch_fails_closed
+claim_scope:
+  assertions: &id004
+  - no_unjustified_claim_promotion
+  - phase_incomplete_blocks_exit
+  - live_api_success_is_not_scientific_truth
+edge_cases:
+  required: &id001
+  - empty_input
+  - single_row_input
+  - missing_values
+  - nonfinite_values
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - invalid_credentials
+  - rate_limit
+  - timeout
+  - malformed_payload
+  - empty_payload
+  - replay_mismatch
+artifact_outputs:
+- build/reports/p10-gate-evidence.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and
+  claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P10-T01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S01
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S01
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S02
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S02
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S03
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S03
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S04
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S04
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S05
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S05
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S06
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S06
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S07:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S07
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S07
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S08:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S08
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S08
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S09:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S09
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S09
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T01-S10:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T01-S10
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T01-S10
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02-S01
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02-S01
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02-S02
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02-S02
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02-S03
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02-S03
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02-S04
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02-S04
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02-S05
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02-S05
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T02-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T02-S06
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T02-S06
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T03
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T03
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T03-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T03-S01
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T03-S01
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T03-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T03-S02
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T03-S02
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T03-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T03-S03
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T03-S03
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T03-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T03-S04
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T03-S04
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T03-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T03-S05
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T03-S05
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T04
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T04
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T04-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T04-S01
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T04-S01
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T04-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T04-S02
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T04-S02
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T04-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T04-S03
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T04-S03
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T04-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T04-S04
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T04-S04
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P10-T04-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/event-definition.yaml
+    - schemas/contracts/stochastic-law.yaml
+    - src/euclid/modules/probabilistic_evaluation.py
+    - src/euclid/modules/scoring.py
+    - src/euclid/stochastic/__init__.py
+    - src/euclid/stochastic/event_definitions.py
+    - src/euclid/stochastic/observation_models.py
+    - src/euclid/stochastic/process_models.py
+    - src/euclid/stochastic/scoring_rules.py
+    test_files:
+    - tests/unit/stochastic/test_event_definitions.py
+    - tests/unit/stochastic/test_observation_models.py
+    - tests/unit/stochastic/test_process_models.py
+    - tests/unit/stochastic/test_scoring_rules.py
+    - tests/unit/modules/test_probabilistic_evaluation.py
+    - tests/unit/modules/test_probabilistic_scoring.py
+    gate_refs:
+    - tests/gates/P10.yaml#P10-T04-S05
+    evidence_refs:
+    - tests/gates/P10.yaml#P10-T04-S05
+    - implementation:src/euclid/stochastic/observation_models.py
+    - implementation:src/euclid/stochastic/process_models.py
+    - implementation:src/euclid/stochastic/scoring_rules.py
+    - implementation:src/euclid/stochastic/event_definitions.py
+    - implementation:src/euclid/modules/probabilistic_evaluation.py
+    - implementation:src/euclid/modules/scoring.py
+    - schema:schemas/contracts/stochastic-law.yaml
+    - schema:schemas/contracts/event-definition.yaml
+    - test:tests/unit/stochastic
+    - test:tests/unit/modules/test_probabilistic_evaluation.py
+    - test:tests/unit/modules/test_probabilistic_scoring.py
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004

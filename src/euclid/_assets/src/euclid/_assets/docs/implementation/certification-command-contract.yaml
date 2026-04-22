@@ -1,0 +1,144 @@
+version: 1
+kind: euclid_certification_command_contract
+status: frozen_contract
+master_plan_ref: docs/README.md
+command_contract_id: euclid-certification-commands-v1
+authority_snapshot_id: euclid-authority-2026-04-15-b
+closure_map_id: euclid-closure-map-2026-04-15-v1
+traceability_id: euclid-traceability-2026-04-15-v1
+environment:
+  python: python3.11
+  repo_execution_prefix: PYTHONPATH=src
+  clean_install_build_frontend: build
+  clean_install_build_backend: setuptools.build_meta
+  clean_install_runtime_dependency_source: local_wheelhouse_no_index
+  zero_skip_policy: required_tests_must_not_skip_or_xfail
+required_command_fields:
+- command_id
+- scope_ids
+- command
+- input_artifact_ids
+- output_artifact_ids
+- build_toolchain_requirements
+- run_order
+- authority_snapshot_id
+commands:
+- command_id: repo_test_matrix
+  scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  run_order: 1
+  command: PYTHONPATH=src python3.11 -m euclid release repo-test-matrix --project-root .
+  input_artifact_ids: []
+  output_artifact_ids:
+  - build/reports/repo_test_matrix.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: current_release_suite
+  scope_ids:
+  - current_release
+  run_order: 2
+  command: PYTHONPATH=src python3.11 -m euclid benchmarks run --suite current-release.yaml --no-resume --benchmark-root build/certification/current_release_suite
+  input_artifact_ids:
+  - benchmarks/suites/current-release.yaml
+  output_artifact_ids:
+  - build/reports/current_release_suite_evidence.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: full_vision_suite
+  scope_ids:
+  - full_vision
+  run_order: 3
+  command: PYTHONPATH=src python3.11 -m euclid benchmarks run --suite full-vision.yaml --no-resume --benchmark-root build/certification/full_vision_suite
+  input_artifact_ids:
+  - benchmarks/suites/full-vision.yaml
+  output_artifact_ids:
+  - build/reports/full_vision_suite_evidence.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: full_vision_operator_run
+  scope_ids:
+  - full_vision
+  run_order: 4
+  command: PYTHONPATH=src python3.11 -m euclid run --config examples/full_vision_run.yaml --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_run_evidence.json
+  input_artifact_ids:
+  - examples/full_vision_run.yaml
+  output_artifact_ids:
+  - build/certification/full_vision_run/run-result.json
+  - build/reports/full_vision_operator_run_evidence.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: full_vision_operator_replay
+  scope_ids:
+  - full_vision
+  run_order: 5
+  command: PYTHONPATH=src python3.11 -m euclid replay --run-id ${full_vision_operator_run.run_id} --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_replay_evidence.json
+  input_artifact_ids:
+  - build/certification/full_vision_run/run-result.json
+  output_artifact_ids:
+  - build/reports/full_vision_operator_replay_evidence.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+  run_id_derivation:
+    source_command_id: full_vision_operator_run
+    input_artifact_id: build/certification/full_vision_run/run-result.json
+    field_path: run_id
+- command_id: clean_install_certification
+  scope_ids:
+  - shipped_releasable
+  run_order: 6
+  command: python3.11 -m euclid release certify-clean-install --project-root . --wheel-dir build/certification/wheels --output-root build/certification/clean_install
+  input_artifact_ids: []
+  output_artifact_ids:
+  - build/certification/wheels
+  - build/certification/clean_install/clean-install-report.json
+  - build/reports/clean-install-certification.json
+  build_toolchain_requirements:
+  - python3.11
+  - build
+  - setuptools>=69
+  - wheel
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: release_status
+  scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  run_order: 7
+  command: PYTHONPATH=src python3.11 -m euclid release status --project-root .
+  input_artifact_ids: []
+  output_artifact_ids:
+  - build/reports/completion-report.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: verify_completion
+  scope_ids:
+  - current_release
+  - full_vision
+  - shipped_releasable
+  run_order: 8
+  command: PYTHONPATH=src python3.11 -m euclid release verify-completion --project-root .
+  input_artifact_ids:
+  - build/reports/completion-report.json
+  output_artifact_ids:
+  - build/reports/verify-completion.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+- command_id: research_readiness_certification
+  scope_ids:
+  - full_vision
+  - shipped_releasable
+  run_order: 9
+  command: PYTHONPATH=src python3.11 -m euclid release certify-research-readiness --project-root .
+  input_artifact_ids: []
+  output_artifact_ids:
+  - build/reports/research-readiness.json
+  build_toolchain_requirements: []
+  authority_snapshot_id: euclid-authority-2026-04-15-b
+rules:
+- Required certification commands must execute in the declared run order unless the contract changes in the same patch.
+- full_vision_operator_replay must derive run_id from build/certification/full_vision_run/run-result.json.
+- clean_install_certification must declare the wheel-building toolchain explicitly.
+- clean_install_certification must install the certified wheel through a local no-index wheelhouse rather than live network dependency resolution.
+- Required certification commands cannot be skipped or xfailed.

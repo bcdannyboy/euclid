@@ -307,9 +307,15 @@ def test_bounded_heuristic_search_reports_omitted_space_honestly() -> None:
         )
 
 
-def test_equality_saturation_search_prefers_lower_extractor_cost() -> None:
+def test_equality_saturation_search_no_longer_uses_sort_only_extractor() -> None:
     feature_view, audit = _feature_view()
     proposals = (
+        DescriptiveSearchProposal(
+            candidate_id="analytic_intercept_simple",
+            primitive_family="analytic",
+            form_class="closed_form_expression",
+            parameter_values={"intercept": 14.0},
+        ),
         DescriptiveSearchProposal(
             candidate_id="analytic_piecewise_complex",
             primitive_family="analytic",
@@ -327,12 +333,6 @@ def test_equality_saturation_search_prefers_lower_extractor_cost() -> None:
             },
             history_access_mode="bounded_lag_window",
             max_lag=1,
-        ),
-        DescriptiveSearchProposal(
-            candidate_id="analytic_intercept_simple",
-            primitive_family="analytic",
-            form_class="closed_form_expression",
-            parameter_values={"intercept": 14.0},
         ),
     )
     search_plan = _build_search_plan(
@@ -361,10 +361,9 @@ def test_equality_saturation_search_prefers_lower_extractor_cost() -> None:
         == "heuristic_rewrite_neighborhood_with_cost_extraction"
     )
     assert result.coverage.disclosures == {
-        "rewrite_system": "search_normal_form_v1_rewrite_system",
-        "extractor_cost": (
-            "family_then_structure_then_literals_then_state_then_candidate_id"
-        ),
+        "rewrite_system": "egraph_engine_required_for_expression_cir_rewrites",
+        "extractor_cost": "declared_by_egraph_engine_rewrite_trace",
+        "legacy_fragment_backend_mode": "no_sort_only_equality_saturation",
         "stop_rule": "proposal_limit=1",
     }
     replay_hook_names = {

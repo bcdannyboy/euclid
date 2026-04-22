@@ -33,6 +33,6 @@ def test_load_contract_catalog_exposes_schema_family_and_contract_metadata() -> 
         "publication_record_manifest@1.1.0",
     )
     assert enum_definition.source_kind == "core_vocabulary"
-    assert "predictively_supported" in enum_definition.allowed_values
+    assert "predictive_within_declared_scope" in enum_definition.allowed_values
     assert contract.kind == "publication_lifecycle"
     assert "publication_completed" in contract.state_ids

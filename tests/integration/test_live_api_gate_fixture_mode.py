@@ -5,7 +5,7 @@ import socket
 from urllib.error import HTTPError
 
 from euclid.runtime.env import EuclidEnv
-from euclid.testing.live_api import LiveApiGate
+from euclid.testing.live_api import LiveApiGate, validate_ordered_provider_rows
 
 
 def test_fixture_mode_live_gate_records_rate_limit_without_secret_leak(tmp_path) -> None:
@@ -146,14 +146,7 @@ def test_fixture_mode_live_gate_records_schema_edge_case_failures(tmp_path) -> N
             {"date": "2026-01-02", "close": 2.0},
             {"date": "2026-01-01", "close": 1.0},
         ]
-        if not rows:
-            raise ValueError("empty history")
-        dates = [row["date"] for row in rows]
-        if len(set(dates)) != len(dates):
-            raise ValueError("duplicate dates")
-        if dates != sorted(dates):
-            raise ValueError("out-of-order rows")
-        return {"schema_valid": True}
+        return validate_ordered_provider_rows(rows, timestamp_key="date")
 
     result = LiveApiGate(
         gate_id="P00-T06-fixture-fmp-schema-drift",
@@ -166,6 +159,40 @@ def test_fixture_mode_live_gate_records_schema_edge_case_failures(tmp_path) -> N
 
     assert result.status == "failed"
     assert result.reason_codes == ("provider_payload_invalid",)
+
+
+def test_ordered_provider_rows_reject_empty_payloads() -> None:
+    try:
+        validate_ordered_provider_rows([], timestamp_key="date")
+    except ValueError as exc:
+        assert "empty payload" in str(exc)
+    else:  # pragma: no cover - assertion branch.
+        raise AssertionError("empty payload was accepted")
+
+
+def test_ordered_provider_rows_reject_duplicate_and_out_of_order_timestamps() -> None:
+    duplicate_rows = [
+        {"date": "2026-01-01", "close": 1.0},
+        {"date": "2026-01-01", "close": 1.0},
+    ]
+    out_of_order_rows = [
+        {"date": "2026-01-02", "close": 2.0},
+        {"date": "2026-01-01", "close": 1.0},
+    ]
+
+    try:
+        validate_ordered_provider_rows(duplicate_rows, timestamp_key="date")
+    except ValueError as exc:
+        assert "duplicate timestamp" in str(exc)
+    else:  # pragma: no cover - assertion branch.
+        raise AssertionError("duplicate timestamps were accepted")
+
+    try:
+        validate_ordered_provider_rows(out_of_order_rows, timestamp_key="date")
+    except ValueError as exc:
+        assert "out-of-order timestamp" in str(exc)
+    else:  # pragma: no cover - assertion branch.
+        raise AssertionError("out-of-order timestamps were accepted")
 
 
 def test_fixture_mode_openai_success_handles_refusal_and_tool_free_text(

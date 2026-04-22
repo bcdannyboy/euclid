@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -27,6 +28,19 @@ class EdgeCaseGate:
     required: tuple[str, ...]
 
 
+REQUIRED_ID_GATE_FIELDS = (
+    "status",
+    "implementation_files",
+    "test_files",
+    "gate_refs",
+    "evidence_refs",
+    "edge_cases",
+    "redaction_assertions",
+    "replay_assertions",
+    "claim_scope_assertions",
+)
+
+
 @dataclass(frozen=True)
 class PhaseGateManifest:
     phase_id: str
@@ -39,6 +53,8 @@ class PhaseGateManifest:
     replay: AssertionGate
     claim_scope: AssertionGate
     edge_cases: EdgeCaseGate
+    id_gates_schema: tuple[str, ...]
+    id_gates: Mapping[str, Mapping[str, Any]]
 
 
 def extract_plan_phase_ids(path: Path, *, phase_id: str) -> tuple[str, ...]:
@@ -76,6 +92,8 @@ def load_gate_manifest(
     path: Path,
     *,
     required_ids: Sequence[str] = (),
+    project_root: Path | None = None,
+    validate_references: bool = False,
 ) -> PhaseGateManifest:
     if not path.is_file():
         raise GateManifestError(f"gate manifest does not exist: {path}")
@@ -83,9 +101,27 @@ def load_gate_manifest(
     if not isinstance(payload, Mapping):
         raise GateManifestError(f"gate manifest must be a mapping: {path}")
 
+    phase_id = _required_string(payload, "phase_id")
+    covered_ids = _required_string_tuple(payload, "covered_ids")
+    missing = sorted(set(required_ids) - set(covered_ids))
+    if missing:
+        raise GateManifestError(
+            f"{path} is missing required task/subtask ids: {', '.join(missing)}"
+        )
+    id_gates_schema = _load_id_gates_schema(payload, required_ids=required_ids)
+    id_gates = _load_id_gates(
+        payload,
+        required_ids=required_ids,
+        schema=id_gates_schema,
+        path=path,
+        project_root=project_root,
+        validate_references=validate_references,
+    )
+    if validate_references:
+        _validate_manifest_commands(payload, path=path, project_root=project_root)
     manifest = PhaseGateManifest(
-        phase_id=_required_string(payload, "phase_id"),
-        covered_ids=_required_string_tuple(payload, "covered_ids"),
+        phase_id=phase_id,
+        covered_ids=covered_ids,
         fixture_unit=CommandGate(
             commands=_required_nested_string_tuple(payload, "fixture_unit", "commands")
         ),
@@ -126,13 +162,212 @@ def load_gate_manifest(
         edge_cases=EdgeCaseGate(
             required=_required_nested_string_tuple(payload, "edge_cases", "required")
         ),
+        id_gates_schema=id_gates_schema,
+        id_gates=id_gates,
     )
-    missing = sorted(set(required_ids) - set(manifest.covered_ids))
-    if missing:
-        raise GateManifestError(
-            f"{path} is missing required task/subtask ids: {', '.join(missing)}"
-        )
     return manifest
+
+
+def _load_id_gates_schema(
+    payload: Mapping[str, Any],
+    *,
+    required_ids: Sequence[str],
+) -> tuple[str, ...]:
+    if not required_ids and "id_gates_schema" not in payload:
+        return ()
+    schema = _required_string_tuple(payload, "id_gates_schema")
+    missing_fields = sorted(set(REQUIRED_ID_GATE_FIELDS) - set(schema))
+    if missing_fields:
+        raise GateManifestError(
+            "gate manifest id_gates_schema missing required fields: "
+            + ", ".join(missing_fields)
+        )
+    return schema
+
+
+def _load_id_gates(
+    payload: Mapping[str, Any],
+    *,
+    required_ids: Sequence[str],
+    schema: Sequence[str],
+    path: Path,
+    project_root: Path | None,
+    validate_references: bool,
+) -> Mapping[str, Mapping[str, Any]]:
+    if not required_ids and "id_gates" not in payload:
+        return {}
+    value = payload.get("id_gates")
+    if not isinstance(value, Mapping) or not value:
+        raise GateManifestError(f"gate manifest missing non-empty id_gates: {path}")
+    normalized: dict[str, Mapping[str, Any]] = {}
+    for key, row in value.items():
+        if not isinstance(row, Mapping):
+            raise GateManifestError(f"gate manifest id_gates row must be mapping: {key}")
+        row_key = str(key).strip()
+        if not row_key:
+            raise GateManifestError("gate manifest contains blank id_gates key")
+        normalized[row_key] = row
+    missing_ids = sorted(set(required_ids) - set(normalized))
+    if missing_ids:
+        raise GateManifestError(
+            f"{path} is missing id_gates rows for: {', '.join(missing_ids)}"
+        )
+    for item_id in required_ids:
+        row = normalized[str(item_id)]
+        for field in schema:
+            if field not in row:
+                raise GateManifestError(f"{path} {item_id} missing id_gates.{field}")
+            if _is_blank_gate_value(row[field]):
+                raise GateManifestError(f"{path} {item_id} has blank id_gates.{field}")
+        _validate_specific_gate_refs(path=path, item_id=str(item_id), row=row)
+        if validate_references:
+            _validate_row_references(
+                path=path,
+                item_id=str(item_id),
+                row=row,
+                project_root=project_root,
+            )
+    return normalized
+
+
+def _validate_specific_gate_refs(
+    *,
+    path: Path,
+    item_id: str,
+    row: Mapping[str, Any],
+) -> None:
+    gate_refs = tuple(str(ref).strip() for ref in row.get("gate_refs", ()))
+    if not any(ref.endswith(f"#{item_id}") for ref in gate_refs):
+        if "-S" in item_id:
+            parent_id = item_id.rsplit("-S", 1)[0]
+            if any(ref.endswith(f"#{parent_id}") for ref in gate_refs):
+                raise GateManifestError(
+                    f"{path} {item_id} uses generic parent gate {parent_id}"
+                )
+        raise GateManifestError(f"{path} {item_id} missing specific gate ref")
+
+
+def _validate_row_references(
+    *,
+    path: Path,
+    item_id: str,
+    row: Mapping[str, Any],
+    project_root: Path | None,
+) -> None:
+    root = _reference_root(path, project_root)
+    for field in ("implementation_files", "test_files"):
+        for reference in row.get(field, ()):
+            _require_existing_reference_path(
+                root,
+                str(reference),
+                context=f"{path} {item_id} {field}",
+            )
+    for reference in row.get("gate_refs", ()):
+        _require_existing_reference_path(
+            root,
+            str(reference).split("#", 1)[0],
+            context=f"{path} {item_id} gate_refs",
+        )
+    for reference in row.get("evidence_refs", ()):
+        prefix, value = _split_evidence_reference(str(reference))
+        if prefix in {"test", "gate", "doc"}:
+            _require_existing_reference_path(
+                root,
+                value.split("#", 1)[0],
+                context=f"{path} {item_id} evidence_refs",
+            )
+        elif prefix == "artifact" and not value.startswith("build/"):
+            _require_existing_reference_path(
+                root,
+                value,
+                context=f"{path} {item_id} evidence_refs",
+            )
+
+
+def _validate_manifest_commands(
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+    project_root: Path | None,
+) -> None:
+    root = _reference_root(path, project_root)
+    for section in ("fixture_unit", "fixture_integration", "fixture_regression", "live_api"):
+        commands = payload.get(section, {}).get("commands", ())
+        for command in commands:
+            _validate_command_references(
+                str(command),
+                path=path,
+                section=section,
+                root=root,
+            )
+
+
+def _validate_command_references(
+    command: str,
+    *,
+    path: Path,
+    section: str,
+    root: Path,
+) -> None:
+    tokens = tuple(shlex.split(command))
+    if not tokens:
+        raise GateManifestError(f"{path} {section} contains blank command")
+    for token in tokens:
+        if token.startswith("-") or "=" in token and not token.startswith(("tests/", "docs/", "src/", "schemas/", "scripts/", "fixtures/", "examples/")):
+            continue
+        if token.startswith(("./", "tests/", "docs/", "src/", "schemas/", "scripts/", "fixtures/", "examples/")):
+            _require_existing_reference_path(
+                root,
+                token[2:] if token.startswith("./") else token,
+                context=f"{path} {section} command",
+            )
+
+
+def _reference_root(path: Path, project_root: Path | None) -> Path:
+    if project_root is not None:
+        return project_root
+    resolved = path.resolve()
+    for parent in resolved.parents:
+        if (parent / "pyproject.toml").is_file():
+            return parent
+    return path.parent
+
+
+def _split_evidence_reference(reference: str) -> tuple[str, str]:
+    if ":" not in reference:
+        return ("path", reference)
+    prefix, value = reference.split(":", 1)
+    return prefix, value
+
+
+def _require_existing_reference_path(
+    root: Path,
+    reference: str,
+    *,
+    context: str,
+) -> None:
+    normalized = reference.strip()
+    if not normalized:
+        raise GateManifestError(f"{context} contains blank reference")
+    candidate = Path(normalized)
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    if any(character in normalized for character in "*?["):
+        if list(root.glob(normalized)):
+            return
+        raise GateManifestError(f"{context} references unmatched glob: {normalized}")
+    if not candidate.exists():
+        raise GateManifestError(f"{context} references missing path: {normalized}")
+
+
+def _is_blank_gate_value(value: Any) -> bool:
+    if isinstance(value, str):
+        return not value.strip()
+    if isinstance(value, Mapping):
+        return not value
+    if isinstance(value, Sequence) and not isinstance(value, bytes | bytearray):
+        return len(value) == 0
+    return value is None
 
 
 def _required_string(payload: Mapping[str, Any], key: str) -> str:
@@ -169,6 +404,7 @@ __all__ = [
     "EdgeCaseGate",
     "extract_plan_phase_ids",
     "GateManifestError",
+    "REQUIRED_ID_GATE_FIELDS",
     "PhaseGateManifest",
     "load_gate_manifest",
 ]

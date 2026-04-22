@@ -7,6 +7,7 @@ from typer.testing import CliRunner
 
 import euclid
 from euclid.cli import app
+from euclid.operator_runtime.resources import EuclidAssetError, resolve_example_path
 
 
 RUNNER = CliRunner()
@@ -46,6 +47,27 @@ def test_full_vision_example_uses_non_point_and_extension_lane() -> None:
         family_id.startswith("algorithmic_")
         for family_id in payload["search"]["family_ids"]
     )
+
+
+def test_missing_packaged_current_release_example_fails_closed(tmp_path: Path) -> None:
+    fake_asset_root = tmp_path / "fake-assets"
+    (fake_asset_root / "schemas" / "contracts").mkdir(parents=True)
+    (fake_asset_root / "schemas" / "contracts" / "schema-registry.yaml").write_text(
+        "schemas: []\n",
+        encoding="utf-8",
+    )
+    (fake_asset_root / "examples").mkdir()
+
+    try:
+        resolve_example_path(
+            "current_release_run.yaml",
+            project_root=fake_asset_root,
+        )
+    except EuclidAssetError as exc:
+        assert exc.code == "euclid_asset_missing"
+        assert exc.asset_path == fake_asset_root / "examples" / "current_release_run.yaml"
+    else:
+        raise AssertionError("missing current_release_run.yaml did not fail closed")
 
 
 def test_release_candidate_workflow_matches_example_and_executes_core_steps(

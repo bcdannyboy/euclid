@@ -26,9 +26,14 @@ enums:
     owner_ref: enum_registry_council
     canonical_source_path: schemas/core/claim-lanes.yaml
     allowed_values:
-      - descriptive_only
-      - predictively_supported
-      - mechanistically_compatible_hypothesis
+      - descriptive_structure
+      - predictive_within_declared_scope
+      - invariant_predictive_law
+      - stochastic_law
+      - mechanistically_compatible_law
+      - transport_supported_law
+      - abstained
+      - downgraded
 
   - enum_name: forecast_object_types
     owner_ref: enum_registry_council
@@ -50,6 +55,10 @@ enums:
       - replay_verification
       - readiness_and_closure
       - boundary_specific_external_evidence
+      - invariance_evaluation
+      - transport_evaluation
+      - probabilistic_scoring
+      - calibration
 
   - enum_name: abstention_types
     owner_ref: enum_registry_council
@@ -68,7 +77,7 @@ enums:
 
   - enum_name: evaluation_event_related_object_kind
     owner_ref: enum_registry_council
-    canonical_source_path: docs/modeling-pipeline.md
+    canonical_source_path: docs/reference/modeling-pipeline.md
     allowed_values:
       - search_plan
       - comparison_universe
@@ -79,7 +88,7 @@ enums:
 
   - enum_name: validation_scope_deferred_scope_schema_names
     owner_ref: enum_registry_council
-    canonical_source_path: docs/modeling-pipeline.md
+    canonical_source_path: docs/reference/modeling-pipeline.md
     allowed_values:
       - mechanistic_lane_policy_manifest@1.0.0
       - shared_plus_local_decomposition_policy_manifest@1.0.0
@@ -88,7 +97,7 @@ enums:
 
   - enum_name: leakage_stage_evidence_kind
     owner_ref: enum_registry_council
-    canonical_source_path: docs/modeling-pipeline.md
+    canonical_source_path: docs/reference/modeling-pipeline.md
     allowed_values:
       - feature_spec
       - time_safety_audit
@@ -96,7 +105,7 @@ enums:
 
   - enum_name: leakage_downstream_evidence_kind
     owner_ref: enum_registry_council
-    canonical_source_path: docs/modeling-pipeline.md
+    canonical_source_path: docs/reference/modeling-pipeline.md
     allowed_values:
       - search_plan
       - frozen_shortlist
@@ -106,7 +115,7 @@ enums:
 
   - enum_name: evaluation_event_type
     owner_ref: enum_registry_council
-    canonical_source_path: docs/modeling-pipeline.md
+    canonical_source_path: docs/reference/modeling-pipeline.md
     allowed_values:
       - nonanalytic_retry
       - pre_holdout_analytic_rerun
@@ -117,14 +126,14 @@ enums:
 
   - enum_name: replay_bundle_mode
     owner_ref: enum_registry_council
-    canonical_source_path: docs/runtime-cli.md
+    canonical_source_path: docs/reference/runtime-cli.md
     allowed_values:
       - candidate_publication
       - abstention_only_publication
 
   - enum_name: replay_artifact_role
     owner_ref: enum_registry_council
-    canonical_source_path: docs/runtime-cli.md
+    canonical_source_path: docs/reference/runtime-cli.md
     allowed_values:
       - dataset_snapshot
       - feature_view
@@ -138,7 +147,7 @@ enums:
 
   - enum_name: replay_seed_scope
     owner_ref: enum_registry_council
-    canonical_source_path: docs/runtime-cli.md
+    canonical_source_path: docs/reference/runtime-cli.md
     allowed_values:
       - search
       - surrogate_generation

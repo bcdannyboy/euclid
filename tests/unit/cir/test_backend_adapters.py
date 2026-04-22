@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from euclid.adapters.decomposition import (
-    DecompositionAdapterCandidate,
-    normalize_decomposition_candidate,
+    LegacyDecompositionProposal,
+    normalize_legacy_decomposition_candidate,
 )
 from euclid.adapters.portfolio import (
     ComparableBackendFinalist,
     normalize_cir_finalist,
 )
 from euclid.adapters.sparse_library import (
-    SparseLibraryAdapterCandidate,
-    normalize_sparse_library_candidate,
+    LegacySparseProposal,
+    normalize_legacy_sparse_candidate,
 )
 from euclid.contracts.refs import TypedRef
 from euclid.math.observation_models import PointObservationModel
@@ -29,8 +29,8 @@ def test_backend_adapters_emit_public_normalization_contracts() -> None:
     feature_view, search_plan = _search_context()
     observation_model = BoundObservationModel.from_runtime(PointObservationModel())
 
-    decomposition_candidate = normalize_decomposition_candidate(
-        spec=DecompositionAdapterCandidate(
+    decomposition_candidate = normalize_legacy_decomposition_candidate(
+        spec=LegacyDecompositionProposal(
             candidate_id="decomposition_lag1",
             feature_dependencies=("lag_1",),
             parameter_values={"intercept": 1.0, "lag_coefficient": 0.9},
@@ -41,8 +41,8 @@ def test_backend_adapters_emit_public_normalization_contracts() -> None:
         observation_model=observation_model,
         proposal_rank=0,
     )
-    sparse_candidate = normalize_sparse_library_candidate(
-        spec=SparseLibraryAdapterCandidate(
+    sparse_candidate = normalize_legacy_sparse_candidate(
+        spec=LegacySparseProposal(
             candidate_id="sparse_recursive",
             primitive_family="recursive",
             form_class="state_recurrence",
@@ -58,10 +58,10 @@ def test_backend_adapters_emit_public_normalization_contracts() -> None:
 
     assert (
         decomposition_candidate.evidence_layer.backend_origin_record.adapter_class
-        == "decomposition"
+        == "legacy_non_claim_decomposition_adapter"
     )
     assert sparse_candidate.evidence_layer.backend_origin_record.adapter_class == (
-        "sparse_library"
+        "legacy_non_claim_sparse_adapter"
     )
     assert (
         decomposition_candidate.evidence_layer.backend_origin_record.normalization_scope
@@ -69,22 +69,34 @@ def test_backend_adapters_emit_public_normalization_contracts() -> None:
     )
     assert (
         sparse_candidate.evidence_layer.backend_origin_record.comparability_scope
-        == "candidate_fitting_and_scoring"
+        == "legacy_compatibility_only_not_production_evidence"
     )
-    assert "search_trace" in (
+    assert "legacy_compatibility_trace" in (
         decomposition_candidate.evidence_layer.backend_origin_record.backend_private_fields
     )
     assert (
-        "library_trace"
+        "legacy_compatibility_trace"
         in sparse_candidate.evidence_layer.backend_origin_record.backend_private_fields
+    )
+    assert (
+        decomposition_candidate.evidence_layer.transient_diagnostics[
+            "legacy_non_claim_adapter"
+        ]["production_evidence_allowed"]
+        is False
+    )
+    assert (
+        sparse_candidate.evidence_layer.transient_diagnostics[
+            "legacy_non_claim_adapter"
+        ]["replacement_engine_id"]
+        == "pysindy-engine-v1"
     )
 
 
 def test_portfolio_adapter_normalization_extracts_comparable_finalist_record() -> None:
     feature_view, search_plan = _search_context()
     observation_model = BoundObservationModel.from_runtime(PointObservationModel())
-    candidate = normalize_decomposition_candidate(
-        spec=DecompositionAdapterCandidate(
+    candidate = normalize_legacy_decomposition_candidate(
+        spec=LegacyDecompositionProposal(
             candidate_id="decomposition_intercept",
             parameter_values={"intercept": 12.0},
         ),
@@ -107,7 +119,7 @@ def test_portfolio_adapter_normalization_extracts_comparable_finalist_record() -
 
     assert isinstance(finalist, ComparableBackendFinalist)
     assert finalist.provenance_id == "analytic_backend"
-    assert finalist.adapter_class == "decomposition"
+    assert finalist.adapter_class == "legacy_non_claim_decomposition_adapter"
     assert finalist.backend_family == "analytic"
     assert finalist.candidate_id == "decomposition_intercept"
     assert finalist.forecast_object_type == "point"

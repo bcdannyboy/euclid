@@ -1,654 +1,641 @@
 version: 1
 kind: module_registry
 owners:
-  - id: manifest_registry_owner
-    display_name: Manifest Registry Owner
-  - id: external_evidence_ingestion_owner
-    display_name: External Evidence Ingestion Owner
-  - id: ingestion_owner
-    display_name: Ingestion Owner
-  - id: snapshotting_owner
-    display_name: Snapshotting Owner
-  - id: timeguard_owner
-    display_name: Timeguard Owner
-  - id: features_owner
-    display_name: Features Owner
-  - id: split_planning_owner
-    display_name: Split Planning Owner
-  - id: search_planning_owner
-    display_name: Search Planning Owner
-  - id: evaluation_governance_owner
-    display_name: Evaluation Governance Owner
-  - id: algorithmic_dsl_owner
-    display_name: Algorithmic DSL Owner
-  - id: shared_plus_local_decomposition_owner
-    display_name: Shared Plus Local Decomposition Owner
-  - id: candidate_fitting_owner
-    display_name: Candidate Fitting Owner
-  - id: evaluation_owner
-    display_name: Point Evaluation Owner
-  - id: probabilistic_evaluation_owner
-    display_name: Probabilistic Evaluation Owner
-  - id: scoring_owner
-    display_name: Scoring Owner
-  - id: robustness_owner
-    display_name: Robustness Owner
-  - id: mechanistic_evidence_owner
-    display_name: Mechanistic Evidence Owner
-  - id: gate_lifecycle_owner
-    display_name: Gate Lifecycle Owner
-  - id: claims_owner
-    display_name: Claims Owner
-  - id: replay_owner
-    display_name: Replay Owner
-  - id: catalog_publishing_owner
-    display_name: Catalog Publishing Owner
+- id: manifest_registry_owner
+  display_name: Manifest Registry Owner
+- id: external_evidence_ingestion_owner
+  display_name: External Evidence Ingestion Owner
+- id: ingestion_owner
+  display_name: Ingestion Owner
+- id: snapshotting_owner
+  display_name: Snapshotting Owner
+- id: timeguard_owner
+  display_name: Timeguard Owner
+- id: features_owner
+  display_name: Features Owner
+- id: split_planning_owner
+  display_name: Split Planning Owner
+- id: search_planning_owner
+  display_name: Search Planning Owner
+- id: evaluation_governance_owner
+  display_name: Evaluation Governance Owner
+- id: algorithmic_dsl_owner
+  display_name: Algorithmic DSL Owner
+- id: expression_ir_owner
+  display_name: Expression IR Owner
+- id: shared_plus_local_decomposition_owner
+  display_name: Shared Plus Local Decomposition Owner
+- id: candidate_fitting_owner
+  display_name: Candidate Fitting Owner
+- id: evaluation_owner
+  display_name: Point Evaluation Owner
+- id: probabilistic_evaluation_owner
+  display_name: Probabilistic Evaluation Owner
+- id: scoring_owner
+  display_name: Scoring Owner
+- id: robustness_owner
+  display_name: Robustness Owner
+- id: mechanistic_evidence_owner
+  display_name: Mechanistic Evidence Owner
+- id: gate_lifecycle_owner
+  display_name: Gate Lifecycle Owner
+- id: claims_owner
+  display_name: Claims Owner
+- id: replay_owner
+  display_name: Replay Owner
+- id: catalog_publishing_owner
+  display_name: Catalog Publishing Owner
 modules:
-  - module: manifest_registry
-    owner_ref: manifest_registry_owner
-    plane: control_plane
-    inputs:
-      - typed_manifest_payload
-      - lineage_declaration
-      - run_declaration
-    outputs:
-      - manifest_record
-      - run_manifest
-      - lineage_edge
-    allowed_dependencies: []
-    forbidden_dependencies:
-      - candidate_fitting
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - identical payloads yield identical manifest ids and content hashes
-      - duplicate registration is idempotent rather than mutating prior records
-      - lineage writes are append-only and replay-stable
-    canonical_refs:
-      - docs/system.md
-      - docs/contracts-manifests.md
-      - docs/contracts-manifests.md
-
-  - module: external_evidence_ingestion
-    owner_ref: external_evidence_ingestion_owner
-    plane: worker_plane
-    inputs:
-      - raw_external_evidence_package
-      - source_metadata
-      - evidence_acquisition_window
-    outputs:
-      - external_evidence_record
-      - external_evidence_bundle
-      - source_digest
-    allowed_dependencies:
-      - manifest_registry
-    forbidden_dependencies:
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - identical source packages normalize to identical evidence digests
-      - evidence timestamps preserve acquisition ordering exactly as declared
-      - normalization never invents uncited external evidence fields
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: ingestion
-    owner_ref: ingestion_owner
-    plane: worker_plane
-    inputs:
-      - raw_observation_payload
-      - source_metadata
-    outputs:
-      - observation_record
-    allowed_dependencies:
-      - manifest_registry
-    forbidden_dependencies:
-      - search_planning
-      - evaluation
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - identical payloads normalize to identical observation records
-      - hashing and row ordering are stable across replay
-      - invalid rows fail before downstream state is emitted
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: snapshotting
-    owner_ref: snapshotting_owner
-    plane: worker_plane
-    inputs:
-      - observation_record
-      - run_manifest
-      - snapshot_cutoff
-    outputs:
-      - dataset_snapshot
-      - dataset_lineage_snapshot
-    allowed_dependencies:
-      - manifest_registry
-      - ingestion
-    forbidden_dependencies:
-      - evaluation
-      - scoring
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - the same source rows and cutoff produce the same snapshot hash
-      - snapshot contents remain immutable after freeze
-      - lineage to raw observations is complete and replayable
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: timeguard
-    owner_ref: timeguard_owner
-    plane: worker_plane
-    inputs:
-      - dataset_snapshot
-      - forecast_task_definition
-      - feature_availability_rules
-    outputs:
-      - time_safety_audit
-      - causal_availability_window
-    allowed_dependencies:
-      - snapshotting
-    forbidden_dependencies:
-      - candidate_fitting
-      - scoring
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - time-safety decisions depend only on declared timestamps and availability law
-      - unsafe access blocks execution instead of silently downgrading scope
-      - the same snapshot and policy yield the same audit result
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: features
-    owner_ref: features_owner
-    plane: worker_plane
-    inputs:
-      - dataset_snapshot
-      - time_safety_audit
-      - feature_spec
-    outputs:
-      - feature_view
-      - feature_materialization_report
-    allowed_dependencies:
-      - snapshotting
-      - timeguard
-    forbidden_dependencies:
-      - candidate_fitting
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - feature materialization is a pure function of snapshot plus feature spec
-      - centered or future-leaking transforms are rejected before output
-      - feature hashes are stable across rebuilds
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: split_planning
-    owner_ref: split_planning_owner
-    plane: control_plane
-    inputs:
-      - dataset_snapshot
-      - time_safety_audit
-      - run_manifest
-    outputs:
-      - evaluation_plan
-      - split_manifest
-    allowed_dependencies:
-      - snapshotting
-      - timeguard
-    forbidden_dependencies:
-      - candidate_fitting
-      - scoring
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - split geometry is fixed before candidate search begins
-      - confirmatory holdout access limits are frozen in the emitted plan
-      - identical inputs yield identical fold boundaries
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: search_planning
-    owner_ref: search_planning_owner
-    plane: control_plane
-    inputs:
-      - evaluation_plan
-      - run_manifest
-      - search_class_contract
-    outputs:
-      - search_plan
-      - canonicalization_policy
-      - search_budget
-      - freeze_boundary
-    allowed_dependencies:
-      - split_planning
-    forbidden_dependencies:
-      - scoring
-      - gate_lifecycle
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - grammar, search class, and search budgets freeze before fitting begins
-      - search coverage statements are derived only from declared search class
-      - candidate freeze boundaries are stable across replay
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/search-core.md
-      - docs/search-core.md
-
-  - module: evaluation_governance
-    owner_ref: evaluation_governance_owner
-    plane: control_plane
-    inputs:
-      - evaluation_plan
-      - search_plan
-      - run_manifest
-    outputs:
-      - baseline_registry
-      - comparison_universe
-      - forecast_comparison_policy
-      - predictive_gate_policy
-      - evaluation_event_log
-    allowed_dependencies:
-      - split_planning
-      - search_planning
-    forbidden_dependencies:
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - baseline selection is ex-ante fixed before holdout access
-      - confirmatory status and event ordering are audit-stable
-      - predictive gate rules are selected by declared object type rather than narrative overrides
-    canonical_refs:
-      - docs/contracts-manifests.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-
-  - module: algorithmic_dsl
-    owner_ref: algorithmic_dsl_owner
-    plane: worker_plane
-    inputs:
-      - search_plan
-      - feature_view
-      - algorithmic_dsl_contract
-    outputs:
-      - algorithmic_program_manifest
-      - canonical_algorithmic_candidate
-    allowed_dependencies:
-      - search_planning
-      - features
-    forbidden_dependencies:
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - parsing, typing, and canonicalization are deterministic for the bound fragment
-      - observationally equivalent serializations collapse to one canonical program
-      - forbidden constructs fail before candidate materialization
-    canonical_refs:
-      - docs/search-core.md
-      - docs/system.md
-      - docs/search-core.md
-
-  - module: shared_plus_local_decomposition
-    owner_ref: shared_plus_local_decomposition_owner
-    plane: worker_plane
-    inputs:
-      - search_plan
-      - evaluation_plan
-      - feature_view
-      - entity_panel_contract
-    outputs:
-      - shared_component_artifact
-      - local_component_artifact
-      - entity_panel_contract
-      - shared_local_candidate
-    allowed_dependencies:
-      - split_planning
-      - search_planning
-      - features
-    forbidden_dependencies:
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - entity panels, combiners, and unseen-entity rules bind before fitting
-      - shared and local component boundaries remain explicit in emitted artifacts
-      - cross-entity aggregation never drops entities silently
-    canonical_refs:
-      - docs/search-core.md
-      - docs/system.md
-      - docs/search-core.md
-
-  - module: candidate_fitting
-    owner_ref: candidate_fitting_owner
-    plane: worker_plane
-    inputs:
-      - search_plan
-      - feature_view
-      - algorithmic_program_manifest
-      - shared_local_candidate
-    outputs:
-      - candidate_spec
-      - reducer_artifact
-      - search_ledger
-      - frontier
-      - rejected_diagnostics
-      - frozen_shortlist
-    allowed_dependencies:
-      - search_planning
-      - features
-      - algorithmic_dsl
-      - shared_plus_local_decomposition
-    forbidden_dependencies:
-      - scoring
-      - gate_lifecycle
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - candidate realization is reproducible from frozen plans, seeds, and feature views
-      - rejected candidates remain visible through typed diagnostics
-      - candidate freeze outputs are stable once emitted
-    canonical_refs:
-      - docs/search-core.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: evaluation
-    owner_ref: evaluation_owner
-    plane: worker_plane
-    inputs:
-      - frozen_shortlist
-      - evaluation_plan
-      - time_safety_audit
-      - baseline_registry
-    outputs:
-      - point_prediction_artifact
-      - baseline_prediction_artifact
-    allowed_dependencies:
-      - candidate_fitting
-      - split_planning
-      - evaluation_governance
-      - timeguard
-    forbidden_dependencies:
-      - search_planning
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - fold-local search remains isolated from outer-test and holdout evaluation
-      - confirmatory access is single-use under the frozen pair rule
-      - identical frozen inputs yield identical point prediction artifacts
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: probabilistic_evaluation
-    owner_ref: probabilistic_evaluation_owner
-    plane: worker_plane
-    inputs:
-      - frozen_shortlist
-      - evaluation_plan
-      - time_safety_audit
-      - baseline_registry
-      - entity_panel_contract
-    outputs:
-      - probabilistic_prediction_artifact
-      - calibration_input_panel
-    allowed_dependencies:
-      - candidate_fitting
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - shared_plus_local_decomposition
-    forbidden_dependencies:
-      - search_planning
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - object-type-specific prediction semantics are frozen before scoring begins
-      - probabilistic outputs preserve their declared object type instead of collapsing into point summaries
-      - cross-entity probabilistic evaluation uses only the declared entity panel and weights
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/system.md
-      - docs/search-core.md
-
-  - module: scoring
-    owner_ref: scoring_owner
-    plane: worker_plane
-    inputs:
-      - point_prediction_artifact
-      - probabilistic_prediction_artifact
-      - forecast_comparison_policy
-      - predictive_gate_policy
-    outputs:
-      - point_score_result
-      - probabilistic_score_result
-      - calibration_result
-    allowed_dependencies:
-      - evaluation
-      - probabilistic_evaluation
-      - evaluation_governance
-    forbidden_dependencies:
-      - candidate_fitting
-      - search_planning
-      - claims
-      - catalog_publishing
-    deterministic_obligations:
-      - primary scores are selected by forecast object type rather than generic confidence fields
-      - calibration artifacts follow object-type-specific diagnostics only
-      - candidate-baseline comparability is enforced before any score is emitted
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-      - docs/contracts-manifests.md
-      - docs/modeling-pipeline.md
-
-  - module: robustness
-    owner_ref: robustness_owner
-    plane: worker_plane
-    inputs:
-      - frozen_shortlist
-      - reducer_artifact
-      - evaluation_event_log
-    outputs:
-      - null_protocol_result
-      - perturbation_report
-      - leakage_canary_report
-      - robustness_report
-    allowed_dependencies:
-      - candidate_fitting
-      - evaluation_governance
-    forbidden_dependencies:
-      - search_planning
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - null, perturbation, and leakage protocols operate on the frozen candidate set only
-      - robustness failures remain explicit rather than being rewritten as rank penalties
-      - protocol replay uses the same seeds, candidate identities, and declared policies
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-
-  - module: mechanistic_evidence
-    owner_ref: mechanistic_evidence_owner
-    plane: worker_plane
-    inputs:
-      - external_evidence_bundle
-      - point_prediction_artifact
-      - probabilistic_prediction_artifact
-      - reducer_artifact
-    outputs:
-      - mechanism_mapping
-      - units_check
-      - invariance_report
-      - mechanistic_evidence_dossier
-      - evidence_independence_attestation
-    allowed_dependencies:
-      - external_evidence_ingestion
-      - evaluation
-      - probabilistic_evaluation
-    forbidden_dependencies:
-      - search_planning
-      - claims
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - mechanistic requirements are checked against a bound external evidence bundle
-      - evidence independence is explicit and lineage-testable
-      - mechanistic failure downgrades meaning instead of mutating predictive evidence
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - module: gate_lifecycle
-    owner_ref: gate_lifecycle_owner
-    plane: control_plane
-    inputs:
-      - point_score_result
-      - probabilistic_score_result
-      - calibration_result
-      - robustness_report
-      - mechanistic_evidence_dossier
-      - predictive_gate_policy
-    outputs:
-      - scorecard
-      - lifecycle_gate_decision
-    allowed_dependencies:
-      - scoring
-      - robustness
-      - mechanistic_evidence
-      - evaluation_governance
-    forbidden_dependencies:
-      - candidate_fitting
-      - evaluation
-      - replay
-      - catalog_publishing
-    deterministic_obligations:
-      - status assembly is driven by closed reason-code sets only
-      - claim meaning is never assigned inside the scorecard layer
-      - the same evidence graph yields the same gate result
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-      - docs/modeling-pipeline.md
-
-  - module: claims
-    owner_ref: claims_owner
-    plane: control_plane
-    inputs:
-      - scorecard
-      - lifecycle_gate_decision
-      - run_manifest
-    outputs:
-      - claim_card
-      - abstention
-    allowed_dependencies:
-      - gate_lifecycle
-    forbidden_dependencies:
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - catalog_publishing
-    deterministic_obligations:
-      - claim lanes derive from typed evidence rather than rank or prose
-      - abstentions remain first-class outputs with explicit reason codes
-      - forecast object meaning stays separate from claim meaning in emitted claim cards
-    canonical_refs:
-      - docs/modeling-pipeline.md
-      - docs/system.md
-      - docs/modeling-pipeline.md
-
-  - module: replay
-    owner_ref: replay_owner
-    plane: worker_plane
-    inputs:
-      - run_manifest
-      - claim_card
-      - abstention
-      - scorecard
-      - publication_candidate_bundle
-    outputs:
-      - reproducibility_bundle
-      - run_result
-      - replay_verification_report
-    allowed_dependencies:
-      - manifest_registry
-      - gate_lifecycle
-      - claims
-    forbidden_dependencies:
-      - candidate_fitting
-      - search_planning
-      - evaluation
-      - catalog_publishing
-    deterministic_obligations:
-      - replay succeeds only when hashes, seeds, and stage order match the bound graph
-      - reproducibility bundles are immutable after verification
-      - replay never mutates upstream scientific artifacts
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/runtime-cli.md
-
-  - module: catalog_publishing
-    owner_ref: catalog_publishing_owner
-    plane: control_plane
-    inputs:
-      - replay_verification_report
-      - reproducibility_bundle
-      - claim_card
-      - run_result
-    outputs:
-      - publication_record
-      - catalog_entry
-      - api_projection
-      - cli_projection
-    allowed_dependencies:
-      - claims
-      - replay
-    forbidden_dependencies:
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - mechanistic_evidence
-    deterministic_obligations:
-      - publication surfaces are reconstructed from immutable upstream artifacts only
-      - catalog projections are read-only and reproducible from the same publication record
-      - unpublished or replay-failed candidates never reach public surfaces
-    canonical_refs:
-      - docs/system.md
-      - docs/search-core.md
-      - docs/contracts-manifests.md
+- module: manifest_registry
+  owner_ref: manifest_registry_owner
+  plane: control_plane
+  inputs:
+  - typed_manifest_payload
+  - lineage_declaration
+  - run_declaration
+  outputs:
+  - manifest_record
+  - run_manifest
+  - lineage_edge
+  allowed_dependencies: []
+  forbidden_dependencies:
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - identical payloads yield identical manifest ids and content hashes
+  - duplicate registration is idempotent rather than mutating prior records
+  - lineage writes are append-only and replay-stable
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/contracts-manifests.md
+  - docs/reference/contracts-manifests.md
+- module: external_evidence_ingestion
+  owner_ref: external_evidence_ingestion_owner
+  plane: worker_plane
+  inputs:
+  - raw_external_evidence_package
+  - source_metadata
+  - evidence_acquisition_window
+  outputs:
+  - external_evidence_record
+  - external_evidence_bundle
+  - source_digest
+  allowed_dependencies:
+  - manifest_registry
+  forbidden_dependencies:
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - identical source packages normalize to identical evidence digests
+  - evidence timestamps preserve acquisition ordering exactly as declared
+  - normalization never invents uncited external evidence fields
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: ingestion
+  owner_ref: ingestion_owner
+  plane: worker_plane
+  inputs:
+  - raw_observation_payload
+  - source_metadata
+  outputs:
+  - observation_record
+  allowed_dependencies:
+  - manifest_registry
+  forbidden_dependencies:
+  - search_planning
+  - evaluation
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - identical payloads normalize to identical observation records
+  - hashing and row ordering are stable across replay
+  - invalid rows fail before downstream state is emitted
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: snapshotting
+  owner_ref: snapshotting_owner
+  plane: worker_plane
+  inputs:
+  - observation_record
+  - run_manifest
+  - snapshot_cutoff
+  outputs:
+  - dataset_snapshot
+  - dataset_lineage_snapshot
+  allowed_dependencies:
+  - manifest_registry
+  - ingestion
+  forbidden_dependencies:
+  - evaluation
+  - scoring
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - the same source rows and cutoff produce the same snapshot hash
+  - snapshot contents remain immutable after freeze
+  - lineage to raw observations is complete and replayable
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: timeguard
+  owner_ref: timeguard_owner
+  plane: worker_plane
+  inputs:
+  - dataset_snapshot
+  - forecast_task_definition
+  - feature_availability_rules
+  outputs:
+  - time_safety_audit
+  - causal_availability_window
+  allowed_dependencies:
+  - snapshotting
+  forbidden_dependencies:
+  - candidate_fitting
+  - scoring
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - time-safety decisions depend only on declared timestamps and availability law
+  - unsafe access blocks execution instead of silently downgrading scope
+  - the same snapshot and policy yield the same audit result
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: features
+  owner_ref: features_owner
+  plane: worker_plane
+  inputs:
+  - dataset_snapshot
+  - time_safety_audit
+  - feature_spec
+  outputs:
+  - feature_view
+  - feature_materialization_report
+  allowed_dependencies:
+  - snapshotting
+  - timeguard
+  forbidden_dependencies:
+  - candidate_fitting
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - feature materialization is a pure function of snapshot plus feature spec
+  - centered or future-leaking transforms are rejected before output
+  - feature hashes are stable across rebuilds
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: split_planning
+  owner_ref: split_planning_owner
+  plane: control_plane
+  inputs:
+  - dataset_snapshot
+  - time_safety_audit
+  - run_manifest
+  outputs:
+  - evaluation_plan
+  - split_manifest
+  allowed_dependencies:
+  - snapshotting
+  - timeguard
+  forbidden_dependencies:
+  - candidate_fitting
+  - scoring
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - split geometry is fixed before candidate search begins
+  - confirmatory holdout access limits are frozen in the emitted plan
+  - identical inputs yield identical fold boundaries
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: search_planning
+  owner_ref: search_planning_owner
+  plane: control_plane
+  inputs:
+  - evaluation_plan
+  - run_manifest
+  - search_class_contract
+  outputs:
+  - search_plan
+  - canonicalization_policy
+  - search_budget
+  - freeze_boundary
+  allowed_dependencies:
+  - split_planning
+  forbidden_dependencies:
+  - scoring
+  - gate_lifecycle
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - grammar, search class, and search budgets freeze before fitting begins
+  - search coverage statements are derived only from declared search class
+  - candidate freeze boundaries are stable across replay
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/search-core.md
+  - docs/reference/search-core.md
+- module: evaluation_governance
+  owner_ref: evaluation_governance_owner
+  plane: control_plane
+  inputs:
+  - evaluation_plan
+  - search_plan
+  - run_manifest
+  outputs:
+  - baseline_registry
+  - comparison_universe
+  - forecast_comparison_policy
+  - predictive_gate_policy
+  - evaluation_event_log
+  allowed_dependencies:
+  - split_planning
+  - search_planning
+  forbidden_dependencies:
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - baseline selection is ex-ante fixed before holdout access
+  - confirmatory status and event ordering are audit-stable
+  - predictive gate rules are selected by declared object type rather than narrative
+    overrides
+  canonical_refs:
+  - docs/reference/contracts-manifests.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+- module: algorithmic_dsl
+  owner_ref: algorithmic_dsl_owner
+  plane: worker_plane
+  inputs:
+  - search_plan
+  - feature_view
+  - algorithmic_dsl_contract
+  outputs:
+  - algorithmic_program_manifest
+  - canonical_algorithmic_candidate
+  allowed_dependencies:
+  - search_planning
+  - features
+  forbidden_dependencies:
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - parsing, typing, and canonicalization are deterministic for the bound fragment
+  - observationally equivalent serializations collapse to one canonical program
+  - forbidden constructs fail before candidate materialization
+  canonical_refs:
+  - docs/reference/search-core.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+- module: shared_plus_local_decomposition
+  owner_ref: shared_plus_local_decomposition_owner
+  plane: worker_plane
+  inputs:
+  - search_plan
+  - evaluation_plan
+  - feature_view
+  - entity_panel_contract
+  outputs:
+  - shared_component_artifact
+  - local_component_artifact
+  - entity_panel_contract
+  - shared_local_candidate
+  allowed_dependencies:
+  - split_planning
+  - search_planning
+  - features
+  forbidden_dependencies:
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - entity panels, combiners, and unseen-entity rules bind before fitting
+  - shared and local component boundaries remain explicit in emitted artifacts
+  - cross-entity aggregation never drops entities silently
+  canonical_refs:
+  - docs/reference/search-core.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+- module: candidate_fitting
+  owner_ref: candidate_fitting_owner
+  plane: worker_plane
+  inputs:
+  - search_plan
+  - feature_view
+  - algorithmic_program_manifest
+  - shared_local_candidate
+  outputs:
+  - candidate_spec
+  - reducer_artifact
+  - search_ledger
+  - frontier
+  - rejected_diagnostics
+  - frozen_shortlist
+  allowed_dependencies:
+  - search_planning
+  - features
+  - algorithmic_dsl
+  - shared_plus_local_decomposition
+  forbidden_dependencies:
+  - scoring
+  - gate_lifecycle
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - candidate realization is reproducible from frozen plans, seeds, and feature views
+  - rejected candidates remain visible through typed diagnostics
+  - candidate freeze outputs are stable once emitted
+  canonical_refs:
+  - docs/reference/search-core.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: evaluation
+  owner_ref: evaluation_owner
+  plane: worker_plane
+  inputs:
+  - frozen_shortlist
+  - evaluation_plan
+  - time_safety_audit
+  - baseline_registry
+  outputs:
+  - point_prediction_artifact
+  - baseline_prediction_artifact
+  allowed_dependencies:
+  - candidate_fitting
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  forbidden_dependencies:
+  - search_planning
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - fold-local search remains isolated from outer-test and holdout evaluation
+  - confirmatory access is single-use under the frozen pair rule
+  - identical frozen inputs yield identical point prediction artifacts
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: probabilistic_evaluation
+  owner_ref: probabilistic_evaluation_owner
+  plane: worker_plane
+  inputs:
+  - frozen_shortlist
+  - evaluation_plan
+  - time_safety_audit
+  - baseline_registry
+  - entity_panel_contract
+  outputs:
+  - probabilistic_prediction_artifact
+  - calibration_input_panel
+  allowed_dependencies:
+  - candidate_fitting
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - shared_plus_local_decomposition
+  forbidden_dependencies:
+  - search_planning
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - object-type-specific prediction semantics are frozen before scoring begins
+  - probabilistic outputs preserve their declared object type instead of collapsing
+    into point summaries
+  - cross-entity probabilistic evaluation uses only the declared entity panel and
+    weights
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+- module: scoring
+  owner_ref: scoring_owner
+  plane: worker_plane
+  inputs:
+  - point_prediction_artifact
+  - probabilistic_prediction_artifact
+  - forecast_comparison_policy
+  - predictive_gate_policy
+  outputs:
+  - point_score_result
+  - probabilistic_score_result
+  - calibration_result
+  allowed_dependencies:
+  - evaluation
+  - probabilistic_evaluation
+  - evaluation_governance
+  forbidden_dependencies:
+  - candidate_fitting
+  - search_planning
+  - claims
+  - catalog_publishing
+  deterministic_obligations:
+  - primary scores are selected by forecast object type rather than generic confidence
+    fields
+  - calibration artifacts follow object-type-specific diagnostics only
+  - candidate-baseline comparability is enforced before any score is emitted
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/contracts-manifests.md
+  - docs/reference/modeling-pipeline.md
+- module: robustness
+  owner_ref: robustness_owner
+  plane: worker_plane
+  inputs:
+  - frozen_shortlist
+  - reducer_artifact
+  - evaluation_event_log
+  outputs:
+  - null_protocol_result
+  - perturbation_report
+  - leakage_canary_report
+  - robustness_report
+  allowed_dependencies:
+  - candidate_fitting
+  - evaluation_governance
+  forbidden_dependencies:
+  - search_planning
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - null, perturbation, and leakage protocols operate on the frozen candidate set
+    only
+  - robustness failures remain explicit rather than being rewritten as rank penalties
+  - protocol replay uses the same seeds, candidate identities, and declared policies
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+- module: mechanistic_evidence
+  owner_ref: mechanistic_evidence_owner
+  plane: worker_plane
+  inputs:
+  - external_evidence_bundle
+  - point_prediction_artifact
+  - probabilistic_prediction_artifact
+  - reducer_artifact
+  outputs:
+  - mechanism_mapping
+  - units_check
+  - invariance_report
+  - mechanistic_evidence_dossier
+  - evidence_independence_attestation
+  allowed_dependencies:
+  - external_evidence_ingestion
+  - evaluation
+  - probabilistic_evaluation
+  forbidden_dependencies:
+  - search_planning
+  - claims
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - mechanistic requirements are checked against a bound external evidence bundle
+  - evidence independence is explicit and lineage-testable
+  - mechanistic failure downgrades meaning instead of mutating predictive evidence
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- module: gate_lifecycle
+  owner_ref: gate_lifecycle_owner
+  plane: control_plane
+  inputs:
+  - point_score_result
+  - probabilistic_score_result
+  - calibration_result
+  - robustness_report
+  - mechanistic_evidence_dossier
+  - predictive_gate_policy
+  outputs:
+  - scorecard
+  - lifecycle_gate_decision
+  allowed_dependencies:
+  - scoring
+  - robustness
+  - mechanistic_evidence
+  - evaluation_governance
+  forbidden_dependencies:
+  - candidate_fitting
+  - evaluation
+  - replay
+  - catalog_publishing
+  deterministic_obligations:
+  - status assembly is driven by closed reason-code sets only
+  - claim meaning is never assigned inside the scorecard layer
+  - the same evidence graph yields the same gate result
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/modeling-pipeline.md
+- module: claims
+  owner_ref: claims_owner
+  plane: control_plane
+  inputs:
+  - scorecard
+  - lifecycle_gate_decision
+  - run_manifest
+  outputs:
+  - claim_card
+  - abstention
+  allowed_dependencies:
+  - gate_lifecycle
+  forbidden_dependencies:
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - catalog_publishing
+  deterministic_obligations:
+  - claim lanes derive from typed evidence rather than rank or prose
+  - abstentions remain first-class outputs with explicit reason codes
+  - forecast object meaning stays separate from claim meaning in emitted claim cards
+  canonical_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
+- module: replay
+  owner_ref: replay_owner
+  plane: worker_plane
+  inputs:
+  - run_manifest
+  - claim_card
+  - abstention
+  - scorecard
+  - publication_candidate_bundle
+  outputs:
+  - reproducibility_bundle
+  - run_result
+  - replay_verification_report
+  allowed_dependencies:
+  - manifest_registry
+  - gate_lifecycle
+  - claims
+  forbidden_dependencies:
+  - candidate_fitting
+  - search_planning
+  - evaluation
+  - catalog_publishing
+  deterministic_obligations:
+  - replay succeeds only when hashes, seeds, and stage order match the bound graph
+  - reproducibility bundles are immutable after verification
+  - replay never mutates upstream scientific artifacts
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/runtime-cli.md
+- module: catalog_publishing
+  owner_ref: catalog_publishing_owner
+  plane: control_plane
+  inputs:
+  - replay_verification_report
+  - reproducibility_bundle
+  - claim_card
+  - run_result
+  outputs:
+  - publication_record
+  - catalog_entry
+  - api_projection
+  - cli_projection
+  allowed_dependencies:
+  - claims
+  - replay
+  forbidden_dependencies:
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - mechanistic_evidence
+  deterministic_obligations:
+  - publication surfaces are reconstructed from immutable upstream artifacts only
+  - catalog projections are read-only and reproducible from the same publication record
+  - unpublished or replay-failed candidates never reach public surfaces
+  canonical_refs:
+  - docs/reference/system.md
+  - docs/reference/search-core.md
+  - docs/reference/contracts-manifests.md

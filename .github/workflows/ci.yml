@@ -85,17 +85,25 @@ jobs:
         with:
           python-version: "3.11"
       - run: python3.11 -m pip install -e ".[dev]"
-      - run: python3.11 -m euclid release repo-test-matrix
-      - run: python3.11 -m euclid release certify-clean-install
-      - run: python3.11 -m euclid release status
-      - run: python3.11 -m euclid release verify-completion
-      - run: python3.11 -m euclid release certify-research-readiness
+      - run: PYTHONPATH=src python3.11 -m euclid release repo-test-matrix --project-root .
+      - run: PYTHONPATH=src python3.11 -m euclid benchmarks run --suite current-release.yaml --no-resume --benchmark-root build/certification/current_release_suite
+      - run: PYTHONPATH=src python3.11 -m euclid benchmarks run --suite full-vision.yaml --no-resume --benchmark-root build/certification/full_vision_suite
+      - run: PYTHONPATH=src python3.11 -m euclid run --config examples/full_vision_run.yaml --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_run_evidence.json
+      - run: python3.11 -m euclid replay --run-id full-vision-run --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_replay_evidence.json
+      - run: python3.11 -m euclid release certify-clean-install --project-root . --wheel-dir build/certification/wheels --output-root build/certification/clean_install
+      - run: PYTHONPATH=src python3.11 -m euclid release status --project-root .
+      - run: PYTHONPATH=src python3.11 -m euclid release verify-completion --project-root .
+      - run: PYTHONPATH=src python3.11 -m euclid release certify-research-readiness --project-root .
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: release-evidence
           path: |
             build/reports/repo_test_matrix.json
+            build/reports/current_release_suite_evidence.json
+            build/reports/full_vision_suite_evidence.json
+            build/reports/full_vision_operator_run_evidence.json
+            build/reports/full_vision_operator_replay_evidence.json
             build/reports/completion-report.json
             build/reports/clean-install-certification.json
             build/reports/verify-completion.json

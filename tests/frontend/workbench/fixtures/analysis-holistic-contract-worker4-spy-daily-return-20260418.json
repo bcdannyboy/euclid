@@ -95,7 +95,7 @@
     "abstention": {
       "abstention_id": "operator_abstention_v1",
       "abstention_type": "robustness_failed",
-      "blocked_ceiling": "descriptive_only",
+      "blocked_ceiling": "descriptive_structure",
       "reason_codes": [
         "robustness_failed",
         "perturbation_protocol_failed"

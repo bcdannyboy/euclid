@@ -288,6 +288,101 @@ class SuitePerformanceBudgetEvaluation:
     max_peak_memory_bytes: int
 
 
+@dataclass(frozen=True)
+class CandidateThroughputBudget:
+    budget_id: str
+    min_candidates_per_second: float
+
+
+@dataclass(frozen=True)
+class CandidateThroughputBudgetEvaluation:
+    budget_id: str
+    passed: bool
+    failure_reasons: tuple[str, ...]
+    candidate_count: int
+    elapsed_seconds: float
+    observed_candidates_per_second: float
+    min_candidates_per_second: float
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "budget_id": self.budget_id,
+            "passed": self.passed,
+            "failure_reasons": list(self.failure_reasons),
+            "candidate_count": self.candidate_count,
+            "elapsed_seconds": self.elapsed_seconds,
+            "observed_candidates_per_second": self.observed_candidates_per_second,
+            "thresholds": {
+                "min_candidates_per_second": self.min_candidates_per_second,
+            },
+        }
+
+
+@dataclass(frozen=True)
+class EngineRuntimeBudget:
+    budget_id: str
+    timeout_seconds: float
+    candidate_limit: int
+    max_iterations: int | None = None
+    node_limit: int | None = None
+    max_memory_bytes: int | None = None
+
+    def resource_limits(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "timeout_seconds": self.timeout_seconds,
+            "candidate_limit": self.candidate_limit,
+        }
+        if self.max_iterations is not None:
+            payload["max_iterations"] = self.max_iterations
+        if self.node_limit is not None:
+            payload["node_limit"] = self.node_limit
+        if self.max_memory_bytes is not None:
+            payload["max_memory_bytes"] = self.max_memory_bytes
+        return payload
+
+
+@dataclass(frozen=True)
+class EngineRuntimeBudgetReport:
+    engine_id: str
+    budget_id: str
+    status: str
+    passed: bool
+    failure_reasons: tuple[str, ...]
+    elapsed_seconds: float
+    candidate_count: int
+    reason_codes: tuple[str, ...]
+    resource_limits: Mapping[str, Any]
+    details: Mapping[str, Any] = field(default_factory=dict)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "engine_id": self.engine_id,
+            "budget_id": self.budget_id,
+            "status": self.status,
+            "passed": self.passed,
+            "failure_reasons": list(self.failure_reasons),
+            "elapsed_seconds": self.elapsed_seconds,
+            "candidate_count": self.candidate_count,
+            "reason_codes": list(self.reason_codes),
+            "resource_limits": _json_ready(self.resource_limits),
+            "details": _json_ready(self.details),
+        }
+
+
+@dataclass(frozen=True)
+class RuntimeDegradationDecision:
+    status: str
+    reason_codes: tuple[str, ...]
+    claim_publication_allowed: bool = False
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "reason_codes": list(self.reason_codes),
+            "claim_publication_allowed": self.claim_publication_allowed,
+        }
+
+
 class TelemetryRecorder:
     def __init__(self) -> None:
         self._lock = threading.RLock()
@@ -734,6 +829,125 @@ def evaluate_suite_performance_budget(
         max_wall_time_seconds=suite.max_wall_time_seconds,
         max_peak_memory_bytes=suite.max_peak_memory_bytes,
     )
+
+
+def evaluate_candidate_throughput_budget(
+    *,
+    candidate_count: int,
+    elapsed_seconds: float,
+    budget: CandidateThroughputBudget,
+) -> CandidateThroughputBudgetEvaluation:
+    resolved_candidate_count = max(0, int(candidate_count))
+    resolved_elapsed_seconds = max(0.0, float(elapsed_seconds))
+    observed_rate = (
+        0.0
+        if resolved_elapsed_seconds <= 0.0
+        else resolved_candidate_count / resolved_elapsed_seconds
+    )
+    failure_reasons: list[str] = []
+    if observed_rate < budget.min_candidates_per_second:
+        failure_reasons.append(
+            "candidates_per_second"
+            f"={observed_rate:.6f} below "
+            f"{budget.min_candidates_per_second:.6f}"
+        )
+    return CandidateThroughputBudgetEvaluation(
+        budget_id=budget.budget_id,
+        passed=not failure_reasons,
+        failure_reasons=tuple(failure_reasons),
+        candidate_count=resolved_candidate_count,
+        elapsed_seconds=resolved_elapsed_seconds,
+        observed_candidates_per_second=observed_rate,
+        min_candidates_per_second=float(budget.min_candidates_per_second),
+    )
+
+
+def build_engine_runtime_budget_report(
+    *,
+    engine_id: str,
+    elapsed_seconds: float,
+    candidate_count: int,
+    status: str,
+    budget: EngineRuntimeBudget,
+    reason_codes: Sequence[str] = (),
+    details: Mapping[str, Any] | None = None,
+) -> EngineRuntimeBudgetReport:
+    resolved_elapsed_seconds = max(0.0, float(elapsed_seconds))
+    resolved_candidate_count = max(0, int(candidate_count))
+    failure_reasons: list[str] = []
+    if resolved_elapsed_seconds > budget.timeout_seconds:
+        failure_reasons.append(
+            "elapsed_seconds"
+            f"={resolved_elapsed_seconds:.6f} exceeds "
+            f"{budget.timeout_seconds:.6f}"
+        )
+    if resolved_candidate_count > budget.candidate_limit:
+        failure_reasons.append(
+            f"candidate_count={resolved_candidate_count} exceeds "
+            f"{budget.candidate_limit}"
+        )
+    if status == "timeout" and not any(
+        reason.startswith("elapsed_seconds=") for reason in failure_reasons
+    ):
+        failure_reasons.append("engine reported timeout")
+    if status == "failed":
+        failure_reasons.append("engine reported failed")
+    return EngineRuntimeBudgetReport(
+        engine_id=engine_id,
+        budget_id=budget.budget_id,
+        status=status,
+        passed=not failure_reasons,
+        failure_reasons=tuple(failure_reasons),
+        elapsed_seconds=resolved_elapsed_seconds,
+        candidate_count=resolved_candidate_count,
+        reason_codes=tuple(str(code) for code in reason_codes),
+        resource_limits=budget.resource_limits(),
+        details=dict(details or {}),
+    )
+
+
+def degradation_decision_from_budget_report(
+    report: EngineRuntimeBudgetReport,
+) -> RuntimeDegradationDecision:
+    if not report.passed:
+        return RuntimeDegradationDecision(
+            status="abstained",
+            reason_codes=(
+                report.reason_codes
+                if report.reason_codes
+                else tuple(report.failure_reasons)
+            ),
+            claim_publication_allowed=False,
+        )
+    if report.status == "partial" or report.reason_codes:
+        return RuntimeDegradationDecision(
+            status="degraded",
+            reason_codes=report.reason_codes or ("partial_result",),
+            claim_publication_allowed=False,
+        )
+    return RuntimeDegradationDecision(
+        status="completed",
+        reason_codes=(),
+        claim_publication_allowed=False,
+    )
+
+
+def benchmark_budget_report(
+    *,
+    task_id: str,
+    candidate_limit: int,
+    wall_clock_seconds: int,
+    parallel_workers: int,
+    submitter_count: int,
+) -> dict[str, Any]:
+    return {
+        "budget_id": f"benchmark_task_budget:{task_id}",
+        "candidate_limit": int(candidate_limit),
+        "wall_clock_seconds": int(wall_clock_seconds),
+        "parallel_workers": max(1, int(parallel_workers)),
+        "submitter_count": int(submitter_count),
+        "status": "reported",
+    }
 
 
 def _mapping_copy(value: object) -> dict[str, Any]:

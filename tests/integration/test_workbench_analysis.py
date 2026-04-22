@@ -419,8 +419,8 @@ def test_saved_analysis_reload_preserves_explicit_abstained_operator_publication
                 "reason_codes": ["saved_explicit_abstention"],
             },
             "claim_card": {
-                "claim_type": "predictively_supported",
-                "claim_ceiling": "predictively_supported",
+                "claim_type": "predictive_within_declared_scope",
+                "claim_ceiling": "predictive_within_declared_scope",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -493,8 +493,8 @@ def test_saved_analysis_reload_rejects_publishable_exact_closure_predictive_law(
                 ],
             },
             "claim_card": {
-                "claim_type": "predictively_supported",
-                "claim_ceiling": "predictively_supported",
+                "claim_type": "predictive_within_declared_scope",
+                "claim_ceiling": "predictive_within_declared_scope",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -552,8 +552,8 @@ def test_saved_analysis_reload_rejects_publishable_delta_only_predictive_law(
                 },
             },
             "claim_card": {
-                "claim_type": "predictively_supported",
-                "claim_ceiling": "predictively_supported",
+                "claim_type": "predictive_within_declared_scope",
+                "claim_ceiling": "predictive_within_declared_scope",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -608,8 +608,8 @@ def test_saved_analysis_reload_does_not_infer_holistic_from_saved_alignment(
                 "publication_record_manifest@1.1.0:publication-1"
             ),
             "claim_card": {
-                "claim_type": "mechanistically_compatible_hypothesis",
-                "claim_ceiling": "mechanistically_compatible_hypothesis",
+                "claim_type": "mechanistically_compatible_law",
+                "claim_ceiling": "mechanistically_compatible_law",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -710,8 +710,8 @@ def test_saved_analysis_reload_does_not_infer_holistic_from_saved_alignment(
     assert payload["predictive_law"] is not None
     assert payload["predictive_law"]["evidence_summary"]["claim_card"] == {
         "ref": "claim_card_manifest@1.1.0:claim-card-1",
-        "claim_type": "mechanistically_compatible_hypothesis",
-        "claim_ceiling": "mechanistically_compatible_hypothesis",
+        "claim_type": "mechanistically_compatible_law",
+        "claim_ceiling": "mechanistically_compatible_law",
         "predictive_support_status": "confirmatory_supported",
         "allowed_interpretation_codes": [
             "historical_structure_summary",
@@ -743,8 +743,8 @@ def test_saved_analysis_reload_does_not_reconstruct_failed_backend_holistic_clai
                 "publication_record_manifest@1.1.0:publication-1"
             ),
             "claim_card": {
-                "claim_type": "mechanistically_compatible_hypothesis",
-                "claim_ceiling": "mechanistically_compatible_hypothesis",
+                "claim_type": "mechanistically_compatible_law",
+                "claim_ceiling": "mechanistically_compatible_law",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -867,8 +867,8 @@ def test_saved_analysis_reload_projects_workflow_native_uncertainty_attachment(
                 "publication_record_manifest@1.1.0:publication-1"
             ),
             "claim_card": {
-                "claim_type": "mechanistically_compatible_hypothesis",
-                "claim_ceiling": "mechanistically_compatible_hypothesis",
+                "claim_type": "mechanistically_compatible_law",
+                "claim_ceiling": "mechanistically_compatible_law",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",
@@ -1033,8 +1033,8 @@ def test_saved_analysis_reload_rejects_holistic_equation_with_banned_equation_ma
                 "publication_record_manifest@1.1.0:publication-1"
             ),
             "claim_card": {
-                "claim_type": "mechanistically_compatible_hypothesis",
-                "claim_ceiling": "mechanistically_compatible_hypothesis",
+                "claim_type": "mechanistically_compatible_law",
+                "claim_ceiling": "mechanistically_compatible_law",
                 "predictive_support_status": "confirmatory_supported",
                 "allowed_interpretation_codes": [
                     "historical_structure_summary",

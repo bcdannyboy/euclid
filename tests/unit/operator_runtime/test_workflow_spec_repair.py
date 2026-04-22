@@ -191,8 +191,8 @@ def test_workflow_keeps_best_descriptive_candidate_separate_from_publishable_can
         "publication_record_ref": result.publication_record.manifest.ref.as_dict(),
     }
     assert result.scorecard.manifest.body["predictive_law"] == predictive_law
-    assert result.validation_scope.manifest.body["predictive_law"] == predictive_law
-    assert result.claim_card.manifest.body["predictive_law"] == predictive_law
+    assert result.validation_scope.manifest.body["predictive_law"] is None
+    assert result.claim_card.manifest.body["predictive_law"] is None
 
 
 def test_workflow_emits_freeze_chain_predictive_blockers_and_residual_diagnostics(
@@ -394,7 +394,7 @@ def test_workflow_structured_confirmatory_residuals_block_predictive_law(
     ]
     assert result.scorecard.manifest.body["predictive_law"] is None
     assert result.validation_scope.manifest.body["predictive_law"] is None
-    assert result.claim_card.manifest.body["claim_type"] == "descriptive_only"
+    assert result.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert result.claim_card.manifest.body["predictive_law"] is None
 
 

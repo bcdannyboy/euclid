@@ -1,8 +1,8 @@
 version: 1
 kind: canonical_math_fixture
-fixture_id: mechanistically_compatible_hypothesis_point
-claim_lane: mechanistically_compatible_hypothesis
-lower_claim_lane: predictively_supported
+fixture_id: mechanistically_compatible_law_point
+claim_lane: mechanistically_compatible_law
+lower_claim_lane: predictive_within_declared_scope
 forecast_object_type: point
 primary_score: absolute_error
 comparison_regime_id: unconditional_model_pair

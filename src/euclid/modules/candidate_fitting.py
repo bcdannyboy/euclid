@@ -24,6 +24,8 @@ from euclid.cir.normalize import (
 from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.loader import ContractCatalog
 from euclid.contracts.refs import TypedRef
+from euclid.fit.parameterization import ParameterDeclaration
+from euclid.fit.refit import FitDataSplit, fit_cir_candidate
 from euclid.manifests.base import ManifestEnvelope
 from euclid.manifests.runtime_models import (
     CandidateSpecManifest,
@@ -188,9 +190,12 @@ def fit_candidate_window(
         "final_loss": family_fit.final_loss,
     }
     if family_fit.component_diagnostics:
-        optimizer_diagnostics["composition_runtime"] = dict(
-            family_fit.component_diagnostics
-        )
+        if family_fit.backend_id == "euclid_unified_fit_layer_v1":
+            optimizer_diagnostics.update(dict(family_fit.component_diagnostics))
+        else:
+            optimizer_diagnostics["composition_runtime"] = dict(
+                family_fit.component_diagnostics
+            )
     candidate_id = (
         closed_candidate.evidence_layer.backend_origin_record.source_candidate_id
     )
@@ -330,6 +335,12 @@ def _fit_family(
     shared_local_backend_preference: str | None = None,
 ) -> _FamilyFitResult:
     composition_graph = candidate.structural_layer.composition_graph
+    if candidate.structural_layer.expression_payload is not None:
+        return _fit_expression_payload(
+            candidate=candidate,
+            training_rows=training_rows,
+            random_seed=random_seed,
+        )
     operator_id = composition_graph.operator_id
     if operator_id == "shared_plus_local_decomposition":
         return _fit_shared_local(
@@ -360,6 +371,62 @@ def _fit_family(
         candidate=candidate,
         training_rows=training_rows,
         random_seed=random_seed,
+    )
+
+
+def _fit_expression_payload(
+    *,
+    candidate: CandidateIntermediateRepresentation,
+    training_rows: Sequence[Mapping[str, Any]],
+    random_seed: str,
+) -> _FamilyFitResult:
+    payload = candidate.structural_layer.expression_payload
+    if payload is None:
+        raise ContractValidationError(
+            code="missing_expression_payload",
+            message="expression fitting requires CIR expression_payload",
+            field_path="candidate.structural_layer.expression_payload",
+        )
+    declared_parameters = _parameter_mapping(candidate)
+    parameter_declarations = tuple(
+        ParameterDeclaration(
+            name=name,
+            initial_value=float(declared_parameters.get(name, 0.0)),
+        )
+        for name in payload.parameter_declarations
+    )
+    fit_result = fit_cir_candidate(
+        candidate=candidate,
+        data=FitDataSplit(train_rows=tuple(training_rows)),
+        fit_window_id="candidate_fit_window",
+        parameter_declarations=parameter_declarations,
+        objective_id="squared_error",
+        seed=int(random_seed),
+    )
+    initial_state = _state_mapping(candidate)
+    return _FamilyFitResult(
+        backend_id="euclid_unified_fit_layer_v1",
+        objective_id=fit_result.objective_id,
+        parameter_summary=dict(fit_result.parameter_estimates),
+        updated_literals={},
+        initial_state=initial_state,
+        final_state=initial_state,
+        state_transitions=_identity_transitions(
+            initial_state=initial_state,
+            training_rows=training_rows,
+        ),
+        converged=fit_result.status == "converged",
+        iteration_count=int(
+            fit_result.optimizer_diagnostics.get("function_evaluations", 0)
+        ),
+        final_loss=_stable_float(fit_result.loss),
+        component_diagnostics={
+            "fit_layer": "src/euclid/fit",
+            "claim_boundary": dict(fit_result.claim_boundary),
+            "replay_identity": fit_result.replay_identity,
+            "failure_reasons": list(fit_result.failure_reasons),
+            "unified_optimizer_diagnostics": dict(fit_result.optimizer_diagnostics),
+        },
     )
 
 

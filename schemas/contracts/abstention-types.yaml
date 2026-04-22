@@ -12,9 +12,9 @@ contracts:
     owner_ref: abstention_semantics_council
     meaning: No candidate remains descriptively admissible under the bound coding law and data-support checks.
     blocked_claim_lanes:
-      - descriptive_only
-      - predictively_supported
-      - mechanistically_compatible_hypothesis
+      - descriptive_structure
+      - predictive_within_declared_scope
+      - mechanistically_compatible_law
     result_mode: abstention_only_publication
     reason_codes:
       - descriptive_gate_failed
@@ -23,9 +23,9 @@ contracts:
     owner_ref: abstention_semantics_council
     meaning: Surviving candidates cannot be compared under one shared codelength policy and reference description law.
     blocked_claim_lanes:
-      - descriptive_only
-      - predictively_supported
-      - mechanistically_compatible_hypothesis
+      - descriptive_structure
+      - predictive_within_declared_scope
+      - mechanistically_compatible_law
     result_mode: abstention_only_publication
     reason_codes:
       - codelength_comparability_failed
@@ -33,9 +33,9 @@ contracts:
     owner_ref: abstention_semantics_council
     meaning: A descriptively admissible candidate fails the bound robustness publication requirements.
     blocked_claim_lanes:
-      - descriptive_only
-      - predictively_supported
-      - mechanistically_compatible_hypothesis
+      - descriptive_structure
+      - predictive_within_declared_scope
+      - mechanistically_compatible_law
     result_mode: abstention_only_publication
     reason_codes:
       - robustness_failed

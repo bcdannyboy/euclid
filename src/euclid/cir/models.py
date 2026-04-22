@@ -275,6 +275,94 @@ class CIRModelCodeDecomposition:
 
 
 @dataclass(frozen=True)
+class CIRExpressionPayload:
+    expression_tree: Mapping[str, Any]
+    expression_canonical_json: str
+    expression_canonical_hash: str
+    assumptions: Mapping[str, Any] = field(default_factory=dict)
+    domain_constraints: Mapping[str, Any] = field(default_factory=dict)
+    unit_constraints: Mapping[str, Any] = field(default_factory=dict)
+    parameter_declarations: tuple[str, ...] = ()
+    feature_dependencies: tuple[str, ...] = ()
+    state_dependencies: tuple[str, ...] = ()
+    stochastic_dependencies: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.expression_tree, Mapping):
+            raise ContractValidationError(
+                code="invalid_cir_expression_payload",
+                message="expression_tree must be a mapping",
+                field_path="expression_tree",
+            )
+        _require_identifier(
+            self.expression_canonical_json,
+            code="invalid_cir_expression_payload",
+            field_path="expression_canonical_json",
+        )
+        if not (
+            isinstance(self.expression_canonical_hash, str)
+            and self.expression_canonical_hash.startswith("sha256:")
+        ):
+            raise ContractValidationError(
+                code="invalid_cir_expression_payload",
+                message="expression_canonical_hash must be a sha256-prefixed digest",
+                field_path="expression_canonical_hash",
+            )
+        object.__setattr__(
+            self,
+            "expression_tree",
+            normalize_json_value(dict(self.expression_tree)),
+        )
+        for field_name in (
+            "assumptions",
+            "domain_constraints",
+            "unit_constraints",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, Mapping):
+                raise ContractValidationError(
+                    code="invalid_cir_expression_payload",
+                    message=f"{field_name} must be a mapping",
+                    field_path=field_name,
+                )
+            object.__setattr__(self, field_name, normalize_json_value(dict(value)))
+        for field_name in (
+            "parameter_declarations",
+            "feature_dependencies",
+            "state_dependencies",
+            "stochastic_dependencies",
+        ):
+            normalized = tuple(
+                _require_identifier(
+                    value,
+                    code="invalid_cir_expression_payload",
+                    field_path=f"{field_name}[{index}]",
+                )
+                for index, value in enumerate(getattr(self, field_name))
+            )
+            _require_unique_names(
+                normalized,
+                code="invalid_cir_expression_payload",
+                field_path=field_name,
+            )
+            object.__setattr__(self, field_name, tuple(sorted(normalized)))
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "expression_tree": dict(self.expression_tree),
+            "expression_canonical_json": self.expression_canonical_json,
+            "expression_canonical_hash": self.expression_canonical_hash,
+            "assumptions": dict(self.assumptions),
+            "domain_constraints": dict(self.domain_constraints),
+            "unit_constraints": dict(self.unit_constraints),
+            "parameter_declarations": list(self.parameter_declarations),
+            "feature_dependencies": list(self.feature_dependencies),
+            "state_dependencies": list(self.state_dependencies),
+            "stochastic_dependencies": list(self.stochastic_dependencies),
+        }
+
+
+@dataclass(frozen=True)
 class CIRBackendOriginRecord:
     adapter_id: str
     adapter_class: str
@@ -421,6 +509,7 @@ class CIRStructuralLayer:
     composition_graph: ReducerCompositionObject = field(
         default_factory=ReducerCompositionObject
     )
+    expression_payload: CIRExpressionPayload | None = None
 
     def __post_init__(self) -> None:
         ReducerFamilyId(self.cir_family_id)
@@ -431,7 +520,7 @@ class CIRStructuralLayer:
         )
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "cir_family_id": self.cir_family_id,
             "cir_form_class": self.cir_form_class,
             "input_signature": self.input_signature.as_dict(),
@@ -440,6 +529,9 @@ class CIRStructuralLayer:
             "parameter_block": self.parameter_block.as_dict(),
             "composition_graph": self.composition_graph.canonical_payload(),
         }
+        if self.expression_payload is not None:
+            payload["expression_payload"] = self.expression_payload.as_dict()
+        return payload
 
 
 @dataclass(frozen=True)
@@ -521,6 +613,7 @@ __all__ = [
     "CIRCanonicalSerialization",
     "CIREvidenceLayer",
     "CIRExecutionLayer",
+    "CIRExpressionPayload",
     "CIRForecastOperator",
     "CIRHistoryAccessContract",
     "CIRInputSignature",

@@ -53,6 +53,34 @@ def test_require_live_credentials_reports_names_only(tmp_path) -> None:
     assert "secret" not in message.lower()
 
 
+def test_blank_env_values_are_treated_as_missing_without_leaking_values(tmp_path) -> None:
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "\n".join(
+            [
+                "EUCLID_LIVE_API_TESTS= ",
+                "EUCLID_LIVE_API_STRICT=1",
+                "FMP_API_KEY=   ",
+                "OPENAI_API_KEY=",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    loaded = EuclidEnv.load(env_file=env_path, environ={})
+
+    assert loaded.live_tests_enabled is False
+    assert loaded.strict_live_api is True
+    assert loaded.presence_metadata(["FMP_API_KEY", "OPENAI_API_KEY"]) == {
+        "FMP_API_KEY": {"present": False, "source": None},
+        "OPENAI_API_KEY": {"present": False, "source": None},
+    }
+    with pytest.raises(MissingLiveApiCredentialError) as exc_info:
+        loaded.require(["FMP_API_KEY", "OPENAI_API_KEY"])
+    assert "FMP_API_KEY" in str(exc_info.value)
+    assert "OPENAI_API_KEY" in str(exc_info.value)
+
+
 def test_invalid_live_flag_is_typed_configuration_error(tmp_path) -> None:
     env_path = tmp_path / ".env"
     env_path.write_text("EUCLID_LIVE_API_TESTS=maybe\n", encoding="utf-8")

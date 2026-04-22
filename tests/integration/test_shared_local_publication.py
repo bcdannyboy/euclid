@@ -219,7 +219,7 @@ def test_shared_local_publication_keeps_entity_panel_through_evaluation_scoring_
             {"entity": "entity-b", "weight": "0.5"},
         ],
     }
-    assert claim.claim_type == "predictively_supported"
+    assert claim.claim_type == "predictive_within_declared_scope"
     assert claim.predictive_support_status == "confirmatory_supported"
     assert claim.allowed_interpretation_codes == (
         "historical_structure_summary",

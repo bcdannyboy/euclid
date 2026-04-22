@@ -52,19 +52,19 @@ def test_canonical_math_fixtures_exist_and_cover_required_paths() -> None:
     fixtures = list(payloads.values())
 
     assert any(
-        fixture["claim_lane"] == "descriptive_only" and "predictive_gate_policy_id" not in fixture
+        fixture["claim_lane"] == "descriptive_structure" and "predictive_gate_policy_id" not in fixture
         for fixture in fixtures
     )
     assert any(
-        fixture["claim_lane"] == "predictively_supported" and fixture["forecast_object_type"] == "point"
+        fixture["claim_lane"] == "predictive_within_declared_scope" and fixture["forecast_object_type"] == "point"
         for fixture in fixtures
     )
     assert any(
-        fixture["claim_lane"] == "predictively_supported"
+        fixture["claim_lane"] == "predictive_within_declared_scope"
         and fixture["forecast_object_type"] in {"distribution", "interval", "quantile", "event_probability"}
         for fixture in fixtures
     )
-    assert any(fixture["claim_lane"] == "mechanistically_compatible_hypothesis" for fixture in fixtures)
+    assert any(fixture["claim_lane"] == "mechanistically_compatible_law" for fixture in fixtures)
     assert any(
         fixture["reducer_object"]["composition_operator"] == "shared_plus_local_decomposition"
         for fixture in fixtures

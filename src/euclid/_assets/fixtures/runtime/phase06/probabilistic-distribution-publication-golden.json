@@ -1,20 +1,21 @@
 {
   "catalog_entry": {
     "abstention_ref": null,
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_86ead64e03ac9b0e129a",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_0a9c2e639478be00807c",
     "comparator_exposure_status": "satisfied",
     "forecast_object_type": "distribution",
     "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
     "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
     "publication_mode": "candidate_publication",
-    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_97d9f90c2ddda6c47395"
+    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_61ad7869358c5f8964c9",
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_bc794558943c7f1bd0c7"
   },
   "claim": {
     "allowed_interpretation_codes": [
       "historical_structure_summary",
       "probabilistic_forecast_within_declared_validation_scope"
     ],
-    "claim_type": "predictively_supported",
+    "claim_type": "predictive_within_declared_scope",
     "predictive_support_status": "confirmatory_supported"
   },
   "comparison": {
@@ -32,6 +33,20 @@
         "comparison_status": "comparable",
         "failure_reason_code": null,
         "mean_loss_differential": 67.277649457814,
+        "paired_predictive_test_result": {
+          "confidence_interval": [
+            67.277649457814,
+            67.277649457814
+          ],
+          "mean_loss_differential": 67.277649457814,
+          "practical_margin": 0.0,
+          "promotion_allowed": true,
+          "raw_metric_comparison_role": "diagnostic_only",
+          "reason_codes": [],
+          "replay_identity": "predictive-promotion:7dbd16c7f37b85cab5c2f2892af13a03e377b38898d73893be76df5598b82afb",
+          "schema_name": "paired_predictive_test_result@1.0.0",
+          "status": "passed"
+        },
         "practical_significance_margin": 0.0,
         "practical_significance_status": "candidate_better_than_margin",
         "primary_score_delta": 67.277649457814,
@@ -55,6 +70,7 @@
       "candidate_or_abstention",
       "scorecard",
       "prediction_artifact",
+      "validation_scope",
       "robustness_report",
       "score_result",
       "calibration_result"
@@ -62,10 +78,11 @@
     "bundle_ref": "reproducibility_bundle_manifest@1.0.0:phase06-probabilistic-distribution-demo_bundle",
     "replay_verification_status": "verified",
     "required_manifest_refs": [
-      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_3d900ca28efd3721a1a4",
-      "scorecard_manifest@1.1.0:scorecard_manifest_97d9f90c2ddda6c47395",
-      "claim_card_manifest@1.1.0:claim_card_manifest_86ead64e03ac9b0e129a",
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_dc6b121ad5f3991d986e",
+      "scorecard_manifest@1.1.0:scorecard_manifest_61ad7869358c5f8964c9",
+      "claim_card_manifest@1.1.0:claim_card_manifest_0a9c2e639478be00807c",
       "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_bc794558943c7f1bd0c7",
       "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
       "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568"
     ],
@@ -80,7 +97,8 @@
       "scorecard_resolved",
       "publication_decision_resolved",
       "run_result_assembled"
-    ]
+    ],
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_bc794558943c7f1bd0c7"
   },
   "request_id": "phase06-probabilistic-distribution-demo",
   "run_result_ref": "run_result_manifest@1.1.0:phase06-probabilistic-distribution-demo_run_result",
@@ -92,7 +110,7 @@
   "summary_refs": {
     "abstention_ref": null,
     "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_86ead64e03ac9b0e129a",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_0a9c2e639478be00807c",
     "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
     "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb"
   }

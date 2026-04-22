@@ -27,7 +27,7 @@ def test_release_module_loads_current_and_full_vision_packaged_policies(
     assert full["matrix_path"] == "schemas/readiness/full-vision-matrix.yaml"
     assert shipped["matrix_path"] == "schemas/readiness/full-vision-matrix.yaml"
     assert "README.md" in current["scope_authority_refs"]
-    assert {"docs/system.md", "docs/benchmarks-readiness.md"} <= set(
+    assert {"docs/reference/system.md", "docs/reference/benchmarks-readiness.md"} <= set(
         full["scope_authority_refs"]
     )
 

@@ -7,8 +7,25 @@ from typing import Mapping, Sequence
 from euclid.contracts.errors import ContractValidationError
 from euclid.search.policies import FULL_COMPARABILITY_SEARCH_CLASSES
 
-_MINIMIZE_AXES = frozenset({"structure_code_bits", "inner_primary_score"})
-_MAXIMIZE_AXES = frozenset({"description_gain_bits"})
+_MINIMIZE_AXES = frozenset(
+    {
+        "structure_code_bits",
+        "inner_primary_score",
+        "fit_loss",
+        "parameter_count",
+    }
+)
+_MAXIMIZE_AXES = frozenset(
+    {
+        "description_gain_bits",
+        "out_of_sample_score",
+        "support_stability",
+        "parameter_stability",
+        "invariance_score",
+        "robustness_score",
+        "calibration_score",
+    }
+)
 _SUPPORTED_AXES = _MINIMIZE_AXES | _MAXIMIZE_AXES
 _DOMINANCE_RULE = "weakly_better_all_axes_strictly_better_one"
 

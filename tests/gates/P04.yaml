@@ -1,0 +1,1755 @@
+phase_id: P04
+phase_title: Search Engine Orchestration
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P04-T01
+- P04-T01-S01
+- P04-T01-S02
+- P04-T01-S03
+- P04-T01-S04
+- P04-T01-S05
+- P04-T02
+- P04-T02-S01
+- P04-T02-S02
+- P04-T02-S03
+- P04-T02-S04
+- P04-T02-S05
+- P04-T02-S06
+- P04-T02-S07
+- P04-T03
+- P04-T03-S01
+- P04-T03-S02
+- P04-T03-S03
+- P04-T03-S04
+- P04-T03-S05
+- P04-T04
+- P04-T04-S01
+- P04-T04-S02
+- P04-T04-S03
+- P04-T04-S04
+- P04-T04-S05
+- P04-T04-S06
+- P04-T04-S07
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+    -m pytest -q tests/unit/search tests/unit/expr tests/unit/fit tests/unit/testing
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+    -m pytest -q tests/integration
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+    -m pytest -q tests/regression tests/golden tests/spec_compiler
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_search_portfolio_live.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions:
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_raw_target_values_in_replay_metadata
+  - engine_trace_contains_no_credentials
+replay:
+  assertions:
+  - replay_metadata_complete
+  - replay_identity_stable
+  - deterministic_engine_order
+  - candidate_canonical_ids_replay_stable
+claim_scope:
+  assertions:
+  - search_engine_not_claim_authority
+  - external_engines_cannot_publish_claims_directly
+  - native_legacy_adapter_is_non_claim_structure_proposal
+  - orchestration_returns_candidates_not_publication_records
+edge_cases:
+  required:
+  - engine_crash
+  - engine_timeout
+  - partial_result
+  - malformed_engine_result
+  - duplicate_canonical_output
+  - failed_lowering
+  - empty_declared_search_space
+  - missing_values
+  - nonfinite_values
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - replay_reproduction
+artifact_outputs:
+- build/reports/p04-gate-evidence.json
+- build/reports/completion-report.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and claim-scope
+  evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P04-T01:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T01
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T01-S01:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T01-S01
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T01-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T01-S02:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T01-S02
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T01-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T01-S03:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T01-S03
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T01-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T01-S04:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T01-S04
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T01-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T01-S05:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T01-S05
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T01-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S01:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S01
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S02:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S02
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S03:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S03
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S04:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S04
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S05:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S05
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S06:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S06
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S06
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T02-S07:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T02-S07
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T02-S07
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T03:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T03
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T03-S01:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T03-S01
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T03-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T03-S02:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T03-S02
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T03-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T03-S03:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T03-S03
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T03-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T03-S04:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T03-S04
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T03-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T03-S05:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T03-S05
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T03-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S01:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S01
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S01
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S02:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S02
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S02
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S03:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S03
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S03
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S04:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S04
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S04
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S05:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S05
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S05
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S06:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S06
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S06
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records
+  P04-T04-S07:
+    status: complete
+    implementation_files:
+    - src/euclid/search/backends.py
+    - src/euclid/search/engine_contracts.py
+    - src/euclid/search/engines/__init__.py
+    - src/euclid/search/engines/native.py
+    - src/euclid/search/engines/pysindy_engine.py
+    - src/euclid/search/engines/pysr_engine.py
+    - src/euclid/search/engines/sparse_regression.py
+    - src/euclid/search/engines/decomposition.py
+    - src/euclid/search/engines/latent_state.py
+    - src/euclid/search/engines/egraph.py
+    - src/euclid/search/frontier.py
+    - src/euclid/search/orchestration.py
+    - src/euclid/search/policies.py
+    test_files:
+    - tests/unit/search/test_backends.py
+    - tests/unit/search/test_engine_contracts.py
+    - tests/unit/search/test_frontier.py
+    - tests/unit/search/test_orchestration.py
+    - tests/unit/search/engines/test_native_engine.py
+    gate_refs:
+    - tests/gates/P04.yaml#P04-T04-S07
+    evidence_refs:
+    - gate:tests/gates/P04.yaml#P04-T04-S07
+    - artifact:build/reports/completion-report.json
+    - test:tests/unit/search/test_engine_contracts.py
+    - test:tests/unit/search/test_orchestration.py
+    - test:tests/unit/search/engines/test_native_engine.py
+    edge_cases:
+    - engine_crash
+    - engine_timeout
+    - partial_result
+    - malformed_engine_result
+    - duplicate_canonical_output
+    - failed_lowering
+    - empty_declared_search_space
+    - missing_values
+    - nonfinite_values
+    - duplicate_timestamps
+    - out_of_order_timestamps
+    - replay_reproduction
+    redaction_assertions:
+    - no_secret_in_stdout
+    - no_secret_in_stderr
+    - no_secret_in_artifact
+    - no_raw_target_values_in_replay_metadata
+    - engine_trace_contains_no_credentials
+    replay_assertions:
+    - replay_metadata_complete
+    - replay_identity_stable
+    - deterministic_engine_order
+    - candidate_canonical_ids_replay_stable
+    claim_scope_assertions:
+    - search_engine_not_claim_authority
+    - external_engines_cannot_publish_claims_directly
+    - native_legacy_adapter_is_non_claim_structure_proposal
+    - orchestration_returns_candidates_not_publication_records

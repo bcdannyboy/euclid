@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from statistics import NormalDist, fmean
+from statistics import fmean
 from typing import Any, Callable, Mapping
 
 from euclid.contracts.errors import ContractValidationError
@@ -20,8 +20,16 @@ from euclid.modules.evaluation_governance import (
     ComparisonKey,
     build_comparison_universe,
 )
+from euclid.modules.predictive_tests import evaluate_predictive_promotion
+from euclid.stochastic.observation_models import get_observation_model
+from euclid.stochastic.scoring_rules import (
+    brier_score,
+    continuous_ranked_probability_score,
+    interval_score,
+    log_score,
+    pinball_loss,
+)
 
-_STANDARD_NORMAL = NormalDist()
 _PROBABILISTIC_POLICY_SCHEMAS = {
     "distribution": "probabilistic_score_policy_manifest@1.0.0",
     "interval": "interval_score_policy_manifest@1.0.0",
@@ -637,11 +645,16 @@ def _probabilistic_row_failure_reason(
     if not math.isfinite(realized_observation):
         return "nonfinite_observation"
     if forecast_object_type == "distribution":
-        if str(row["distribution_family"]) != "gaussian_location_scale":
+        family_id = _observation_family_from_distribution(
+            str(row["distribution_family"])
+        )
+        if family_id is None:
             return "unsupported_forecast_object_type"
-        location = float(row["location"])
-        scale = float(row["scale"])
-        if not math.isfinite(location) or not math.isfinite(scale) or scale <= 0:
+        parameters = _distribution_row_parameters(row=row, family_id=family_id)
+        try:
+            model = get_observation_model(family_id).bind(parameters)
+            model.log_likelihood(realized_observation)
+        except ContractValidationError:
             return "nonfinite_score_value"
         return None
     if forecast_object_type == "interval":
@@ -741,6 +754,24 @@ def _build_paired_comparison_record(
                 ),
             }
         )
+    candidate_origin_losses = tuple(
+        _stable_float(
+            sum(
+                weight * candidate_losses[origin_key][horizon]
+                for horizon, weight in horizon_weights
+            )
+        )
+        for origin_key in origin_keys
+    )
+    comparator_origin_losses = tuple(
+        _stable_float(
+            sum(
+                weight * comparator_losses[origin_key][horizon]
+                for horizon, weight in horizon_weights
+            )
+        )
+        for origin_key in origin_keys
+    )
 
     mean_loss_differential = _stable_float(
         fmean(
@@ -759,6 +790,15 @@ def _build_paired_comparison_record(
         mean_loss_differential=mean_loss_differential,
         margin=practical_significance_margin,
     )
+    predictive_test = evaluate_predictive_promotion(
+        candidate_losses=candidate_origin_losses,
+        baseline_losses=comparator_origin_losses,
+        split_protocol_id="declared_confirmatory_holdout",
+        baseline_id=comparator_id,
+        practical_margin=practical_significance_margin,
+        calibration_status="not_applicable_for_forecast_type",
+        leakage_status="passed",
+    )
     return {
         "comparator_id": comparator_id,
         "comparator_kind": comparator_kind,
@@ -776,6 +816,7 @@ def _build_paired_comparison_record(
         "per_horizon_mean_loss_differentials": per_horizon_mean_loss_differentials,
         "practical_significance_margin": _stable_float(practical_significance_margin),
         "practical_significance_status": practical_significance_status,
+        "paired_predictive_test_result": predictive_test.as_manifest(),
         "score_result_ref": comparator_score_result.ref.as_dict(),
     }
 
@@ -1129,31 +1170,30 @@ def _probabilistic_primary_score(
 ) -> float:
     realized_observation = float(row["realized_observation"])
     if forecast_object_type == "distribution":
-        location = float(row["location"])
-        scale = float(row["scale"])
+        family_id = _observation_family_from_distribution(
+            str(row["distribution_family"])
+        )
+        if family_id is None:
+            raise ContractValidationError(
+                code="unsupported_observation_family",
+                message="distribution scoring requires an admitted observation family",
+                field_path="row.distribution_family",
+                details={"distribution_family": row["distribution_family"]},
+            )
+        model = get_observation_model(family_id).bind(
+            _distribution_row_parameters(row=row, family_id=family_id)
+        )
         if primary_score_id == "continuous_ranked_probability_score":
-            return _stable_float(
-                _gaussian_crps(
-                    location=location,
-                    scale=scale,
-                    realized_observation=realized_observation,
-                )
-            )
+            return _stable_float(continuous_ranked_probability_score(model, realized_observation))
         if primary_score_id == "log_score":
-            return _stable_float(
-                _gaussian_log_score(
-                    location=location,
-                    scale=scale,
-                    realized_observation=realized_observation,
-                )
-            )
+            return _stable_float(log_score(model, realized_observation))
     if forecast_object_type == "interval" and primary_score_id == "interval_score":
         return _stable_float(
-            _interval_score(
+            interval_score(
                 nominal_coverage=float(row["nominal_coverage"]),
                 lower_bound=float(row["lower_bound"]),
                 upper_bound=float(row["upper_bound"]),
-                realized_observation=realized_observation,
+                observed=realized_observation,
             )
         )
     if forecast_object_type == "quantile" and primary_score_id == "pinball_loss":
@@ -1167,7 +1207,12 @@ def _probabilistic_primary_score(
         probability = float(row["event_probability"])
         realized_event = bool(row["realized_event"])
         if primary_score_id == "brier_score":
-            return _stable_float((probability - (1.0 if realized_event else 0.0)) ** 2)
+            return _stable_float(
+                brier_score(
+                    probability=probability,
+                    realized_event=realized_event,
+                )
+            )
         if primary_score_id == "log_score":
             return _stable_float(
                 _event_log_score(
@@ -1189,48 +1234,6 @@ def _probabilistic_primary_score(
     )
 
 
-def _gaussian_crps(
-    *,
-    location: float,
-    scale: float,
-    realized_observation: float,
-) -> float:
-    z = (realized_observation - location) / scale
-    return scale * (
-        z * (2 * _STANDARD_NORMAL.cdf(z) - 1)
-        + 2 * _STANDARD_NORMAL.pdf(z)
-        - (1 / math.sqrt(math.pi))
-    )
-
-
-def _gaussian_log_score(
-    *,
-    location: float,
-    scale: float,
-    realized_observation: float,
-) -> float:
-    squared_residual = (realized_observation - location) ** 2
-    return 0.5 * math.log(2 * math.pi * (scale**2)) + (
-        squared_residual / (2 * (scale**2))
-    )
-
-
-def _interval_score(
-    *,
-    nominal_coverage: float,
-    lower_bound: float,
-    upper_bound: float,
-    realized_observation: float,
-) -> float:
-    alpha = 1.0 - nominal_coverage
-    score = upper_bound - lower_bound
-    if realized_observation < lower_bound:
-        score += (2.0 / alpha) * (lower_bound - realized_observation)
-    elif realized_observation > upper_bound:
-        score += (2.0 / alpha) * (realized_observation - upper_bound)
-    return score
-
-
 def _quantile_pinball_loss(
     *,
     quantiles: tuple[Mapping[str, Any], ...],
@@ -1238,14 +1241,59 @@ def _quantile_pinball_loss(
 ) -> float:
     losses = []
     for item in quantiles:
-        level = float(item["level"])
-        value = float(item["value"])
-        residual = realized_observation - value
-        if residual >= 0:
-            losses.append(level * residual)
-        else:
-            losses.append((level - 1.0) * residual)
+        losses.append(
+            pinball_loss(
+                level=float(item["level"]),
+                quantile=float(item["value"]),
+                observed=realized_observation,
+            )
+        )
     return fmean(losses)
+
+
+def _observation_family_from_distribution(distribution_family: str) -> str | None:
+    return {
+        "gaussian_location_scale": "gaussian",
+        "student_t_location_scale": "student_t",
+        "laplace_location_scale": "laplace",
+        "poisson_rate": "poisson",
+        "negative_binomial_mean_dispersion": "negative_binomial",
+        "bernoulli_probability": "bernoulli",
+        "beta_alpha_beta": "beta",
+        "lognormal_location_scale": "lognormal",
+    }.get(distribution_family)
+
+
+def _distribution_row_parameters(
+    *,
+    row: Mapping[str, Any],
+    family_id: str,
+) -> dict[str, float]:
+    if family_id in {"gaussian", "laplace"}:
+        return {"location": float(row["location"]), "scale": float(row["scale"])}
+    if family_id == "student_t":
+        return {
+            "location": float(row["location"]),
+            "scale": float(row["scale"]),
+            "df": float(row.get("df", 5.0)),
+        }
+    if family_id == "poisson":
+        return {"rate": float(row["rate"])}
+    if family_id == "negative_binomial":
+        return {
+            "mean": float(row["mean"]),
+            "dispersion": float(row["dispersion"]),
+        }
+    if family_id == "bernoulli":
+        return {"probability": float(row["probability"])}
+    if family_id == "beta":
+        return {"alpha": float(row["alpha"]), "beta": float(row["beta"])}
+    if family_id == "lognormal":
+        return {
+            "log_location": float(row["log_location"]),
+            "log_scale": float(row["log_scale"]),
+        }
+    raise AssertionError("unreachable")
 
 
 def _event_log_score(*, probability: float, realized_event: bool) -> float:

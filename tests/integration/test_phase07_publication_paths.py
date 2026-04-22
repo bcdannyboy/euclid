@@ -32,6 +32,6 @@ def test_candidate_publication_path_supports_catalog_and_replay_surfaces(
         publication_id=published.publication_id,
     )
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_only"
+    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert inspection.abstention is None
     assert inspection.replay_bundle.replay_verification_status == "verified"

@@ -1,0 +1,17 @@
+request_id: minimal-run
+dataset_csv: minimal_dataset.csv
+cutoff_available_at: null
+quantization_step: "0.5"
+forecast_object_type: point
+minimum_description_gain_bits: 0.0
+min_train_size: 3
+horizon: 1
+seasonal_period: 2
+search:
+  class: bounded_heuristic
+  seed: "0"
+  family_ids:
+    - constant
+    - drift
+    - linear_trend
+    - seasonal_naive

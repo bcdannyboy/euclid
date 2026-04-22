@@ -159,6 +159,12 @@ def _optional_string(payload: Any, *, field_path: str) -> str | None:
     return _require_string(payload, field_path=field_path)
 
 
+def _optional_string_list(payload: Any, *, field_path: str) -> tuple[str, ...]:
+    if payload is None:
+        return ()
+    return _require_string_list(payload, field_path=field_path)
+
+
 @dataclass(frozen=True)
 class BenchmarkRegistryEntry:
     entry_id: str
@@ -240,6 +246,11 @@ class BenchmarkTaskManifest:
     baseline_registry: tuple[BenchmarkRegistryEntry, ...]
     submitter_registry: tuple[BenchmarkRegistryEntry, ...]
     frozen_protocol: FrozenBenchmarkProtocol
+    metric_thresholds: dict[str, Any]
+    expected_claim_ceiling: str
+    false_claim_expectations: tuple[str, ...]
+    engine_requirements: tuple[str, ...]
+    semantic_readiness_row_ids: tuple[str, ...]
     fixture_spec_id: str | None
     fixture_family_id: str | None
     source_path: Path
@@ -521,12 +532,19 @@ def _build_common_fields(
             )
         )
 
+    task_id = _require_string(payload.get("task_id"), field_path="task_id")
+    task_family = _require_string(payload.get("task_family"), field_path="task_family")
+    submitter_registry = _require_registry(
+        payload.get("submitter_registry"),
+        field_path="submitter_registry",
+        id_field="submitter_id",
+    )
+    submitter_ids = tuple(entry.entry_id for entry in submitter_registry)
+
     return {
-        "task_id": _require_string(payload.get("task_id"), field_path="task_id"),
+        "task_id": task_id,
         "track_id": track_id,
-        "task_family": _require_string(
-            payload.get("task_family"), field_path="task_family"
-        ),
+        "task_family": task_family,
         "search_class": search_class,
         "search_class_honesty": search_class_honesty,
         "composition_operators": composition_operators,
@@ -558,12 +576,30 @@ def _build_common_fields(
             field_path="baseline_registry",
             id_field="baseline_id",
         ),
-        "submitter_registry": _require_registry(
-            payload.get("submitter_registry"),
-            field_path="submitter_registry",
-            id_field="submitter_id",
-        ),
+        "submitter_registry": submitter_registry,
         "frozen_protocol": frozen_protocol,
+        "metric_thresholds": _semantic_metric_thresholds(
+            payload,
+            frozen_protocol=frozen_protocol,
+        ),
+        "expected_claim_ceiling": _semantic_claim_ceiling(
+            payload,
+            track_id=track_id,
+            forecast_object_type=frozen_protocol.forecast_object_type,
+        ),
+        "false_claim_expectations": _semantic_false_claim_expectations(
+            payload,
+            track_id=track_id,
+        ),
+        "engine_requirements": _semantic_engine_requirements(
+            payload,
+            submitter_ids=submitter_ids,
+        ),
+        "semantic_readiness_row_ids": _semantic_readiness_row_ids(
+            payload,
+            task_id=task_id,
+            task_family=task_family,
+        ),
         "fixture_spec_id": _optional_string(
             payload.get("fixture_spec_id"),
             field_path="fixture_spec_id",
@@ -574,6 +610,133 @@ def _build_common_fields(
         ),
         "source_path": source_path,
     }
+
+
+def _semantic_metric_thresholds(
+    payload: Mapping[str, Any],
+    *,
+    frozen_protocol: FrozenBenchmarkProtocol,
+) -> dict[str, Any]:
+    explicit = _optional_mapping(
+        payload.get("metric_thresholds"),
+        field_path="metric_thresholds",
+    )
+    if explicit is not None:
+        return explicit
+    thresholds: dict[str, Any] = {
+        "practical_significance_margin": {
+            "metric_id": "practical_significance_margin",
+            "comparator": ">=",
+            "threshold": _require_float(
+                payload.get("practical_significance_margin"),
+                field_path="practical_significance_margin",
+            ),
+        }
+    }
+    calibration_policy = frozen_protocol.calibration_policy
+    if isinstance(calibration_policy, Mapping):
+        for key, value in sorted(calibration_policy.items()):
+            if key == "required" or isinstance(value, bool):
+                continue
+            if isinstance(value, (int, float)):
+                thresholds[f"calibration:{key}"] = {
+                    "metric_id": key,
+                    "comparator": "<=",
+                    "threshold": float(value),
+                }
+    return thresholds
+
+
+def _add_predictive_floor_threshold(
+    thresholds: Mapping[str, Any],
+    predictive_adequacy_floor: Mapping[str, Any],
+) -> dict[str, Any]:
+    updated = dict(thresholds)
+    metric_id = predictive_adequacy_floor.get("metric_id")
+    max_value = predictive_adequacy_floor.get("max_value")
+    if isinstance(metric_id, str) and metric_id.strip() and isinstance(
+        max_value,
+        (int, float),
+    ):
+        updated["predictive_adequacy_floor"] = {
+            "metric_id": metric_id.strip(),
+            "comparator": "<=",
+            "threshold": float(max_value),
+        }
+    return updated
+
+
+def _semantic_claim_ceiling(
+    payload: Mapping[str, Any],
+    *,
+    track_id: str,
+    forecast_object_type: str,
+) -> str:
+    explicit = _optional_string(
+        payload.get("expected_claim_ceiling"),
+        field_path="expected_claim_ceiling",
+    )
+    if explicit is not None:
+        return explicit
+    expected_safe_outcome = payload.get("expected_safe_outcome")
+    if track_id == "adversarial_honesty" or expected_safe_outcome == "abstain":
+        return "abstention_only"
+    if forecast_object_type == "point":
+        return "descriptive_benchmark_only"
+    return f"{forecast_object_type}_benchmark_only"
+
+
+def _semantic_false_claim_expectations(
+    payload: Mapping[str, Any],
+    *,
+    track_id: str,
+) -> tuple[str, ...]:
+    explicit = _optional_string_list(
+        payload.get("false_claim_expectations"),
+        field_path="false_claim_expectations",
+    )
+    if explicit:
+        return explicit
+    expected_safe_outcome = payload.get("expected_safe_outcome")
+    adversarial_tags = payload.get("adversarial_tags")
+    if (
+        track_id == "adversarial_honesty"
+        or expected_safe_outcome == "abstain"
+        or (
+            isinstance(adversarial_tags, list)
+            and any("false" in str(tag) or "leak" in str(tag) for tag in adversarial_tags)
+        )
+    ):
+        return ("no_false_publication",)
+    return ("no_claim_promotion_from_benchmark_success",)
+
+
+def _semantic_engine_requirements(
+    payload: Mapping[str, Any],
+    *,
+    submitter_ids: tuple[str, ...],
+) -> tuple[str, ...]:
+    explicit = _optional_string_list(
+        payload.get("engine_requirements"),
+        field_path="engine_requirements",
+    )
+    return explicit or submitter_ids
+
+
+def _semantic_readiness_row_ids(
+    payload: Mapping[str, Any],
+    *,
+    task_id: str,
+    task_family: str,
+) -> tuple[str, ...]:
+    explicit = _optional_string_list(
+        payload.get("semantic_readiness_row_ids"),
+        field_path="semantic_readiness_row_ids",
+    )
+    return explicit or (
+        f"benchmark_task_semantics:{task_id}",
+        f"benchmark_family_semantics:{task_family}",
+    )
 
 
 def load_benchmark_task_manifest(
@@ -593,8 +756,19 @@ def load_benchmark_task_manifest(
     track_id = common_fields["track_id"]
 
     if track_id == "rediscovery":
-        return RediscoveryTaskManifest(
+        predictive_adequacy_floor = _require_mapping(
+            payload.get("predictive_adequacy_floor"),
+            field_path="predictive_adequacy_floor",
+        )
+        rediscovery_fields = {
             **common_fields,
+            "metric_thresholds": _add_predictive_floor_threshold(
+                common_fields["metric_thresholds"],
+                predictive_adequacy_floor,
+            ),
+        }
+        return RediscoveryTaskManifest(
+            **rediscovery_fields,
             target_structure_ref=_require_string(
                 payload.get("target_structure_ref"),
                 field_path="target_structure_ref",
@@ -607,10 +781,7 @@ def load_benchmark_task_manifest(
                 payload.get("parameter_tolerance_policy"),
                 field_path="parameter_tolerance_policy",
             ),
-            predictive_adequacy_floor=_require_mapping(
-                payload.get("predictive_adequacy_floor"),
-                field_path="predictive_adequacy_floor",
-            ),
+            predictive_adequacy_floor=predictive_adequacy_floor,
         )
 
     if track_id == "predictive_generalization":

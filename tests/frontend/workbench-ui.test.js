@@ -7,7 +7,7 @@ const INDEX_PATH =
 const APP_PATH =
   "/Users/danielbloom/Desktop/euclid/src/euclid/_assets/workbench/app.js";
 const ANALYSIS_PATH =
-  "/Users/danielbloom/Desktop/euclid/build/workbench/20260420T010656Z-spy-price-close/analysis.json";
+  "/Users/danielbloom/Desktop/euclid/tests/frontend/workbench/fixtures/analysis-saved.json";
 
 const CONFIG_FIXTURE = {
   default_target_id: "price_close",
@@ -61,9 +61,9 @@ describe("workbench workspace redesign", () => {
       Array.from(document.querySelectorAll(".tab-button"), (button) =>
         button.textContent.trim(),
       ),
-    ).toContain("Workspace");
-    expect(document.body.textContent).toContain("SPY");
-    expect(document.body.textContent).toContain("Price Close");
+    ).toContain("Atlas");
+    expect(document.body.textContent).toContain(analysis.dataset.symbol);
+    expect(document.body.textContent).toContain(analysis.dataset.target.label);
   });
 
   it("renders a linked analytical workspace, point explanation, and decision-first evidence regions", async () => {
@@ -78,5 +78,55 @@ describe("workbench workspace redesign", () => {
     expect(document.querySelector('[data-point-story="lag-explanation"]')).toBeTruthy();
     expect(document.querySelector('[data-benchmark-region="outcome-strip"]')).toBeTruthy();
     expect(document.querySelector('[data-artifact-region="role-summary"]')).toBeTruthy();
+  });
+
+  it("renders the evidence studio claim, replay, provenance, and live boundary", async () => {
+    const { analysis, module } = await setupWorkbench();
+    analysis.evidence_studio = {
+      claim_surface: {
+        claim_lane: "descriptive",
+        claim_ceiling: "descriptive_structure",
+        publication_status: "abstained",
+        publishable: false,
+        abstention_reason_codes: ["robustness_failed"],
+        downgrade_reason_codes: ["operator_not_publishable"],
+        live_evidence_boundary: {
+          counts_as_scientific_claim_evidence: false,
+        },
+      },
+      live_evidence: {
+        status: "passed",
+        claim_boundary: {
+          counts_as_scientific_claim_evidence: false,
+        },
+      },
+      replay_artifacts: {
+        links: [
+          {
+            section: "operator_point",
+            role: "manifest_path",
+            value: "/tmp/workbench-run/operator-point.yaml",
+          },
+        ],
+      },
+      engine_provenance: {
+        point_lane: {
+          engine_id: "bounded_symbolic_search",
+        },
+      },
+      diagnostics: {},
+    };
+
+    module.__test__.adoptAnalysis(analysis);
+    module.__test__.render();
+
+    const evidenceText = document.querySelector(
+      '[data-workspace-region="evidence-rail"]',
+    ).textContent;
+    expect(evidenceText).toContain("Evidence Studio");
+    expect(evidenceText).toContain("descriptive");
+    expect(evidenceText).toContain("non-claim live evidence");
+    expect(evidenceText).toContain("bounded_symbolic_search");
+    expect(evidenceText).toContain("Replay links");
   });
 });

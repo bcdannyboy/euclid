@@ -3,795 +3,783 @@ kind: canonical_fixture_coverage_matrix
 coverage_plan_id: euclid_canonical_fixture_coverage@1.0.0
 decision_date: '2026-04-12'
 fixture_root: fixtures/canonical
-scope_statement: >-
-  Plan the full canonical Euclid fixture corpus as a closed object graph that
-  covers every major publication lane, forecast-object family, extension
-  surface, and validator-rejected failure mode without relying on implied
-  upstream instances.
+scope_statement: Plan the full canonical Euclid fixture corpus as a closed object
+  graph that covers every major publication lane, forecast-object family, extension
+  surface, and validator-rejected failure mode without relying on implied upstream
+  instances.
 source_inventory:
   fixture_walkthroughs:
-    - path: docs/examples/fixture-walkthroughs.md
-      reason: Family-level reading guide for the fixture corpus.
+  - path: docs/reference/examples/fixture-walkthroughs.md
+    reason: Family-level reading guide for the fixture corpus.
   canonical_math:
-    - path: docs/modeling-pipeline.md
-      reason: Lane, forecast-object, and abstention composition rules.
-    - path: docs/modeling-pipeline.md
-      reason: Predictive gate laws, confirmatory regimes, and shared-plus-local evaluation rules.
-    - path: docs/modeling-pipeline.md
-      reason: Mechanistic evidence requirements and downgrade effects.
-    - path: docs/search-core.md
-      reason: Shared-plus-local object law and non-admission conditions.
+  - path: docs/reference/modeling-pipeline.md
+    reason: Lane, forecast-object, and abstention composition rules.
+  - path: docs/reference/modeling-pipeline.md
+    reason: Predictive gate laws, confirmatory regimes, and shared-plus-local evaluation
+      rules.
+  - path: docs/reference/modeling-pipeline.md
+    reason: Mechanistic evidence requirements and downgrade effects.
+  - path: docs/reference/search-core.md
+    reason: Shared-plus-local object law and non-admission conditions.
   canonical_architecture:
-    - path: docs/contracts-manifests.md
-      reason: Runtime contract families, ownership groups, and publication bundle surfaces.
-    - path: docs/search-core.md
-      reason: Stage-by-stage artifact flow and failure boundaries.
+  - path: docs/reference/contracts-manifests.md
+    reason: Runtime contract families, ownership groups, and publication bundle surfaces.
+  - path: docs/reference/search-core.md
+    reason: Stage-by-stage artifact flow and failure boundaries.
 global_invariants:
-  - scenario manifests must materialize every typed ref as an object in the same bundle or in a declared shared bundle shipped with the corpus
-  - duplicate object_id values across the canonical fixture corpus are forbidden unless the object is intentionally shared and declared exactly once
-  - every accepted publication scenario must align run_result.result_mode, publication_record.publication_mode, and the publication lifecycle terminal state
-  - every rejected or blocked scenario must encode the stopping condition as a typed validator or lifecycle outcome rather than a prose-only note
-  - walkthrough markdown may explain scenarios but may not introduce ids, enums, or refs missing from the machine-readable fixture bundle
+- scenario manifests must materialize every typed ref as an object in the same bundle
+  or in a declared shared bundle shipped with the corpus
+- duplicate object_id values across the canonical fixture corpus are forbidden unless
+  the object is intentionally shared and declared exactly once
+- every accepted publication scenario must align run_result.result_mode, publication_record.publication_mode,
+  and the publication lifecycle terminal state
+- every rejected or blocked scenario must encode the stopping condition as a typed
+  validator or lifecycle outcome rather than a prose-only note
+- walkthrough markdown may explain scenarios but may not introduce ids, enums, or
+  refs missing from the machine-readable fixture bundle
 scenarios:
-  - scenario_id: descriptive-publication
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/descriptive-publication.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: descriptive_only
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - candidate_fitting
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/claim-lanes.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-      - schemas/contracts/abstention-types.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - fixtures/canonical/math/descriptive-only-analytic-piecewise.yaml
-      - docs/examples/fixture-walkthroughs.md
-
-  - scenario_id: predictive-publication-point
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/predictive-publication-point.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - point_score_policy_manifest@1.0.0
-      - point_score_result_manifest@1.0.0
-      - calibration_contract_manifest@1.0.0
-      - calibration_result_manifest@1.0.0
-      - predictive_gate_policy_manifest@1.1.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/forecast-object-types.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - fixtures/canonical/math/predictively-supported-point.yaml
-      - docs/examples/fixture-walkthroughs.md
-
-  - scenario_id: probabilistic-publication-distribution
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-distribution.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: distribution
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - calibration_result_manifest@1.0.0
-      - predictive_gate_policy_manifest@1.1.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/forecast-object-types.yaml
-      - probabilistic_score_policy_manifest
-      - distribution_calibration_policy_manifest
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - fixtures/canonical/math/predictively-supported-distribution.yaml
-      - docs/modeling-pipeline.md
-
-  - scenario_id: probabilistic-publication-interval
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-interval.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: interval
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - calibration_result_manifest@1.0.0
-      - predictive_gate_policy_manifest@1.1.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/forecast-object-types.yaml
-      - interval_score_policy_manifest
-      - interval_calibration_policy_manifest
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/modeling-pipeline.md
-      - docs/search-core.md
-
-  - scenario_id: probabilistic-publication-quantile
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-quantile.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: quantile
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - calibration_result_manifest@1.0.0
-      - predictive_gate_policy_manifest@1.1.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/forecast-object-types.yaml
-      - quantile_score_policy_manifest
-      - quantile_calibration_policy_manifest
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/modeling-pipeline.md
-      - docs/search-core.md
-
-  - scenario_id: probabilistic-publication-event-probability
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: event_probability
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - calibration_result_manifest@1.0.0
-      - predictive_gate_policy_manifest@1.1.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/forecast-object-types.yaml
-      - event_probability_score_policy_manifest
-      - event_probability_calibration_policy_manifest
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/modeling-pipeline.md
-      - docs/search-core.md
-
-  - scenario_id: mechanistic-publication
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/mechanistic-publication.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: mechanistically_compatible_hypothesis
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - external_evidence_ingestion
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - robustness
-      - mechanistic_evidence
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - mechanistic_lane_policy_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/mechanistic-evidence.yaml
-      - schemas/contracts/claim-lanes.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-      - boundary_specific_external_evidence
-    anchor_artifacts:
-      - fixtures/canonical/math/mechanistically-compatible-hypothesis.yaml
-      - docs/modeling-pipeline.md
-
-  - scenario_id: shared-plus-local-publication
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/shared-plus-local-publication.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - shared_plus_local_decomposition
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - shared_plus_local_decomposition_policy_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/shared-plus-local-evaluation.yaml
-      - schemas/contracts/composition-semantics.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - fixtures/canonical/math/shared-plus-local-predictive.yaml
-      - docs/search-core.md
-
-  - scenario_id: algorithmic-discovery-publication
-    scenario_class: positive_publication
-    planned_fixture_bundle: fixtures/canonical/publication/algorithmic-discovery-publication.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: distribution
-    expected_abstention_type: null
-    expected_failure_effect: none
-    required_modules:
-      - search_planning
-      - algorithmic_dsl
-      - candidate_fitting
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - algorithmic_dsl_manifest@1.1.0
-      - algorithmic_search_policy_manifest@1.0.0
-      - algorithmic_frontier_policy_manifest@1.0.0
-      - validation_scope_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - reproducibility_bundle_manifest@1.0.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/algorithmic-dsl.yaml
-      - schemas/contracts/search-classes.yaml
-      - schemas/contracts/rewrite-guarantees.yaml
-      - schemas/contracts/search-frontier.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - fixtures/canonical/math/predictively-supported-distribution.yaml
-      - docs/search-core.md
-
-  - scenario_id: abstention-only-publication
-    scenario_class: negative_publication
-    planned_fixture_bundle: fixtures/canonical/negative/abstention-only-publication.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: abstention_only_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: null
-    expected_forecast_object_type: null
-    expected_abstention_type: no_admissible_reducer
-    expected_failure_effect: typed_abstention_only
-    required_modules:
-      - candidate_fitting
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - abstention_manifest@1.1.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/abstention-types.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/examples/fixture-walkthroughs.md
-      - docs/modeling-pipeline.md
-
-  - scenario_id: inadmissible-candidate
-    scenario_class: negative_publication
-    planned_fixture_bundle: fixtures/canonical/negative/inadmissible-candidate.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: descriptive_only
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: rejected_candidate_removed_before_publication
-    required_modules:
-      - search_planning
-      - candidate_fitting
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - search_ledger_manifest@1.0.0
-      - rejected_diagnostics_manifest@1.0.0
-      - frozen_shortlist_manifest@1.0.0
-      - reducer_artifact_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/search-frontier.yaml
-      - schemas/contracts/claim-lanes.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/search-core.md
-      - docs/search-core.md
-
-  - scenario_id: failed-predictive-promotion
-    scenario_class: negative_publication
-    planned_fixture_bundle: fixtures/canonical/negative/failed-predictive-promotion.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: descriptive_only
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: downgrade_to_descriptive_only_without_abstention
-    expected_reason_codes:
-      - holdout_exhausted
-      - fresh_replication_required
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - point_score_result_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/claim-lanes.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/examples/fixture-walkthroughs.md
-      - docs/modeling-pipeline.md
-
-  - scenario_id: probabilistic-gate-failure
-    scenario_class: negative_publication
-    planned_fixture_bundle: fixtures/canonical/negative/probabilistic-gate-failure.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: descriptive_only
-    expected_forecast_object_type: distribution
-    expected_abstention_type: null
-    expected_failure_effect: probabilistic_predictive_gate_blocks_upgrade_but_preserves_typed_evaluation_evidence
-    required_modules:
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - probabilistic_evaluation
-      - scoring
-      - robustness
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - prediction_artifact_manifest@1.1.0
-      - calibration_result_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/forecast-object-types.yaml
-      - probabilistic_score_policy_manifest
-      - distribution_calibration_policy_manifest
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-    anchor_artifacts:
-      - docs/search-core.md
-      - docs/modeling-pipeline.md
-
-  - scenario_id: mechanistic-evidence-insufficiency
-    scenario_class: negative_publication
-    planned_fixture_bundle: fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: candidate_publication
-    expected_terminal_lifecycle_state: publication_completed
-    expected_claim_lane: predictively_supported
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: downgrade_to_predictively_supported
-    required_modules:
-      - external_evidence_ingestion
-      - split_planning
-      - evaluation_governance
-      - timeguard
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - robustness
-      - mechanistic_evidence
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - mechanistic_lane_policy_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - claim_card_manifest@1.1.0
-      - run_result_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/mechanistic-evidence.yaml
-      - schemas/contracts/claim-lanes.yaml
-    required_evidence_classes:
-      - descriptive_compression
-      - predictive_generalization
-      - robustness
-      - replay_verification
-      - readiness_and_closure
-      - boundary_specific_external_evidence
-    anchor_artifacts:
-      - docs/modeling-pipeline.md
-      - fixtures/canonical/math/mechanistically-compatible-hypothesis.yaml
-
-  - scenario_id: shared-plus-local-contract-failure
-    scenario_class: blocked_publication
-    planned_fixture_bundle: fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: publication_blocked
-    expected_terminal_lifecycle_state: publication_blocked
-    expected_claim_lane: null
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: shared_plus_local_publication_blocked_by_missing_entity_weights_or_unseen_entity_policy
-    expected_reason_codes:
-      - shared_plus_local_decomposition_deferred_from_scope
-    required_modules:
-      - shared_plus_local_decomposition
-      - split_planning
-      - evaluation_governance
-      - candidate_fitting
-      - evaluation
-      - scoring
-      - gate_lifecycle
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - shared_plus_local_decomposition_policy_manifest@1.0.0
-      - validation_scope_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-      - run_result_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/shared-plus-local-evaluation.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-    required_evidence_classes:
-      - predictive_generalization
-      - replay_verification
-    anchor_artifacts:
-      - docs/examples/fixture-walkthroughs.md
-      - docs/search-core.md
-
-  - scenario_id: illegal-time-access
-    scenario_class: blocked_publication
-    planned_fixture_bundle: fixtures/canonical/negative/illegal-time-access.yaml
-    validator_disposition: must_accept
-    expected_publication_mode: publication_blocked
-    expected_terminal_lifecycle_state: publication_blocked
-    expected_claim_lane: null
-    expected_forecast_object_type: point
-    expected_abstention_type: null
-    expected_failure_effect: predictive_path_stops_before_claim_binding_when_time_safety_fails
-    expected_reason_codes:
-      - future_target_feature_detected
-      - feature_available_after_origin
-    required_modules:
-      - ingestion
-      - snapshotting
-      - timeguard
-      - features
-      - split_planning
-      - evaluation
-      - gate_lifecycle
-      - replay
-    required_schema_families:
-      - time_safety_audit_manifest@1.0.0
-      - validation_scope_manifest@1.0.0
-      - scorecard_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/evaluation-governance.yaml
-      - schemas/contracts/run-lifecycle.yaml
-    required_evidence_classes:
-      - predictive_generalization
-    anchor_artifacts:
-      - docs/examples/fixture-walkthroughs.md
-      - docs/search-core.md
-
-  - scenario_id: illegal-ref-shape
-    scenario_class: invalid_fixture
-    planned_fixture_bundle: fixtures/canonical/invalid/illegal-ref-shape.yaml
-    validator_disposition: must_reject
-    expected_publication_mode: none
-    expected_terminal_lifecycle_state: not_applicable_fixture_rejected
-    expected_claim_lane: null
-    expected_forecast_object_type: null
-    expected_abstention_type: null
-    expected_failure_effect: typed_ref_validation_fails_before_lifecycle_entry
-    required_modules:
-      - manifest_registry
-      - claims
-      - replay
-      - catalog_publishing
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - claim_card_manifest@1.1.0
-      - publication_record_manifest@1.1.0
-    required_contract_families:
-      - schemas/contracts/reference-types.yaml
-      - schemas/contracts/schema-registry.yaml
-    required_evidence_classes: []
-    anchor_artifacts:
-      - docs/contracts-manifests.md
-      - tests/unit/contracts/test_refs.py
-
-  - scenario_id: unresolved-scope-violation
-    scenario_class: invalid_fixture
-    planned_fixture_bundle: fixtures/canonical/invalid/unresolved-scope-violation.yaml
-    validator_disposition: must_reject
-    expected_publication_mode: none
-    expected_terminal_lifecycle_state: not_applicable_fixture_rejected
-    expected_claim_lane: null
-    expected_forecast_object_type: null
-    expected_abstention_type: null
-    expected_failure_effect: scope_axes_or_deferred_scope_refs_are_incoherent_with_the_declared_bundle
-    required_modules:
-      - search_planning
-      - shared_plus_local_decomposition
-      - algorithmic_dsl
-      - claims
-    required_schema_families:
-      - validation_scope_manifest@1.0.0
-      - shared_plus_local_decomposition_policy_manifest@1.0.0
-      - algorithmic_search_policy_manifest@1.0.0
-      - algorithmic_frontier_policy_manifest@1.0.0
-    required_contract_families:
-      - schemas/contracts/reference-types.yaml
-      - schemas/contracts/run-lifecycle.yaml
-      - schemas/contracts/publication-lifecycle.yaml
-    required_evidence_classes: []
-    anchor_artifacts:
-      - docs/examples/fixture-walkthroughs.md
-      - docs/search-core.md
+- scenario_id: descriptive-publication
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/descriptive-publication.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: descriptive_only
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - candidate_fitting
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/claim-lanes.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  - schemas/contracts/abstention-types.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - fixtures/canonical/math/descriptive-only-analytic-piecewise.yaml
+  - docs/reference/examples/fixture-walkthroughs.md
+- scenario_id: predictive-publication-point
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/predictive-publication-point.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - point_score_policy_manifest@1.0.0
+  - point_score_result_manifest@1.0.0
+  - calibration_contract_manifest@1.0.0
+  - calibration_result_manifest@1.0.0
+  - predictive_gate_policy_manifest@1.1.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - fixtures/canonical/math/predictively-supported-point.yaml
+  - docs/reference/examples/fixture-walkthroughs.md
+- scenario_id: probabilistic-publication-distribution
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-distribution.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: distribution
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - calibration_result_manifest@1.0.0
+  - predictive_gate_policy_manifest@1.1.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - probabilistic_score_policy_manifest
+  - distribution_calibration_policy_manifest
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - fixtures/canonical/math/predictively-supported-distribution.yaml
+  - docs/reference/modeling-pipeline.md
+- scenario_id: probabilistic-publication-interval
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-interval.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: interval
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - calibration_result_manifest@1.0.0
+  - predictive_gate_policy_manifest@1.1.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - interval_score_policy_manifest
+  - interval_calibration_policy_manifest
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/search-core.md
+- scenario_id: probabilistic-publication-quantile
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-quantile.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: quantile
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - calibration_result_manifest@1.0.0
+  - predictive_gate_policy_manifest@1.1.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - quantile_score_policy_manifest
+  - quantile_calibration_policy_manifest
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/search-core.md
+- scenario_id: probabilistic-publication-event-probability
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/probabilistic-publication-event-probability.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: event_probability
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - calibration_result_manifest@1.0.0
+  - predictive_gate_policy_manifest@1.1.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - event_probability_score_policy_manifest
+  - event_probability_calibration_policy_manifest
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/search-core.md
+- scenario_id: mechanistic-publication
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/mechanistic-publication.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: mechanistically_compatible_hypothesis
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - external_evidence_ingestion
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - mechanistic_evidence
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - mechanistic_lane_policy_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/mechanistic-evidence.yaml
+  - schemas/contracts/claim-lanes.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  - boundary_specific_external_evidence
+  anchor_artifacts:
+  - fixtures/canonical/math/mechanistically-compatible-hypothesis.yaml
+  - docs/reference/modeling-pipeline.md
+- scenario_id: shared-plus-local-publication
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/shared-plus-local-publication.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - shared_plus_local_decomposition
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - shared_plus_local_decomposition_policy_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/shared-plus-local-evaluation.yaml
+  - schemas/contracts/composition-semantics.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - fixtures/canonical/math/shared-plus-local-predictive.yaml
+  - docs/reference/search-core.md
+- scenario_id: algorithmic-discovery-publication
+  scenario_class: positive_publication
+  planned_fixture_bundle: fixtures/canonical/publication/algorithmic-discovery-publication.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: distribution
+  expected_abstention_type: null
+  expected_failure_effect: none
+  required_modules:
+  - search_planning
+  - algorithmic_dsl
+  - candidate_fitting
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - algorithmic_dsl_manifest@1.1.0
+  - algorithmic_search_policy_manifest@1.0.0
+  - algorithmic_frontier_policy_manifest@1.0.0
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - reproducibility_bundle_manifest@1.0.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/algorithmic-dsl.yaml
+  - schemas/contracts/search-classes.yaml
+  - schemas/contracts/rewrite-guarantees.yaml
+  - schemas/contracts/search-frontier.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - fixtures/canonical/math/predictively-supported-distribution.yaml
+  - docs/reference/search-core.md
+- scenario_id: abstention-only-publication
+  scenario_class: negative_publication
+  planned_fixture_bundle: fixtures/canonical/negative/abstention-only-publication.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: abstention_only_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: null
+  expected_forecast_object_type: null
+  expected_abstention_type: no_admissible_reducer
+  expected_failure_effect: typed_abstention_only
+  required_modules:
+  - candidate_fitting
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - abstention_manifest@1.1.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/abstention-types.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/examples/fixture-walkthroughs.md
+  - docs/reference/modeling-pipeline.md
+- scenario_id: inadmissible-candidate
+  scenario_class: negative_publication
+  planned_fixture_bundle: fixtures/canonical/negative/inadmissible-candidate.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: descriptive_only
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: rejected_candidate_removed_before_publication
+  required_modules:
+  - search_planning
+  - candidate_fitting
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - search_ledger_manifest@1.0.0
+  - rejected_diagnostics_manifest@1.0.0
+  - frozen_shortlist_manifest@1.0.0
+  - reducer_artifact_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/search-frontier.yaml
+  - schemas/contracts/claim-lanes.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/search-core.md
+  - docs/reference/search-core.md
+- scenario_id: failed-predictive-promotion
+  scenario_class: negative_publication
+  planned_fixture_bundle: fixtures/canonical/negative/failed-predictive-promotion.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: descriptive_only
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: downgrade_to_descriptive_only_without_abstention
+  expected_reason_codes:
+  - holdout_exhausted
+  - fresh_replication_required
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - point_score_result_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/claim-lanes.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/examples/fixture-walkthroughs.md
+  - docs/reference/modeling-pipeline.md
+- scenario_id: probabilistic-gate-failure
+  scenario_class: negative_publication
+  planned_fixture_bundle: fixtures/canonical/negative/probabilistic-gate-failure.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: descriptive_only
+  expected_forecast_object_type: distribution
+  expected_abstention_type: null
+  expected_failure_effect: probabilistic_predictive_gate_blocks_upgrade_but_preserves_typed_evaluation_evidence
+  required_modules:
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - probabilistic_evaluation
+  - scoring
+  - robustness
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - prediction_artifact_manifest@1.1.0
+  - calibration_result_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/forecast-object-types.yaml
+  - probabilistic_score_policy_manifest
+  - distribution_calibration_policy_manifest
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  anchor_artifacts:
+  - docs/reference/search-core.md
+  - docs/reference/modeling-pipeline.md
+- scenario_id: mechanistic-evidence-insufficiency
+  scenario_class: negative_publication
+  planned_fixture_bundle: fixtures/canonical/negative/mechanistic-evidence-insufficiency.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: candidate_publication
+  expected_terminal_lifecycle_state: publication_completed
+  expected_claim_lane: predictively_supported
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: downgrade_to_predictively_supported
+  required_modules:
+  - external_evidence_ingestion
+  - split_planning
+  - evaluation_governance
+  - timeguard
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - robustness
+  - mechanistic_evidence
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - mechanistic_lane_policy_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - claim_card_manifest@1.1.0
+  - run_result_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/mechanistic-evidence.yaml
+  - schemas/contracts/claim-lanes.yaml
+  required_evidence_classes:
+  - descriptive_compression
+  - predictive_generalization
+  - robustness
+  - replay_verification
+  - readiness_and_closure
+  - boundary_specific_external_evidence
+  anchor_artifacts:
+  - docs/reference/modeling-pipeline.md
+  - fixtures/canonical/math/mechanistically-compatible-hypothesis.yaml
+- scenario_id: shared-plus-local-contract-failure
+  scenario_class: blocked_publication
+  planned_fixture_bundle: fixtures/canonical/negative/shared-plus-local-contract-failure.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: publication_blocked
+  expected_terminal_lifecycle_state: publication_blocked
+  expected_claim_lane: null
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: shared_plus_local_publication_blocked_by_missing_entity_weights_or_unseen_entity_policy
+  expected_reason_codes:
+  - shared_plus_local_decomposition_deferred_from_scope
+  required_modules:
+  - shared_plus_local_decomposition
+  - split_planning
+  - evaluation_governance
+  - candidate_fitting
+  - evaluation
+  - scoring
+  - gate_lifecycle
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - shared_plus_local_decomposition_policy_manifest@1.0.0
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  - run_result_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/shared-plus-local-evaluation.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  required_evidence_classes:
+  - predictive_generalization
+  - replay_verification
+  anchor_artifacts:
+  - docs/reference/examples/fixture-walkthroughs.md
+  - docs/reference/search-core.md
+- scenario_id: illegal-time-access
+  scenario_class: blocked_publication
+  planned_fixture_bundle: fixtures/canonical/negative/illegal-time-access.yaml
+  validator_disposition: must_accept
+  expected_publication_mode: publication_blocked
+  expected_terminal_lifecycle_state: publication_blocked
+  expected_claim_lane: null
+  expected_forecast_object_type: point
+  expected_abstention_type: null
+  expected_failure_effect: predictive_path_stops_before_claim_binding_when_time_safety_fails
+  expected_reason_codes:
+  - future_target_feature_detected
+  - feature_available_after_origin
+  required_modules:
+  - ingestion
+  - snapshotting
+  - timeguard
+  - features
+  - split_planning
+  - evaluation
+  - gate_lifecycle
+  - replay
+  required_schema_families:
+  - time_safety_audit_manifest@1.0.0
+  - validation_scope_manifest@1.0.0
+  - scorecard_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/evaluation-governance.yaml
+  - schemas/contracts/run-lifecycle.yaml
+  required_evidence_classes:
+  - predictive_generalization
+  anchor_artifacts:
+  - docs/reference/examples/fixture-walkthroughs.md
+  - docs/reference/search-core.md
+- scenario_id: illegal-ref-shape
+  scenario_class: invalid_fixture
+  planned_fixture_bundle: fixtures/canonical/invalid/illegal-ref-shape.yaml
+  validator_disposition: must_reject
+  expected_publication_mode: none
+  expected_terminal_lifecycle_state: not_applicable_fixture_rejected
+  expected_claim_lane: null
+  expected_forecast_object_type: null
+  expected_abstention_type: null
+  expected_failure_effect: typed_ref_validation_fails_before_lifecycle_entry
+  required_modules:
+  - manifest_registry
+  - claims
+  - replay
+  - catalog_publishing
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - claim_card_manifest@1.1.0
+  - publication_record_manifest@1.1.0
+  required_contract_families:
+  - schemas/contracts/reference-types.yaml
+  - schemas/contracts/schema-registry.yaml
+  required_evidence_classes: []
+  anchor_artifacts:
+  - docs/reference/contracts-manifests.md
+  - tests/unit/contracts/test_refs.py
+- scenario_id: unresolved-scope-violation
+  scenario_class: invalid_fixture
+  planned_fixture_bundle: fixtures/canonical/invalid/unresolved-scope-violation.yaml
+  validator_disposition: must_reject
+  expected_publication_mode: none
+  expected_terminal_lifecycle_state: not_applicable_fixture_rejected
+  expected_claim_lane: null
+  expected_forecast_object_type: null
+  expected_abstention_type: null
+  expected_failure_effect: scope_axes_or_deferred_scope_refs_are_incoherent_with_the_declared_bundle
+  required_modules:
+  - search_planning
+  - shared_plus_local_decomposition
+  - algorithmic_dsl
+  - claims
+  required_schema_families:
+  - validation_scope_manifest@1.0.0
+  - shared_plus_local_decomposition_policy_manifest@1.0.0
+  - algorithmic_search_policy_manifest@1.0.0
+  - algorithmic_frontier_policy_manifest@1.0.0
+  required_contract_families:
+  - schemas/contracts/reference-types.yaml
+  - schemas/contracts/run-lifecycle.yaml
+  - schemas/contracts/publication-lifecycle.yaml
+  required_evidence_classes: []
+  anchor_artifacts:
+  - docs/reference/examples/fixture-walkthroughs.md
+  - docs/reference/search-core.md

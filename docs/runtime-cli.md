@@ -37,9 +37,12 @@ The demo tree remains packaged because the repo still ships retained local demos
 
 Runtime assets resolve through `euclid.operator_runtime.resources`. Packaged
 assets under `src/euclid/_assets` are canonical for examples, fixtures,
-contracts, readiness policies, notebooks, and workbench files. Root-level public
-mirrors are not assumed by runtime code; tests must use the resolver instead of
-hard-coded checkout paths such as `examples/current_release_run.yaml`.
+contracts, readiness policies, notebooks, and workbench files. When
+`project_root` or `EUCLID_PROJECT_ROOT` points at a checkout, the resolver
+prefers `src/euclid/_assets` and then the checkout mirror. Direct CLI paths such
+as `examples/current_release_run.yaml` remain runnable in the checkout; packaged
+asset tests should use the resolver when they are proving wheel/runtime
+resource behavior.
 
 Missing packaged assets raise `EuclidAssetError` with code
 `euclid_asset_missing`. This replaces generic file-existence behavior so release
@@ -47,12 +50,14 @@ and replay failures carry typed evidence.
 
 ## Numerical Runtime
 
-The runtime dependency foundation includes NumPy, pandas, SciPy, SymPy, Pint,
-statsmodels, scikit-learn, PySINDy, PySR, egglog, joblib, SQLAlchemy, Pydantic,
-PyYAML, Typer, PyArrow, httpx, python-dotenv, vcrpy, responses/respx,
-pytest-timeout, pytest-xdist, and Hypothesis. Ray is intentionally optional via
-the `distributed` extra because distributed execution is a policy decision, not
-a default local requirement.
+The declared runtime and dev/test dependency foundation includes NumPy, pandas,
+SciPy, SymPy, Pint, statsmodels, scikit-learn, PySINDy, PySR, egglog, joblib,
+SQLAlchemy, Pydantic, PyYAML, Typer, PyArrow, httpx, python-dotenv, vcrpy,
+responses/respx, pytest-timeout, pytest-xdist, and Hypothesis. The pytest
+commands in this repository require the dev/test dependencies because
+`pyproject.toml` enables strict config and `pytest-timeout`. Ray is
+intentionally optional via the `distributed` extra because distributed execution
+is a policy decision, not a default local requirement.
 
 Replay bundles record numerical environment metadata through
 `euclid.runtime.numerical_environment`: Python version, package versions, Julia
@@ -148,12 +153,12 @@ These lanes change required artifacts, admissibility rules, and publication beha
 
 Operational scripts in `scripts/` cover smoke and packaging paths:
 
-- `benchmark_smoke.sh`
-- `benchmark_suite.sh`
-- `demo.sh`
-- `install_smoke.sh`
-- `release_smoke.sh`
-- `fmp_euclid_smoke.py`
-- `workbench_ui_smoke.py`
+- `scripts/benchmark_smoke.sh`
+- `scripts/benchmark_suite.sh`
+- `scripts/demo.sh`
+- `scripts/install_smoke.sh`
+- `scripts/release_smoke.sh`
+- `scripts/fmp_euclid_smoke.py`
+- `scripts/workbench_ui_smoke.py`
 
 They exercise public entrypoints, but they do not replace the release and readiness gates in `src/euclid/release.py`.

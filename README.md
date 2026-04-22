@@ -74,6 +74,7 @@ Compatibility-only entrypoints:
 - `docs/reference/system.md`: the big picture, the main subsystems, and the end-to-end lifecycle
 - `docs/reference/runtime-cli.md`: the main CLI surface, replay model, workspace layout, and extension lanes
 - `docs/reference/modeling-pipeline.md`: how Euclid turns ordered data into candidate laws, scores, and publication outcomes
+- `docs/math.md`: the implemented formulas for coding, fitting, scoring, stochastic support, rewrites, invariance, and promotion boundaries
 - `docs/reference/search-core.md`: the mathematical search layer, CIR, reducer families, description gain, and algorithmic DSL
 - `docs/reference/contracts-manifests.md`: the formal specification layer for schemas, manifests, object identity, and registries
 - `docs/reference/benchmarks-readiness.md`: benchmarks, release scopes, readiness rules, and packaging outputs

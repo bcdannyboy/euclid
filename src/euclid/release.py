@@ -413,25 +413,45 @@ def _requirement_distribution_name(requirement: str) -> str:
     return match.group(0)
 
 
+def _requirement_marker_applies(requirement: Any, *, extra_context: str) -> bool:
+    if requirement.marker is None:
+        return True
+    return bool(requirement.marker.evaluate({"extra": extra_context}))
+
+
 def _runtime_dependency_distribution_names(checkout_root: Path) -> tuple[str, ...]:
     from packaging.requirements import Requirement
 
-    pending = list(_declared_runtime_requirements(checkout_root))
+    pending = [
+        (requirement, "")
+        for requirement in _declared_runtime_requirements(checkout_root)
+    ]
     discovered: dict[str, str] = {}
+    processed_extra_contexts: dict[str, set[str]] = {}
 
     while pending:
-        raw_requirement = pending.pop()
+        raw_requirement, parent_extra_context = pending.pop()
         parsed_requirement = Requirement(raw_requirement)
-        if parsed_requirement.marker is not None and not parsed_requirement.marker.evaluate():
+        if not _requirement_marker_applies(
+            parsed_requirement,
+            extra_context=parent_extra_context,
+        ):
             continue
         distribution_name = parsed_requirement.name
         normalized_name = distribution_name.lower().replace("-", "_")
-        if normalized_name in discovered:
+        selected_extra_contexts = {""} | {
+            str(extra) for extra in parsed_requirement.extras
+        }
+        already_processed = processed_extra_contexts.setdefault(normalized_name, set())
+        unprocessed_extra_contexts = selected_extra_contexts - already_processed
+        if normalized_name in discovered and not unprocessed_extra_contexts:
             continue
         distribution = importlib_metadata.distribution(distribution_name)
         discovered[normalized_name] = str(distribution.metadata["Name"])
+        already_processed.update(unprocessed_extra_contexts)
         for nested_requirement in distribution.requires or ():
-            pending.append(str(nested_requirement))
+            for extra_context in sorted(unprocessed_extra_contexts):
+                pending.append((str(nested_requirement), extra_context))
 
     return tuple(sorted(discovered.values(), key=str.lower))
 

@@ -124,7 +124,9 @@ Important suites:
 
 - `tests/unit/workbench/*`
 - `tests/frontend/workbench/*.js`
-- `tests/integration/test_workbench_analysis.py`
+- `tests/unit/workbench/test_service.py`
+- `tests/unit/workbench/test_evidence_studio.py`
+- `tests/unit/workbench/test_explainer.py`
 - `scripts/workbench_ui_smoke.py`
 
 These tests pin:

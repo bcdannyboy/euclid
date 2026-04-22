@@ -203,7 +203,7 @@ where $\beta_{1,e}$ comes from shared lag + local lag adjustment (or explicit lo
 Probabilistic artifacts are built from point paths by attaching Gaussian location-scale support per horizon.
 
 - Location always equals point forecast for that horizon.
-- Scale uses family-specific growth from a base scale $s_0$.
+- Scale is fitted through the retained residual stochastic model with the declared `sqrt_horizon` scale law. It is not family-specific in the current implementation.
 
 ### 6.1 Base scale
 
@@ -211,12 +211,21 @@ $$
 s_0 = \max\left(\sqrt{\frac{\max(\text{final\_loss},0)}{\max(N,1)}},\;0.25 + 0.05\,\max_j |\theta_j|\right).
 $$
 
-### 6.2 Horizon scaling by family
+### 6.2 Horizon scaling
 
-- Analytic: $s_h=s_0\sqrt{h}$
-- Recursive: $s_h=s_0(1+0.15(h-1))$
-- Spectral: $s_h=s_0(1+(A/10)h)$, with $A=\max(|a|,|b|,1)$
-- Algorithmic: $s_h=s_0(1+0.2(h-1))$
+`src/euclid/modules/probabilistic_evaluation.py` passes the residual proxy
+$(-s_0, s_0)$ into `fit_residual_stochastic_model(...)` with
+`family_id="gaussian"` and `horizon_scale_law="sqrt_horizon"`.
+The fitted residual location is therefore 0, the residual scale is $s_0$, and
+every supported family currently uses:
+
+$$
+s_h=s_0\sqrt{h}.
+$$
+
+The implementation also supports `constant` and `linear_horizon` laws inside
+`src/euclid/stochastic/process_models.py`, but the retained probabilistic
+evaluation path does not select them.
 
 ## 7) Forecast object derivations
 
@@ -350,7 +359,101 @@ $|\hat h_\tau-\tau|$. Use max gap across levels; pass if $\le$ threshold (defaul
 
 Group rows by predicted probability $p$, compare empirical event frequency in each bin to $p$, and take maximum absolute reliability gap. Pass if $\le$ threshold (default 0.2).
 
-## 12) Numerical policy notes
+## 12) Rewrite and equality-saturation behavior
+
+Production rewrite evidence is deliberately narrower than algebraic truth in the
+abstract.
+
+- `src/euclid/rewrites/rules.py` registers exact rewrite rules with declared side
+  conditions, unit policies, and domain policies.
+- Every built-in rule has `publication_semantics =
+  rewrite_evidence_only_not_claim`.
+- Unsafe rewrites fail closed with `unsafe_rewrite_rejected`; examples include
+  dimensioned `log(exp(x))`, unit-changing identities, missing nonzero
+  denominator assumptions, and `sqrt(x^2) -> x` without a nonnegative
+  assumption.
+- `src/euclid/rewrites/sympy_simplifier.py` records applied and rejected rule
+  evidence and verifies equivalence through the expression bridge.
+- `src/euclid/rewrites/egglog_runner.py` uses egglog when the package is
+  importable and otherwise records the `sympy_egraph_fallback` backend.
+  Resource limits return `status="partial"` with an omission disclosure rather
+  than a completeness claim.
+
+Equality saturation evidence is therefore rewrite-neighborhood evidence plus
+cost extraction. It is not proof that every algebraic form or every domain-safe
+rewrite was explored.
+
+## 13) Invariance and transport gates
+
+Invariance gates are implemented in `src/euclid/invariance/gates.py` and
+`src/euclid/invariance/scoring.py`. They are claim-lane gates, not universal-law
+proof.
+
+For environment-indexed residual sets $R_e$, parameter maps $\theta_e$, support
+sets $S_e$, and optional train/holdout losses, the retained metrics are:
+`residual_spread`, `max_parameter_drift`, `min_support_jaccard`, and
+`max_holdout_degradation`.
+
+$$
+\text{residual\_spread}
+= \max_e \operatorname{mean}_{r\in R_e}|r|
+  - \min_e \operatorname{mean}_{r\in R_e}|r|,
+$$
+
+$$
+\text{max\_parameter\_drift}
+= \max_j \left(\max_e \theta_{e,j} - \min_e \theta_{e,j}\right),
+$$
+
+$$
+\text{min\_support\_jaccard}
+= \min_{e\ne e'} \frac{|S_e\cap S_{e'}|}{|S_e\cup S_{e'}|},
+$$
+
+$$
+\text{max\_holdout\_degradation}
+= \max_e(\text{holdout\_loss}_e-\text{train\_loss}_e).
+$$
+
+The default invariance pass thresholds are:
+
+- at least 2 constructed environments
+- residual spread $\le 0.05$
+- max parameter drift $\le 0.05$
+- min support Jaccard $\ge 1.0$
+- max holdout degradation $\le 0.1$
+
+Transport uses source and target environment ids plus target holdout scores. It
+passes only when source ids and target ids are present, target holdout scores are
+present, and:
+
+$$
+\max_t(\text{target\_loss}_t-\text{source\_loss}_t)\le 0.25
+$$
+
+under the default threshold. `claim_lane_allowed` is true only when the
+corresponding evaluation status is `passed`.
+
+## 14) Claim promotion boundaries
+
+Mathematical artifacts do not promote themselves.
+
+- Descriptive coding can admit a descriptive candidate, but it is not claim
+  authority for predictive publication.
+- Point predictions can support `predictive_within_declared_scope` only after
+  scorecard, comparator, time-safety, robustness, replay, and readiness
+  requirements close.
+- Non-point probabilistic objects require object-specific scoring and successful
+  calibration for probabilistic publication.
+- A joined deterministic-plus-stochastic equation can be surfaced only when the
+  publishable point lane and publishable probabilistic lane share the same
+  validation scope and publication record.
+- External-engine outputs, rewrite traces, live API success, and benchmark files
+  are evidence inputs or runtime diagnostics. They do not become scientific
+  claim evidence without the Euclid-owned CIR, fitting, scoring, replay,
+  calibration/readiness, and publication gates.
+
+## 15) Numerical policy notes
 
 - Euclid frequently applies a 12-decimal rounding normalization (`_stable_float`) before emitting artifacts/scores, improving deterministic reproducibility.
 - Non-finite values (NaN/Inf) cause comparability failure or missing-origin diagnostics depending on stage.

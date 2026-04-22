@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from euclid.cli import app
@@ -16,6 +17,7 @@ def _completion_report(project_root: Path) -> dict[str, object]:
     return json.loads(report_path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.timeout(600)
 def test_shipped_releasable_is_not_alias_of_current_release(
     project_root: Path,
 ) -> None:
@@ -50,6 +52,7 @@ def test_shipped_releasable_is_not_alias_of_current_release(
     )
 
 
+@pytest.mark.timeout(600)
 def test_shipped_releasable_requires_packaging_install_evidence(
     project_root: Path,
 ) -> None:

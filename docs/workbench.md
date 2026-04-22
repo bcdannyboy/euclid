@@ -36,13 +36,13 @@ Routes:
 
 ## Analysis flow
 
-`create_workbench_analysis(...)` in `service.py`:
+`create_workbench_analysis(...)` in `src/euclid/workbench/service.py`:
 
 1. fetches FMP history
 2. requires explicit date range selection
 3. transforms the chosen target
 4. runs point, probabilistic, and benchmark analysis lanes
-5. writes workspace artifacts and `analysis.json`
+5. writes workspace artifacts and output-root-local `analysis.json`
 
 `normalize_analysis_payload(...)` then does the work that matters for interpretation: it rebuilds the saved run into a conservative UI-facing claim taxonomy. The workbench does not simply echo raw payloads back to the browser. It keeps only the surfaces that still clear structural and publication gates after normalization:
 
@@ -88,7 +88,7 @@ In practice that means the app refuses to promote:
 - probabilistic lanes whose calibration status does not have a `publishable` gate effect
 - runs with abstention or incomplete evidence refs into higher symbolic claim classes
 
-This logic is split between `service.py`, which normalizes and classifies the payload, and `app.js`, which rechecks whether a card, overlay, or headline is allowed to present itself as authoritative.
+This logic is split between `src/euclid/workbench/service.py`, which normalizes and classifies the payload, and `src/euclid/_assets/workbench/app.js`, which rechecks whether a card, overlay, or headline is allowed to present itself as authoritative.
 
 ## Frontend behavior
 
@@ -118,7 +118,7 @@ It also has explicit busy, failure, no-winner, and explainer-fallback states.
 
 ## Explainer flow
 
-`src/euclid/workbench/explainer.py` builds page-scoped snapshots and uses the OpenAI Responses API to create structured explanation bundles. It retries with a more compact request when the first pass times out or truncates.
+`src/euclid/workbench/explainer.py` builds page-scoped snapshots and uses the OpenAI Responses API to create structured explanation bundles when `OPENAI_API_KEY` is available. Without that key, it records `status="unavailable"` with `reason_code="missing_openai_api_key"` and leaves the rest of the workbench usable. It retries with a more compact request when the first pass times out or truncates.
 
 The backend generates explainer pages for:
 

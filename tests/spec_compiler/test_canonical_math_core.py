@@ -99,7 +99,7 @@ def test_reference_math_core_docs_exist_with_live_front_matter_and_sections() ->
         assert section in modeling_body
 
     for required_string in {
-        "`modules/shared_plus_local_decomposition.py` handles panel-specific shared-plus-local fitting and unseen-entity constraints.",
+        "`src/euclid/modules/shared_plus_local_decomposition.py` handles panel-specific shared-plus-local fitting and unseen-entity constraints.",
         "Cross-object comparisons are invalid by design.",
         "Publication requires replay-verifiable bundles.",
         "distribution",

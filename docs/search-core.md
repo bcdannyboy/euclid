@@ -129,3 +129,10 @@ It still proves replay, robustness, and release behavior, but it is a smaller wo
 - `src/euclid/math/codelength.py`
 - `src/euclid/math/quantization.py`
 - `src/euclid/math/reference_descriptions.py`
+
+
+## Engine provenance and fitting diagnostics
+
+Search engines disclose their provenance, resource budget, timeout behavior, and replay seed before their candidates can support a claim lane. PySINDy and PySR adapters enter through the same candidate intermediate representation as native reducers. External engine output is proposal evidence only: it cannot publish a claim directly and must still pass Euclid-owned CIR closure, fitting, scoring, replay, falsification, and publication gates. Equality-saturation and rewrite traces are evidence about the explored neighborhood, not proof that every algebraic form was explored. Stochastic restarts report seeds and restart counts, and bounded engines report proposal limits and graceful degradation.
+
+Law-eligible publication is not the same as candidate discovery. A backend may find a candidate that remains descriptive only, downgraded, or abstained because score, calibration, robustness, replay, or evidence contracts did not close.

@@ -5,28 +5,28 @@ authority_snapshot_id: euclid-authority-2026-04-15-b
 generated_at_utc: '2026-04-22T00:00:00Z'
 scope_authority_docs:
 - path: README.md
-  sha256: 3db9878ac5d012b39ecbdcc73657a807a1ae024de0527962cd0539b1fd912ffc
+  sha256: 65492b928fad850e9f845989dde4b842fcf973291d28eea2cf2d9cf0ac1699cf
   last_updated_on: '2026-04-22'
 - path: docs/reference/system.md
   sha256: e3bf9ae44ebef3fc90a504c6fde261fc5b7bea7603f45c186b7110d95d6a98f3
   last_updated_on: '2026-04-22'
 - path: docs/reference/contracts-manifests.md
-  sha256: 81feb4940ec6474a8966599c941011f6a6888c9d6900b4baa85356488800ab43
+  sha256: bd532f526ae1bc022aeec8528620ff42e840e56ee154ffa1c32e76f5c6c8df2d
   last_updated_on: '2026-04-22'
 - path: docs/reference/benchmarks-readiness.md
   sha256: dc09f108836aae756cc04151c05c062a10f5382471f6f5cdb9c2f8adb78c1903
   last_updated_on: '2026-04-22'
 - path: docs/reference/modeling-pipeline.md
-  sha256: 54f63d184460a3e819d1af2ea9ced1154a6a7ef6c405d803c3fba1eec31aa8c3
+  sha256: 7bb887352a35c9aa40a918d2d32990dcee9653c0dd4d539d449e7e623414f696
   last_updated_on: '2026-04-22'
 - path: docs/reference/search-core.md
-  sha256: 17b899e912d22c007a7b5a1b45c8167a2cb40f7542db1bd97a0bac5ce76c7b6b
+  sha256: 7318918318520cefde41f81076b330514f48548a8eb845a20fc9d6d7d1d51474
   last_updated_on: '2026-04-22'
 - path: docs/reference/workbench.md
-  sha256: 267fa2be2a052e48ec69ac11687ad1b45725777addbfa54d302c24d088a72fd9
+  sha256: 94e1a25434c02cbad71e8cbc411392df37b34bfc46c54999384bf89426901703
   last_updated_on: '2026-04-22'
 - path: docs/reference/testing-truthfulness.md
-  sha256: 08593681568d20768745dc805a4033c55a5942be2b802321f657c5a8ccaf1b46
+  sha256: 7cfd1c7e0a62b4698a3420e6f43ce43a279f5b45ac123168e4e23dbfb6e924c3
   last_updated_on: '2026-04-22'
 master_plan:
   path: docs/plans/2026-04-21-euclid-enhancement-master-plan.md

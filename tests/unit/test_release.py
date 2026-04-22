@@ -278,6 +278,58 @@ def test_clean_install_certification_resolves_relative_wheel_paths_before_instal
     assert captured["wheel_path"].is_absolute()
 
 
+def test_runtime_dependency_closure_preserves_selected_extras(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        "\n".join(
+            [
+                "[project]",
+                "dependencies = ['parent>=1']",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    class _FakeDistribution:
+        def __init__(
+            self,
+            name: str,
+            requires: tuple[str, ...] = (),
+        ) -> None:
+            self.metadata = {"Name": name}
+            self.requires = requires
+
+    distributions = {
+        "parent": _FakeDistribution(
+            "parent",
+            ("child[format-nongpl]>=1",),
+        ),
+        "child": _FakeDistribution(
+            "child",
+            (
+                "base-dep>=1",
+                'format-dep>=1; extra == "format-nongpl"',
+                'ignored-extra>=1; extra == "other"',
+            ),
+        ),
+        "base-dep": _FakeDistribution("base-dep"),
+        "format-dep": _FakeDistribution("format-dep"),
+        "ignored-extra": _FakeDistribution("ignored-extra"),
+    }
+
+    def _fake_distribution(distribution_name: str) -> _FakeDistribution:
+        return distributions[distribution_name.lower().replace("_", "-")]
+
+    monkeypatch.setattr(release.importlib_metadata, "distribution", _fake_distribution)
+
+    names = set(release._runtime_dependency_distribution_names(tmp_path))
+
+    assert {"parent", "child", "base-dep", "format-dep"} <= names
+    assert "ignored-extra" not in names
+
+
 def test_release_status_command_prints_current_and_target_versions() -> None:
     result = RUNNER.invoke(app, ["release", "status"])
 

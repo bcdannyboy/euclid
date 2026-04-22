@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from euclid.cli import app
@@ -16,6 +17,7 @@ def _load_report(project_root: Path) -> dict[str, object]:
     return json.loads(report_path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.timeout(600)
 def test_release_status_emits_closure_metadata_and_scope_evidence_bundles(
     project_root: Path,
 ) -> None:
@@ -52,6 +54,7 @@ def test_release_status_emits_closure_metadata_and_scope_evidence_bundles(
     } <= verdict_ids
 
 
+@pytest.mark.timeout(600)
 def test_full_vision_only_rows_do_not_close_from_current_release_bundle(
     project_root: Path,
 ) -> None:

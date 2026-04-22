@@ -21,9 +21,9 @@ The contract layer lives in `src/euclid/contracts`.
 
 Important pieces:
 
-- `loader.py`: loads YAML contracts into a `ContractCatalog`
-- `refs.py`: typed-ref validation and allowed target-family/version checks
-- `errors.py`: contract validation error types
+- `src/euclid/contracts/loader.py`: loads YAML contracts into a `ContractCatalog`
+- `src/euclid/contracts/refs.py`: typed-ref validation and allowed target-family/version checks
+- `src/euclid/contracts/errors.py`: contract validation error types
 
 The source specifications live in `schemas/`:
 

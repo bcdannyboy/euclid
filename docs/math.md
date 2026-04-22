@@ -41,11 +41,13 @@ $r_t = q(y_t - \hat y_t)$.
 Zigzag integer map:
 
 $$
-\mathrm{zigzag}(z)=
-\begin{cases}
-2z & z\ge 0\\
-{}-2z-1 & z<0
-\end{cases}
+\mathrm{zigzag}(z)=2z \quad \text{when } z\ge 0,
+$$
+
+and
+
+$$
+\mathrm{zigzag}(z)=-2z-1 \quad \text{when } z\lt 0.
 $$
 
 Natural-number code length (Elias-delta-like form used in code):
@@ -310,11 +312,7 @@ $$
 **Quantile pinball (average over declared quantiles):**
 
 $$
-\rho_\tau(y-q)=
-\begin{cases}
-\tau(y-q), & y\ge q\\
-(\tau-1)(y-q), & y<q
-\end{cases}
+\rho_\tau(e)=\max\{\tau e,(\tau-1)e\},\quad e=y-q.
 $$
 
 with score as mean of $\rho_\tau$ over quantiles in row.

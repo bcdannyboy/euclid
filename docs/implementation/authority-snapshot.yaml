@@ -5,7 +5,7 @@ authority_snapshot_id: euclid-authority-2026-04-15-b
 generated_at_utc: '2026-04-22T00:00:00Z'
 scope_authority_docs:
 - path: README.md
-  sha256: 65492b928fad850e9f845989dde4b842fcf973291d28eea2cf2d9cf0ac1699cf
+  sha256: 8107491503a3e03bccbbe43b50978554b64acee642671ba445ba2497c468e8b4
   last_updated_on: '2026-04-22'
 - path: docs/reference/system.md
   sha256: e3bf9ae44ebef3fc90a504c6fde261fc5b7bea7603f45c186b7110d95d6a98f3

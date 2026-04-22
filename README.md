@@ -9,11 +9,32 @@ related:
 ---
 # Euclid
 
+Euclid began as the calmer answer to a gloriously overheated movie idea.
+
+In Darren Aronofsky's 1998 film [_Pi_](https://en.wikipedia.org/wiki/Pi_%28film%29), Max Cohen builds a homemade computer named Euclid to hunt patterns in the stock market. Movie Euclid does what any good paranoid math thriller needs it to do: it spits out a mysterious 216-digit number, crashes, and sends everyone looking for either market domination or the name of God. Great cinema. Terrible release process.
+
+This Euclid is a realistic effort at time-series pattern derivation. It asks the fun question from the movie in a boringly useful way: if ordered data really does contain a compact pattern, can we derive it, write it down as an equation, and make it survive evidence checks before anyone gets too excited?
+
 Most forecasting stacks give you a score, a chart, and a request for trust. Euclid tries to give you an equation and then make that equation earn the right to be believed.
 
 Euclid is a forecasting system for ordered observations. It derives compact equations that describe a time series, then tests whether those equations have predictive support under replay, comparator, calibration, and publication gates.
 
 Euclid keeps a descriptive equation separate from predictive claims, so a curve that summarizes the sample does not automatically get to masquerade as a forecast. When the deterministic and probabilistic lanes both clear the same publication scope, Euclid can surface one unified equation: a readable deterministic backbone joined to an explicit stochastic rule. When the evidence falls short, Euclid downgrades the claim or abstains instead of bluffing.
+
+## The movie version vs. this repo
+
+Movie Euclid chases total hidden order, attracts mystics and financiers, and has a very poor relationship with system reliability.
+
+Repo Euclid does something less cinematic and more useful:
+
+- accepts that a time series may contain structure, noise, both, or neither
+- searches for compact symbolic descriptions and reducer laws
+- scores those candidates against ordered holdout data
+- keeps stochastic uncertainty explicit instead of pretending the equation knows everything
+- records replayable artifacts so a result can be inspected later
+- refuses to promote a pattern into a stronger claim unless the current implementation and tests support it
+
+So the inspiration is the film's delightfully feverish premise: a machine named Euclid deriving patterns from time series. The implementation is the antidote to the fever: schemas, manifests, scorecards, calibration, replay, and abstention paths.
 
 ## Why Euclid is unusual
 

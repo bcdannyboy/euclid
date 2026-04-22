@@ -233,7 +233,7 @@ Probabilistic artifacts are built from point paths by attaching Gaussian locatio
 ### 6.1 Base scale
 
 $$
-s_0 = \max\left(\sqrt{\frac{\max(\text{final\_loss},0)}{\max(N,1)}},\;0.25 + 0.05\,\max_j |\theta_j|\right).
+s_0 = \max\left(\sqrt{\frac{\max(\text{final loss},0)}{\max(N,1)}},\;0.25 + 0.05\,\max_j |\theta_j|\right).
 $$
 
 ### 6.2 Horizon scaling
@@ -450,25 +450,25 @@ sets $S_e$, and optional train/holdout losses, the retained metrics are:
 
 $$
 \begin{aligned}
-\text{residual\_spread}
-&= \max_e \operatorname{mean}_{r\in R_e}|r|\\
-&\quad {}- \min_e \operatorname{mean}_{r\in R_e}|r|.
+\text{residual spread}
+&= \max_e \mathrm{mean}_{r\in R_e}|r|\\
+&\quad {}- \min_e \mathrm{mean}_{r\in R_e}|r|.
 \end{aligned}
 $$
 
 $$
-\text{max\_parameter\_drift}
+\text{max parameter drift}
 = \max_j \left(\max_e \theta_{e,j} - \min_e \theta_{e,j}\right),
 $$
 
 $$
-\text{min\_support\_jaccard}
+\text{min support Jaccard}
 = \min_{e\ne e'} \frac{|S_e\cap S_{e'}|}{|S_e\cup S_{e'}|},
 $$
 
 $$
-\text{max\_holdout\_degradation}
-= \max_e(\text{holdout\_loss}_e-\text{train\_loss}_e).
+\text{max holdout degradation}
+= \max_e(\ell^{\mathrm{holdout}}_e-\ell^{\mathrm{train}}_e).
 $$
 
 The default invariance pass thresholds are:
@@ -484,7 +484,7 @@ passes only when source ids and target ids are present, target holdout scores ar
 present, and:
 
 $$
-\max_t(\text{target\_loss}_t-\text{source\_loss}_t)\le 0.25
+\max_t(\ell^{\mathrm{target}}_t-\ell^{\mathrm{source}}_t)\le 0.25
 $$
 
 under the default threshold. `claim_lane_allowed` is true only when the

@@ -101,6 +101,8 @@ def test_math_doc_uses_github_safe_math_markdown() -> None:
     assert display_blocks >= 1
     assert r"\mathbb{1}\{" not in text
     assert r"\begin{cases}" not in text
+    assert r"\operatorname" not in text
+    assert not re.search(r"\\text\{[^}]*(?<!\\)_[^}]*\}", text)
 
 
 def test_reference_index_routes_to_math_document() -> None:

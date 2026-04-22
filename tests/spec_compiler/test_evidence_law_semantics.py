@@ -204,9 +204,9 @@ def test_contract_contents_lock_core_policy_choices() -> None:
     assert gate_entries["probabilistic_predictive_gate"]["requires_calibration_pass"] is True
 
     assert robustness["global_rules"]["leakage_canaries_are_structural"] is True
-    assert mechanistic["global_rules"]["requires_lower_lane_support"] == "predictively_supported"
+    assert mechanistic["global_rules"]["requires_lower_lane_support"] == "predictive_within_declared_scope"
     assert mechanistic["global_rules"]["missing_requirement_effect"] == (
-        "downgrade_to_predictively_supported"
+        "downgrade_to_predictive_within_declared_scope"
     )
     assert shared_local["global_rules"]["entity_index_set_required"] is True
     assert shared_local["global_rules"]["unseen_entity_publication_requires_separate_contract"] is True

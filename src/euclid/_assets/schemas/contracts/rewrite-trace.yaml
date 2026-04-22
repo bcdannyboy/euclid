@@ -1,0 +1,42 @@
+schema_name: rewrite_trace_contract@1.0.0
+kind: contract_schema
+owner_ref: search_planning_owner
+owning_module: search
+canonical_source_path: docs/reference/search-core.md
+phase_ref: P07
+description: >
+  Trace contract for Euclid expression CIR rewrites and bounded equality
+  saturation. Rewrite traces are equivalence evidence only and cannot publish
+  claims directly.
+required_fields:
+  - status
+  - original_expression_hash
+  - best_expression_hash
+  - extraction
+  - applied_rule_ids
+  - rejected_rule_ids
+  - equivalence_evidence
+  - egraph_backend
+  - eclass_count
+  - iteration_count
+  - omission_disclosure
+  - replay_identity
+claim_boundary:
+  claim_publication_allowed: false
+  reason_codes:
+    - search_engine_not_claim_authority
+resource_bounds:
+  required:
+    - max_iterations
+    - node_limit
+    - timeout_seconds
+extraction_contract:
+  cost_model: expression_node_cost_v1
+  tie_break_rule: min_cost_then_min_canonical_expression_json
+  equivalence_required: true
+unsafe_rewrite_policy:
+  default: reject
+  required_evidence:
+    - side_conditions_checked
+    - domain_evidence
+    - unit_evidence

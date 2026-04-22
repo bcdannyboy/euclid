@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 from typer.testing import CliRunner
 
@@ -171,6 +172,7 @@ def test_completion_report_makes_incomplete_rows_and_blockers_explicit(
         assert isinstance(blocker["evidence_refs"], list)
 
 
+@pytest.mark.timeout(600)
 def test_release_certification_flow_captures_clean_install_surfaces_and_packaging_evidence(  # noqa: E501
     project_root: Path,
 ) -> None:

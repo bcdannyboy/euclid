@@ -1,8 +1,8 @@
 version: 1
 project_name: Fixture Euclid
 canonical_doc_refs:
-  - README.md
-  - docs/system.md
+- docs/canonical/euclid-project.md
+- docs/canonical/system-map.md
 vocabulary_refs:
   reducer_families: schemas/core/reducer-families.yaml
   composition_operators: schemas/core/composition-operators.yaml
@@ -14,9 +14,9 @@ vocabulary_refs:
 scope_statement: Fixture scope statement for the Euclid canonical-pack compiler.
 major_runtime_modules:
   core:
-    - manifest_registry
-    - evaluation
+  - manifest_registry
+  - evaluation
 artifact_classes:
   publication:
-    - claim_card
-    - publication_record
+  - claim_card
+  - publication_record

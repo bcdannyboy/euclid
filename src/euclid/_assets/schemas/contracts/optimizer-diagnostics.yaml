@@ -1,0 +1,58 @@
+version: 1
+kind: optimizer_diagnostics_contract
+schema_name: optimizer_diagnostics_manifest@1.0.0
+owners:
+  - id: optimizer_diagnostics_contract_council
+    display_name: Optimizer Diagnostics Contract Council
+canonicalization:
+  serialization: canonical_json
+  digest: sha256
+  replay_identity_fields:
+    - optimizer_backend
+    - objective_id
+    - parameter_declarations
+    - data_window
+    - seed
+    - library_versions
+required_fields:
+  - optimizer_backend
+  - objective_id
+  - status
+  - converged
+  - failure_reasons
+  - initial_parameters
+  - final_parameters
+  - bounds
+  - bound_hits
+  - function_evaluations
+  - replay_metadata
+  - claim_boundary
+failure_codes:
+  - underdetermined_system
+  - optimizer_nonconvergence
+  - optimizer_numerical_failure
+  - invalid_fit_rows
+  - duplicate_fit_timestamp
+  - out_of_order_fit_timestamp
+  - nonfinite_fit_value
+  - unified_fit_domain_violation
+claim_boundary:
+  direct_claim_publication: forbidden
+  required_boundary_reason: fit_is_not_claim_authority
+redaction:
+  forbidden_fields:
+    - raw_rows
+    - raw_provider_payload
+    - train_target_values
+    - provider_headers
+  allowed_row_identity_fields:
+    - event_time
+    - available_at
+    - row_hash
+runtime_backends:
+  optimization:
+    - scipy.optimize.least_squares
+    - scipy.optimize.minimize
+  statistical_baselines:
+    - statsmodels.OLS
+    - sklearn.linear_model.LinearRegression

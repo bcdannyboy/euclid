@@ -43275,7 +43275,7 @@
     "abstention": {
       "abstention_id": "operator_abstention_v1",
       "abstention_type": "robustness_failed",
-      "blocked_ceiling": "descriptive_only",
+      "blocked_ceiling": "descriptive_structure",
       "governing_refs": [
         {
           "object_id": "scorecard_manifest_85974b92f85a8b716679",

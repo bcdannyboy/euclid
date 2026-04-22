@@ -1,0 +1,2605 @@
+phase_id: P02
+phase_title: Expression IR Replacement
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P02-T01
+- P02-T01-S01
+- P02-T01-S02
+- P02-T01-S03
+- P02-T01-S04
+- P02-T01-S05
+- P02-T01-S06
+- P02-T02
+- P02-T02-S01
+- P02-T02-S02
+- P02-T02-S03
+- P02-T02-S04
+- P02-T02-S05
+- P02-T02-S06
+- P02-T02-S07
+- P02-T02-S08
+- P02-T03
+- P02-T03-S01
+- P02-T03-S02
+- P02-T03-S03
+- P02-T03-S04
+- P02-T03-S05
+- P02-T03-S06
+- P02-T04
+- P02-T04-S01
+- P02-T04-S02
+- P02-T04-S03
+- P02-T04-S04
+- P02-T04-S05
+- P02-T05
+- P02-T05-S01
+- P02-T05-S02
+- P02-T05-S03
+- P02-T05-S04
+- P02-T05-S05
+- P02-T06
+- P02-T06-S01
+- P02-T06-S02
+- P02-T06-S03
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+    -m pytest -q tests/unit/expr tests/unit/testing
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3.12
+    -m pytest -q tests/unit/cir/test_expression_payload.py tests/unit/search/dsl/test_expression_lowering.py
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/integration/test_multi_backend_cir_pipeline.py
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/golden tests/regression
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_expression_cir_live_pipeline.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions:
+  - external_provider_payloads_are_structured_not_secret_logs
+  - no_secret_in_expression_artifact
+replay:
+  assertions:
+  - expression_canonical_hash_replay_stable
+  - cir_expression_payload_part_of_identity
+  - backend_origin_excluded_from_expression_identity
+claim_scope:
+  assertions:
+  - external_engine_outputs_cannot_publish_claims_directly
+  - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+edge_cases:
+  required:
+  - canonical_equivalence
+  - duplicate_canonical_candidates
+  - invalid_units
+  - unsafe_domains
+  - log_nonpositive
+  - division_by_zero
+  - missing_values
+  - nonfinite_values
+  - serialization_round_trip
+  - replay_stable_ids
+  - external_engine_lowering_without_direct_claims
+artifact_outputs:
+- schemas/contracts/expression-ir.yaml
+- build/reports/completion-report.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and
+  claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P02-T01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T01-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01-S01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01-S01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T01-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01-S02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01-S02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T01-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01-S03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01-S03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T01-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01-S04
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01-S04
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T01-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01-S05
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01-S05
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T01-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T01-S06
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T01-S06
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S04
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S04
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S05
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S05
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S06
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S06
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S07:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S07
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S07
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T02-S08:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T02-S08
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T02-S08
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03-S01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03-S01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03-S02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03-S02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03-S03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03-S03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03-S04
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03-S04
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03-S05
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03-S05
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T03-S06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T03-S06
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T03-S06
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T04
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T04
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T04-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T04-S01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T04-S01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T04-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T04-S02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T04-S02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T04-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T04-S03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T04-S03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T04-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T04-S04
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T04-S04
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T04-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T04-S05
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T04-S05
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T05
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T05
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T05-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T05-S01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T05-S01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T05-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T05-S02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T05-S02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T05-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T05-S03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T05-S03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T05-S04:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T05-S04
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T05-S04
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T05-S05:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T05-S05
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T05-S05
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T06:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T06
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T06
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T06-S01:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T06-S01
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T06-S01
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T06-S02:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T06-S02
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T06-S02
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring
+  P02-T06-S03:
+    status: complete
+    implementation_files:
+    - schemas/contracts/expression-ir.yaml
+    - src/euclid/algorithmic_dsl.py
+    - src/euclid/cir/models.py
+    - src/euclid/cir/normalize.py
+    - src/euclid/expr/__init__.py
+    - src/euclid/expr/ast.py
+    - src/euclid/expr/domains.py
+    - src/euclid/expr/evaluators.py
+    - src/euclid/expr/external.py
+    - src/euclid/expr/operators.py
+    - src/euclid/expr/serialization.py
+    - src/euclid/expr/sympy_bridge.py
+    - src/euclid/expr/units.py
+    - src/euclid/modules/algorithmic_dsl.py
+    - src/euclid/search/dsl/__init__.py
+    - src/euclid/search/dsl/lowering.py
+    test_files:
+    - tests/unit/cir/test_expression_payload.py
+    - tests/unit/expr/test_ast.py
+    - tests/unit/expr/test_external_boundary.py
+    - tests/unit/expr/test_operators.py
+    - tests/unit/expr/test_serialization.py
+    - tests/unit/expr/test_sympy_bridge.py
+    - tests/unit/expr/test_units.py
+    - tests/unit/search/dsl/test_expression_lowering.py
+    gate_refs:
+    - tests/gates/P02.yaml#P02-T06-S03
+    evidence_refs:
+    - gate:tests/gates/P02.yaml#P02-T06-S03
+    - test:tests/unit/expr/test_ast.py
+    - test:tests/unit/expr/test_external_boundary.py
+    - test:tests/unit/expr/test_operators.py
+    - test:tests/unit/expr/test_serialization.py
+    - test:tests/unit/expr/test_sympy_bridge.py
+    - test:tests/unit/expr/test_units.py
+    - test:tests/unit/cir/test_expression_payload.py
+    - test:tests/unit/search/dsl/test_expression_lowering.py
+    - artifact:schemas/contracts/expression-ir.yaml
+    - artifact:build/reports/completion-report.json
+    edge_cases:
+    - canonical_equivalence
+    - duplicate_canonical_candidates
+    - invalid_units
+    - unsafe_domains
+    - log_nonpositive
+    - division_by_zero
+    - missing_values
+    - nonfinite_values
+    - serialization_round_trip
+    - replay_stable_ids
+    - external_engine_lowering_without_direct_claims
+    redaction_assertions:
+    - external_provider_payloads_are_structured_not_secret_logs
+    - no_secret_in_expression_artifact
+    replay_assertions:
+    - expression_canonical_hash_replay_stable
+    - cir_expression_payload_part_of_identity
+    - backend_origin_excluded_from_expression_identity
+    claim_scope_assertions:
+    - external_engine_outputs_cannot_publish_claims_directly
+    - expression_ir_candidates_require_euclid_cir_replay_and_scoring

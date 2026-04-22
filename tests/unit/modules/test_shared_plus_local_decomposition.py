@@ -50,7 +50,10 @@ def test_parse_and_fit_shared_plus_local_decomposition_preserves_component_bound
 
     assert isinstance(summary, SharedLocalFitSummary)
     assert summary.entity_panel == ("entity-a", "entity-b")
-    assert summary.backend_id == "deterministic_shared_local_mean_offsets_v1"
+    assert summary.backend_id == "legacy_non_claim_shared_local_mean_offsets_v1"
+    assert summary.evidence_role == "legacy_non_claim_adapter"
+    assert summary.claim_lane_ceiling == "descriptive_structure"
+    assert summary.universal_law_evidence_allowed is False
     assert summary.parameter_summary == {
         "shared_intercept": 16.0,
         "local_adjustment__entity-a": -5.0,
@@ -119,8 +122,8 @@ def test_fit_shared_plus_local_decomposition_selects_panel_optimizer_when_availa
         random_seed="0",
     )
 
-    assert summary.backend_id == "deterministic_shared_local_panel_optimizer_v1"
-    assert summary.objective_id == "least_squares_shared_local_panel_optimizer_v1"
+    assert summary.backend_id == "legacy_non_claim_shared_local_panel_optimizer_v1"
+    assert summary.objective_id == "legacy_non_claim_shared_local_panel_optimizer_v1"
     assert summary.parameter_summary == {
         "shared_intercept": 1.0,
         "shared_lag_coefficient": 1.0,
@@ -196,8 +199,12 @@ def test_fit_shared_plus_local_decomposition_selects_panel_optimizer_when_availa
         ],
         "sharing_map": ["intercept"],
         "unseen_entity_rule": "panel_entities_only",
-        "baseline_backend_id": "deterministic_shared_local_mean_offsets_v1",
-        "selected_backend_id": "deterministic_shared_local_panel_optimizer_v1",
+        "baseline_backend_id": "legacy_non_claim_shared_local_mean_offsets_v1",
+        "selected_backend_id": "legacy_non_claim_shared_local_panel_optimizer_v1",
+        "evidence_role": "legacy_non_claim_adapter",
+        "claim_lane_ceiling": "descriptive_structure",
+        "universal_law_evidence_allowed": False,
+        "legacy_adapter_status": "legacy_non_claim_adapter",
     }
 
 

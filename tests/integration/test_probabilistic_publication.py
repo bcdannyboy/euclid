@@ -48,7 +48,7 @@ def test_probabilistic_publication_surfaces_support_replay_and_catalog_without_r
     assert entry.primary_score_result_ref == result.summary.score_result_ref
     assert entry.primary_calibration_result_ref == result.summary.calibration_result_ref
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictively_supported"
+    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
     assert (
         inspection.claim_card.manifest.body["predictive_support_status"]
         == "confirmatory_supported"
@@ -86,7 +86,7 @@ def test_probabilistic_publication_downgrade_is_preserved_in_catalog_and_replay(
     assert entry.primary_calibration_result_ref == result.summary.calibration_result_ref
     assert inspection.scorecard is not None
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_only"
+    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert inspection.claim_card.manifest.body["predictive_support_status"] == "blocked"
     assert inspection.scorecard.manifest.body["predictive_status"] == "blocked"
     assert inspection.scorecard.manifest.body["predictive_reason_codes"] == [

@@ -21,6 +21,9 @@ class SharedLocalFitSummary:
     local_components: tuple[Mapping[str, Any], ...]
     final_loss: float
     baseline_backend_id: str | None = None
+    evidence_role: str = "legacy_non_claim_adapter"
+    claim_lane_ceiling: str = "descriptive_structure"
+    universal_law_evidence_allowed: bool = False
 
     def as_diagnostics(self) -> dict[str, Any]:
         diagnostics = {
@@ -31,6 +34,10 @@ class SharedLocalFitSummary:
             ],
             "sharing_map": ["intercept"],
             "unseen_entity_rule": "panel_entities_only",
+            "evidence_role": self.evidence_role,
+            "claim_lane_ceiling": self.claim_lane_ceiling,
+            "universal_law_evidence_allowed": self.universal_law_evidence_allowed,
+            "legacy_adapter_status": "legacy_non_claim_adapter",
         }
         if self.baseline_backend_id is not None:
             diagnostics["baseline_backend_id"] = self.baseline_backend_id
@@ -38,10 +45,10 @@ class SharedLocalFitSummary:
         return diagnostics
 
 
-_BASELINE_BACKEND_ID = "deterministic_shared_local_mean_offsets_v1"
-_BASELINE_OBJECTIVE_ID = "least_squares_shared_local_offsets_v1"
-_OPTIMIZER_BACKEND_ID = "deterministic_shared_local_panel_optimizer_v1"
-_OPTIMIZER_OBJECTIVE_ID = "least_squares_shared_local_panel_optimizer_v1"
+_BASELINE_BACKEND_ID = "legacy_non_claim_shared_local_mean_offsets_v1"
+_BASELINE_OBJECTIVE_ID = "legacy_non_claim_shared_local_offsets_v1"
+_OPTIMIZER_BACKEND_ID = "legacy_non_claim_shared_local_panel_optimizer_v1"
+_OPTIMIZER_OBJECTIVE_ID = "legacy_non_claim_shared_local_panel_optimizer_v1"
 
 
 def fit_shared_plus_local_decomposition(
@@ -134,6 +141,9 @@ def fit_shared_plus_local_decomposition(
             local_components=optimizer_summary.local_components,
             final_loss=optimizer_summary.final_loss,
             baseline_backend_id=baseline_summary.backend_id,
+            evidence_role="legacy_non_claim_adapter",
+            claim_lane_ceiling="descriptive_structure",
+            universal_law_evidence_allowed=False,
         )
     if (
         optimizer_summary is not None
@@ -148,6 +158,9 @@ def fit_shared_plus_local_decomposition(
             local_components=optimizer_summary.local_components,
             final_loss=optimizer_summary.final_loss,
             baseline_backend_id=baseline_summary.backend_id,
+            evidence_role="legacy_non_claim_adapter",
+            claim_lane_ceiling="descriptive_structure",
+            universal_law_evidence_allowed=False,
         )
     return baseline_summary
 

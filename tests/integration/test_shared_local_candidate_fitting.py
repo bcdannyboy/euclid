@@ -104,7 +104,7 @@ def test_fit_candidate_window_uses_panel_scoped_rows_for_shared_local_candidates
     )
 
     assert "shared_plus_local_decomposition" in search_plan.composition_operators
-    assert fit.backend_id == "deterministic_shared_local_panel_optimizer_v1"
+    assert fit.backend_id == "legacy_non_claim_shared_local_panel_optimizer_v1"
     assert fit.training_row_count == 4
     assert fit.parameter_summary == {
         "shared_intercept": 1.0,
@@ -154,8 +154,12 @@ def test_fit_candidate_window_uses_panel_scoped_rows_for_shared_local_candidates
         ],
         "sharing_map": ["intercept"],
         "unseen_entity_rule": "panel_entities_only",
-        "baseline_backend_id": "deterministic_shared_local_mean_offsets_v1",
-        "selected_backend_id": "deterministic_shared_local_panel_optimizer_v1",
+        "baseline_backend_id": "legacy_non_claim_shared_local_mean_offsets_v1",
+        "selected_backend_id": "legacy_non_claim_shared_local_panel_optimizer_v1",
+        "evidence_role": "legacy_non_claim_adapter",
+        "claim_lane_ceiling": "descriptive_structure",
+        "universal_law_evidence_allowed": False,
+        "legacy_adapter_status": "legacy_non_claim_adapter",
     }
 
 

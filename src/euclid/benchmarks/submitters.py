@@ -361,7 +361,9 @@ def _run_single_submitter(
         search_plan=search_plan,
         canonical_program_count=result.coverage.canonical_program_count,
         attempted_candidate_count=result.coverage.attempted_candidate_count,
-        accepted_candidate_count=result.coverage.accepted_candidate_count,
+        accepted_candidate_count=sum(
+            entry.ledger_status == "accepted" for entry in candidate_ledger
+        ),
         rejected_candidate_count=result.coverage.rejected_candidate_count,
         omitted_candidate_count=result.coverage.omitted_candidate_count,
     )
@@ -395,11 +397,7 @@ def _run_single_submitter(
             unit="candidates",
             attributes={"submitter_id": submitter_id},
         )
-    selected_candidate = (
-        result.frontier.frozen_shortlist_cir_candidates[0]
-        if result.frontier.frozen_shortlist_cir_candidates
-        else None
-    )
+    selected_candidate = result.accepted_candidate
     selected_entry = _selected_candidate_entry(
         candidate_ledger=candidate_ledger,
         selected_candidate=selected_candidate,
@@ -798,6 +796,8 @@ def _candidate_family_ids_for_submitter(
     )
     default_candidate_ids = tuple(definition.get("candidate_family_ids", ()))
     if proposal_candidate_ids:
+        if context.task_manifest.task_family.startswith("shared_local_panel_"):
+            return proposal_candidate_ids
         return tuple(dict.fromkeys((*proposal_candidate_ids, *default_candidate_ids)))
     if (
         submitter_id == ALGORITHMIC_SEARCH_SUBMITTER_ID

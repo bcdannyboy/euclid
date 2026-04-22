@@ -1,0 +1,32 @@
+schema_name: event_definition@1.0.0
+kind: contract_schema
+owner_ref: probabilistic_evaluation_owner
+owning_module: probabilistic_evaluation
+canonical_source_path: schemas/contracts/event-definition.yaml
+phase_ref: P10
+description: >
+  Explicit probabilistic event definition. Event thresholds must be declared in
+  the artifact and cannot be inferred from an origin target shortcut.
+required_fields:
+  - event_id
+  - variable
+  - operator
+  - threshold
+  - threshold_source
+  - calibration_required
+admitted_operators:
+  - greater_than
+  - greater_than_or_equal
+  - less_than
+  - less_than_or_equal
+forbidden_threshold_sources:
+  - origin_target
+  - implicit_origin_target
+claim_boundary:
+  event_definition_is_claim_evidence: false
+  requires_calibration_for_probabilistic_publication: true
+replay:
+  required_fields:
+    - event_id
+    - threshold_source
+    - replay_identity

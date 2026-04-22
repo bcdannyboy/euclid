@@ -13,6 +13,7 @@ import tempfile
 import tomllib
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 from importlib import resources
 from pathlib import Path
 from typing import Any, Mapping
@@ -21,7 +22,6 @@ import yaml
 
 from euclid._version import (
     PACKAGE_VERSION,
-    RELEASE_CERTIFICATION_COMMANDS,
     RELEASE_CERTIFICATION_TEST_TARGETS,
     RELEASE_TARGET_VERSION,
     RELEASE_WORKFLOW_ID,
@@ -29,13 +29,9 @@ from euclid._version import (
 from euclid.benchmarks import profile_benchmark_suite, profile_benchmark_task
 from euclid.contracts import load_contract_catalog
 from euclid.operator_runtime._compat_runtime import profile_operator_run
-from euclid.operator_runtime.models import (
-    DEFAULT_ADMISSIBILITY_RULE_IDS,
-    DEFAULT_RUN_SUPPORT_OBJECT_IDS,
-)
 from euclid.operator_runtime.resources import (
-    resolve_checkout_root,
     resolve_asset_root,
+    resolve_checkout_root,
     resolve_example_path,
     resolve_notebook_path,
 )
@@ -63,6 +59,7 @@ from euclid.runtime.profiling import (
     capture_operator_runtime_snapshot,
     compare_runtime_determinism,
 )
+from euclid.testing.redaction import collect_secret_values, redact_mapping
 
 _EXPECTED_NOTEBOOK_CASE_IDS = (
     "distribution",
@@ -211,6 +208,7 @@ class ReleaseStatus:
     policy_judgments: Mapping[str, ReadinessJudgment]
     shipped_releasable_judgment: ReadinessJudgment
     readiness_judgment: ReadinessJudgment
+    enhancement_phase_gates: tuple[Mapping[str, Any], ...]
 
 
 @dataclass(frozen=True)
@@ -452,6 +450,87 @@ def _load_packaged_closure_map() -> dict[str, Any]:
 
 def _load_packaged_traceability() -> dict[str, Any]:
     return _load_packaged_implementation_contract(_TRACEABILITY_PATH)
+
+
+@lru_cache(maxsize=None)
+def _load_enhancement_phase_gate_statuses(
+    workspace_root: Path,
+) -> tuple[Mapping[str, Any], ...]:
+    statuses: list[Mapping[str, Any]] = []
+    gate_root = workspace_root / "tests" / "gates"
+    for index in range(17):
+        phase_id = f"P{index:02d}"
+        manifest_path = gate_root / f"{phase_id}.yaml"
+        if not manifest_path.is_file():
+            statuses.append(
+                {
+                    "phase_id": phase_id,
+                    "phase_status": "missing",
+                    "covered_id_count": 0,
+                    "id_gate_count": 0,
+                    "id_gate_status_counts": {"missing": 1},
+                    "reason_codes": ["phase_gate_manifest_missing"],
+                    "manifest_path": str(manifest_path),
+                }
+            )
+            continue
+        try:
+            payload = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            statuses.append(
+                {
+                    "phase_id": phase_id,
+                    "phase_status": "failed",
+                    "covered_id_count": 0,
+                    "id_gate_count": 0,
+                    "id_gate_status_counts": {"failed": 1},
+                    "reason_codes": [f"phase_gate_manifest_parse_failed:{type(exc).__name__}"],
+                    "manifest_path": str(manifest_path),
+                }
+            )
+            continue
+        if not isinstance(payload, Mapping):
+            statuses.append(
+                {
+                    "phase_id": phase_id,
+                    "phase_status": "failed",
+                    "covered_id_count": 0,
+                    "id_gate_count": 0,
+                    "id_gate_status_counts": {"failed": 1},
+                    "reason_codes": ["phase_gate_manifest_not_mapping"],
+                    "manifest_path": str(manifest_path),
+                }
+            )
+            continue
+        id_gates = payload.get("id_gates", {})
+        status_counts: dict[str, int] = {}
+        if isinstance(id_gates, Mapping):
+            for row in id_gates.values():
+                row_status = (
+                    str(row.get("status", "missing"))
+                    if isinstance(row, Mapping)
+                    else "malformed"
+                )
+                status_counts[row_status] = status_counts.get(row_status, 0) + 1
+        phase_status = str(payload.get("phase_status", "missing"))
+        reason_codes = []
+        if phase_status != "complete":
+            reason_codes.append("enhancement_phase_incomplete")
+        if any(status != "complete" for status in status_counts):
+            reason_codes.append("enhancement_phase_has_incomplete_plan_ids")
+        statuses.append(
+            {
+                "phase_id": phase_id,
+                "phase_status": phase_status,
+                "covered_id_count": len(payload.get("covered_ids", ())),
+                "id_gate_count": len(id_gates) if isinstance(id_gates, Mapping) else 0,
+                "id_gate_status_counts": status_counts,
+                "reason_codes": reason_codes,
+                "manifest_path": f"tests/gates/{phase_id}.yaml",
+                "blocked_reason": str(payload.get("blocked_reason", "")),
+            }
+        )
+    return tuple(statuses)
 
 
 def _load_packaged_fixture_spec() -> dict[str, Any]:
@@ -760,6 +839,7 @@ def get_release_status(
         )
     )
     contract_validation = validate_release_contracts(project_root=project_root)
+    clean_install_report = _load_clean_install_report(workspace_root=workspace_root)
     current_release_suite = profile_benchmark_suite(
         manifest_path=workflow.benchmark_suite,
         benchmark_root=current_benchmark_root,
@@ -778,11 +858,19 @@ def get_release_status(
         suite_result=full_vision_suite,
         workspace_root=workspace_root,
     )
-    notebook_smoke = execute_release_notebook_smoke(
-        project_root=project_root,
-        output_root=resolved_notebook_output_root,
+    notebook_smoke = (
+        _notebook_smoke_from_clean_install_report(
+            project_root=project_root,
+            clean_install_report=clean_install_report,
+        )
+        if notebook_output_root is None
+        else None
     )
-    clean_install_report = _load_clean_install_report(workspace_root=workspace_root)
+    if notebook_smoke is None:
+        notebook_smoke = execute_release_notebook_smoke(
+            project_root=project_root,
+            output_root=resolved_notebook_output_root,
+        )
     repo_test_matrix_report = _load_json_report_if_present(
         _report_path(workspace_root, _REPO_TEST_MATRIX_REPORT_PATH)
     )
@@ -874,6 +962,7 @@ def get_release_status(
         "full_vision_v1": full_vision_judgment,
         "shipped_releasable_v1": shipped_releasable_judgment,
     }
+    enhancement_phase_gates = _load_enhancement_phase_gate_statuses(workspace_root)
     _write_completion_report(
         workspace_root=workspace_root,
         payload=_build_completion_report(
@@ -886,6 +975,7 @@ def get_release_status(
             notebook_smoke=notebook_smoke,
             clean_install_report=clean_install_report,
             workspace_root=workspace_root,
+            enhancement_phase_gates=enhancement_phase_gates,
         ),
     )
     return ReleaseStatus(
@@ -902,6 +992,7 @@ def get_release_status(
         policy_judgments=policy_judgments,
         shipped_releasable_judgment=shipped_releasable_judgment,
         readiness_judgment=shipped_releasable_judgment,
+        enhancement_phase_gates=enhancement_phase_gates,
     )
 
 
@@ -1038,6 +1129,71 @@ def execute_release_notebook_smoke(
         publication_mode=published_entry.publication_mode,
         catalog_entries=published_catalog.entry_count,
     )
+
+
+def _notebook_smoke_from_clean_install_report(
+    *,
+    project_root: Path | str | None,
+    clean_install_report: Mapping[str, Any],
+) -> NotebookSmokeResult | None:
+    surface = next(
+        (
+            row
+            for row in clean_install_report.get("surfaces", ())
+            if isinstance(row, Mapping)
+            and row.get("surface_id") == "packaged_notebook_smoke"
+        ),
+        None,
+    )
+    if not isinstance(surface, Mapping) or surface.get("status") != "passed":
+        return None
+    summary_path = _artifact_ref_path(
+        surface.get("evidence_refs", ()),
+        suffix="notebook-smoke-summary.json",
+    )
+    if summary_path is None or not summary_path.is_file():
+        return None
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    case_ids = payload.get("probabilistic_case_ids")
+    catalog_entries = payload.get("catalog_entries")
+    publication_mode = payload.get("publication_mode")
+    if (
+        not isinstance(case_ids, list)
+        or not isinstance(catalog_entries, int)
+        or not isinstance(publication_mode, str)
+    ):
+        return None
+
+    asset_root = _resolve_asset_root(project_root)
+    workspace_root = _resolve_workspace_root(project_root)
+    return NotebookSmokeResult(
+        project_root=workspace_root,
+        notebook_path=resolve_notebook_path(project_root=asset_root),
+        output_root=summary_path.parent,
+        summary_path=summary_path,
+        probabilistic_case_ids=tuple(str(case_id) for case_id in case_ids),
+        publication_mode=publication_mode,
+        catalog_entries=catalog_entries,
+    )
+
+
+def _artifact_ref_path(
+    refs: object,
+    *,
+    suffix: str,
+) -> Path | None:
+    if not isinstance(refs, (list, tuple)):
+        return None
+    for ref in refs:
+        if not isinstance(ref, str) or not ref.startswith("artifact:"):
+            continue
+        path = Path(ref.removeprefix("artifact:"))
+        if str(path).endswith(suffix):
+            return path
+    return None
 
 
 def run_release_determinism_smoke(
@@ -1815,6 +1971,13 @@ def write_suite_evidence_bundle(
             for surface in suite_result.surface_statuses
         ],
     }
+    payload = redact_mapping(
+        payload,
+        secrets=collect_secret_values(
+            os.environ,
+            names=("FMP_API_KEY", "OPENAI_API_KEY"),
+        ),
+    )
     return _write_json(_report_path(workspace_root, report_relative_path), payload)
 
 
@@ -2090,6 +2253,7 @@ def _resolve_checkout_root(project_root: Path | str | None) -> Path:
     return resolve_checkout_root(project_root)
 
 
+@lru_cache(maxsize=None)
 def _load_packaged_yaml(relative_path: str) -> dict[str, Any]:
     traversable = resources.files("euclid._assets")
     for part in Path(relative_path).parts:
@@ -2175,6 +2339,7 @@ def _build_completion_report(
     notebook_smoke: NotebookSmokeResult,
     clean_install_report: Mapping[str, Any],
     workspace_root: Path,
+    enhancement_phase_gates: tuple[Mapping[str, Any], ...] = (),
 ) -> dict[str, Any]:
     matrix_payload = _load_packaged_yaml(str(policies["full_vision_v1"]["matrix_path"]))
     current_row_ids = {
@@ -2284,6 +2449,19 @@ def _build_completion_report(
                 "evidence_bundle_ids": list(row.evidence_bundle_ids),
             }
             for row in completion_rows
+        ],
+        "enhancement_phase_gates": [
+            {
+                "phase_id": str(row["phase_id"]),
+                "phase_status": str(row["phase_status"]),
+                "covered_id_count": int(row["covered_id_count"]),
+                "id_gate_count": int(row["id_gate_count"]),
+                "id_gate_status_counts": dict(row["id_gate_status_counts"]),
+                "reason_codes": list(row["reason_codes"]),
+                "manifest_path": str(row["manifest_path"]),
+                "blocked_reason": str(row.get("blocked_reason", "")),
+            }
+            for row in enhancement_phase_gates
         ],
         "residual_risk_codes": _build_residual_risk_codes(
             completion_rows=completion_rows,
@@ -3478,8 +3656,33 @@ def verify_completion_report(
                     f"{row_id} lost required evidence class {required_class}"
                 )
 
-    if policy_state == "full_closure" and payload.get("unresolved_blockers"):
+    incomplete_rows = [
+        row
+        for row in payload.get("capability_rows", ())
+        if isinstance(row, Mapping) and row.get("status") != "complete"
+    ]
+    if incomplete_rows:
+        failures.append(
+            "completion report has incomplete rows: "
+            + ", ".join(str(row.get("row_id", "unknown")) for row in incomplete_rows)
+        )
+    if payload.get("unresolved_blockers"):
         failures.append("completion report still contains unresolved blockers")
+    enhancement_phase_gates = payload.get("enhancement_phase_gates")
+    if not enhancement_phase_gates:
+        failures.append("enhancement phase gate summary missing from completion report")
+    elif not isinstance(enhancement_phase_gates, list):
+        failures.append("enhancement phase gate summary is malformed")
+    else:
+        incomplete_phases = [
+            str(row.get("phase_id", "unknown"))
+            for row in enhancement_phase_gates
+            if isinstance(row, Mapping) and row.get("phase_status") != "complete"
+        ]
+        if incomplete_phases:
+            failures.append(
+                "enhancement phases incomplete: " + ", ".join(incomplete_phases)
+            )
     bundles = payload.get("scope_evidence_bundles", ())
     bundle_ids = [
         str(bundle.get("evidence_bundle_id"))

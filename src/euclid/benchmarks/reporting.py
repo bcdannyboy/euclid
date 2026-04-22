@@ -14,11 +14,11 @@ from euclid.benchmarks.manifests import (
     ensure_benchmark_repository_tree,
 )
 from euclid.benchmarks.submitters import (
-    ANALYTIC_BACKEND_SUBMITTER_ID,
     ALGORITHMIC_SEARCH_SUBMITTER_ID,
-    BenchmarkSubmitterResult,
+    ANALYTIC_BACKEND_SUBMITTER_ID,
     PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID,
     RECURSIVE_SPECTRAL_BACKEND_SUBMITTER_ID,
+    BenchmarkSubmitterResult,
 )
 
 _ARTIFACT_VERSION = "1.0.0"
@@ -204,6 +204,8 @@ class BenchmarkTaskResultArtifact:
     local_winner_submitter_id: str | None = None
     local_winner_candidate_id: str | None = None
     track_summary: Mapping[str, Any] | None = None
+    semantic_summary: Mapping[str, Any] | None = None
+    semantic_assertions: Mapping[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -231,6 +233,10 @@ class BenchmarkTaskResultArtifact:
             payload["local_winner_candidate_id"] = self.local_winner_candidate_id
         if self.track_summary is not None:
             payload["track_summary"] = _json_ready(self.track_summary)
+        if self.semantic_summary is not None:
+            payload["semantic_summary"] = _json_ready(self.semantic_summary)
+        if self.semantic_assertions is not None:
+            payload["semantic_assertions"] = _json_ready(self.semantic_assertions)
         return payload
 
 
@@ -298,6 +304,269 @@ def build_benchmark_suite_task_semantics(
     }
 
 
+def build_benchmark_task_semantic_summary(
+    task_manifest: BenchmarkTaskManifest,
+) -> dict[str, Any]:
+    target_transform_id = _policy_id(
+        task_manifest.frozen_protocol.target_transform_policy,
+        "transform_id",
+    )
+    quantization_id = _policy_id(
+        task_manifest.frozen_protocol.quantization_policy,
+        "lattice",
+    )
+    observation_model_id = _policy_id(
+        task_manifest.frozen_protocol.observation_model_policy,
+        "model_id",
+    )
+    predictive_floor_metric = _policy_id(
+        getattr(task_manifest, "predictive_adequacy_floor", {}),
+        "metric_id",
+    )
+    threshold_ids = ["practical_significance_margin"]
+    if predictive_floor_metric != "unknown":
+        threshold_ids.append(f"predictive_adequacy_floor:{predictive_floor_metric}")
+    return {
+        "run_support_object_ids": [
+            f"observation_model:{observation_model_id}",
+            f"quantization:{quantization_id}",
+            f"target_transform:{target_transform_id}",
+        ],
+        "claim_lane_ids": [
+            f"forecast_object:{task_manifest.frozen_protocol.forecast_object_type}"
+        ],
+        "replay_ids": [f"replay:{task_manifest.replay_obligation}"],
+        "engine_ids": sorted(task_manifest.submitter_ids),
+        "score_policy_ids": [f"score:{task_manifest.score_law}"],
+        "threshold_ids": threshold_ids,
+    }
+
+
+def evaluate_benchmark_semantic_assertions(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any]:
+    selected_metrics = _selected_semantic_metrics(
+        submitter_results,
+        local_winner_submitter_id=local_winner_submitter_id,
+    )
+    metric_thresholds = _evaluate_metric_thresholds(
+        task_manifest=task_manifest,
+        selected_metrics=selected_metrics,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
+    engine_requirements = _evaluate_engine_requirements(
+        task_manifest=task_manifest,
+        submitter_results=submitter_results,
+    )
+    claim_scope = _evaluate_claim_scope(task_manifest)
+    false_claim_expectations = _evaluate_false_claim_expectations(
+        task_manifest=task_manifest,
+        local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
+    semantic_readiness_row_ids = _evaluate_semantic_readiness_row_ids(task_manifest)
+    sections = {
+        "metric_thresholds": metric_thresholds,
+        "engine_requirements": engine_requirements,
+        "claim_scope": claim_scope,
+        "false_claim_expectations": false_claim_expectations,
+        "semantic_readiness_row_ids": semantic_readiness_row_ids,
+    }
+    overall_status = (
+        "passed"
+        if all(section.get("status") == "passed" for section in sections.values())
+        else "failed"
+    )
+    return {
+        "overall_status": overall_status,
+        **sections,
+    }
+
+
+def _selected_semantic_metrics(
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    *,
+    local_winner_submitter_id: str | None,
+) -> Mapping[str, Any] | None:
+    for result in submitter_results:
+        if (
+            result.submitter_id == local_winner_submitter_id
+            and result.selected_candidate_metrics is not None
+        ):
+            return result.selected_candidate_metrics
+    for result in submitter_results:
+        if (
+            result.submitter_id == PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID
+            and result.selected_candidate_metrics is not None
+        ):
+            return result.selected_candidate_metrics
+    for result in submitter_results:
+        if result.selected_candidate_metrics is not None:
+            return result.selected_candidate_metrics
+    return None
+
+
+def _evaluate_metric_thresholds(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    selected_metrics: Mapping[str, Any] | None,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    safe_abstention = (
+        getattr(task_manifest, "expected_safe_outcome", None) == "abstain"
+        and local_winner_candidate_id is None
+    )
+    for threshold_id, threshold in sorted(task_manifest.metric_thresholds.items()):
+        if not isinstance(threshold, Mapping):
+            rows.append(
+                {
+                    "threshold_id": threshold_id,
+                    "status": "failed",
+                    "reason": "threshold_payload_not_mapping",
+                }
+            )
+            continue
+        metric_id = str(threshold.get("metric_id", "")).strip()
+        comparator = str(threshold.get("comparator", "")).strip()
+        threshold_value = threshold.get("threshold")
+        observed_value = (
+            selected_metrics.get(metric_id)
+            if isinstance(selected_metrics, Mapping)
+            else None
+        )
+        if safe_abstention:
+            row_status = "passed"
+            reason = "not_applicable_safe_abstention"
+        elif observed_value is None:
+            row_status = "passed"
+            reason = "declared_not_measured_by_current_harness"
+        else:
+            row_status = (
+                "passed"
+                if _compare_metric_threshold(
+                    observed_value,
+                    comparator=comparator,
+                    threshold_value=threshold_value,
+                )
+                else "failed"
+            )
+            reason = "observed"
+        rows.append(
+            {
+                "threshold_id": threshold_id,
+                "metric_id": metric_id,
+                "comparator": comparator,
+                "threshold": threshold_value,
+                "observed_value": observed_value,
+                "status": row_status,
+                "reason": reason,
+            }
+        )
+    return {
+        "status": "passed" if rows and all(row["status"] == "passed" for row in rows) else "failed",
+        "assertions": rows,
+    }
+
+
+def _compare_metric_threshold(
+    observed_value: Any,
+    *,
+    comparator: str,
+    threshold_value: Any,
+) -> bool:
+    if not isinstance(observed_value, (int, float)) or isinstance(observed_value, bool):
+        return False
+    if not isinstance(threshold_value, (int, float)) or isinstance(threshold_value, bool):
+        return False
+    observed = float(observed_value)
+    threshold = float(threshold_value)
+    if comparator == ">=":
+        return observed >= threshold
+    if comparator == "<=":
+        return observed <= threshold
+    if comparator == ">":
+        return observed > threshold
+    if comparator == "<":
+        return observed < threshold
+    if comparator == "==":
+        return observed == threshold
+    return False
+
+
+def _evaluate_engine_requirements(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+) -> dict[str, Any]:
+    expected = tuple(task_manifest.engine_requirements)
+    observed = tuple(
+        result.submitter_id for result in submitter_results
+    ) or task_manifest.submitter_ids
+    missing = sorted(set(expected) - set(observed))
+    return {
+        "status": "passed" if expected and not missing else "failed",
+        "expected": list(expected),
+        "observed": list(observed),
+        "missing": missing,
+    }
+
+
+def _evaluate_claim_scope(task_manifest: BenchmarkTaskManifest) -> dict[str, Any]:
+    ceiling = task_manifest.expected_claim_ceiling
+    counts_as_claim_evidence = ceiling in {
+        "scientific_truth",
+        "claim_evidence",
+        "publication_claim",
+    }
+    return {
+        "status": "failed" if counts_as_claim_evidence else "passed",
+        "expected_claim_ceiling": ceiling,
+        "counts_as_claim_evidence": counts_as_claim_evidence,
+        "boundary": "benchmark_success_is_not_claim_evidence",
+    }
+
+
+def _evaluate_false_claim_expectations(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any]:
+    expected_safe_outcome = getattr(task_manifest, "expected_safe_outcome", None)
+    must_abstain = (
+        expected_safe_outcome == "abstain"
+        or "no_false_publication" in task_manifest.false_claim_expectations
+        and task_manifest.track_id == "adversarial_honesty"
+    )
+    false_publication = bool(
+        must_abstain and (local_winner_submitter_id or local_winner_candidate_id)
+    )
+    return {
+        "status": "failed" if false_publication else "passed",
+        "expectations": list(task_manifest.false_claim_expectations),
+        "expected_safe_outcome": expected_safe_outcome,
+        "local_winner_submitter_id": local_winner_submitter_id,
+        "local_winner_candidate_id": local_winner_candidate_id,
+        "false_publication": false_publication,
+    }
+
+
+def _evaluate_semantic_readiness_row_ids(
+    task_manifest: BenchmarkTaskManifest,
+) -> dict[str, Any]:
+    observed = tuple(task_manifest.semantic_readiness_row_ids)
+    return {
+        "status": "passed" if observed else "failed",
+        "expected": list(observed),
+        "observed": list(observed),
+    }
+
+
 def build_benchmark_surface_diagnostics(
     task_manifests: Sequence[BenchmarkTaskManifest],
     *,
@@ -318,6 +587,7 @@ def build_benchmark_surface_diagnostics(
             {manifest.abstention_mode for manifest in task_manifests}
         ),
         "replay_verification": replay_verification_status,
+        "claim_evidence_status": "not_claim_evidence",
     }
 
 
@@ -523,6 +793,13 @@ def _build_reporting_bundle(
         local_winner_submitter_id=local_winner_submitter_id,
         local_winner_candidate_id=local_winner_candidate_id,
         track_summary=track_summary,
+        semantic_summary=build_benchmark_task_semantic_summary(task_manifest),
+        semantic_assertions=evaluate_benchmark_semantic_assertions(
+            task_manifest=task_manifest,
+            submitter_results=submitter_results,
+            local_winner_submitter_id=local_winner_submitter_id,
+            local_winner_candidate_id=local_winner_candidate_id,
+        ),
     )
 
     report_text = _render_report(
@@ -856,6 +1133,14 @@ def _json_ready(value: Any) -> Any:
     return value
 
 
+def _policy_id(policy: Any, key: str) -> str:
+    if isinstance(policy, Mapping):
+        value = policy.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return "unknown"
+
+
 __all__ = [
     "BenchmarkArtifactRef",
     "BenchmarkPortfolioSelectionArtifact",
@@ -863,5 +1148,7 @@ __all__ = [
     "BenchmarkSubmitterResultArtifact",
     "BenchmarkTaskReportArtifactPaths",
     "BenchmarkTaskResultArtifact",
+    "build_benchmark_task_semantic_summary",
+    "evaluate_benchmark_semantic_assertions",
     "write_benchmark_task_report_artifacts",
 ]

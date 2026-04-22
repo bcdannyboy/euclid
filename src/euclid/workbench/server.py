@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import mimetypes
-import os
 import webbrowser
 from functools import partial
 from http import HTTPStatus
@@ -12,17 +11,18 @@ from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import parse_qs, urlparse
 
+from euclid.runtime.env import EuclidEnv
+from euclid.workbench.explainer import (
+    DEFAULT_OPENAI_API_KEY_ENV_VAR,
+    ensure_cached_workbench_explanations,
+    workbench_explainer_model,
+)
 from euclid.workbench.service import (
     create_workbench_analysis,
     default_workbench_date_range,
     list_recent_analyses,
     normalize_analysis_payload,
     ordered_target_specs,
-)
-from euclid.workbench.explainer import (
-    DEFAULT_OPENAI_API_KEY_ENV_VAR,
-    ensure_cached_workbench_explanations,
-    workbench_explainer_model,
 )
 
 _CLIENT_DISCONNECT_ERRORS = (
@@ -158,16 +158,10 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                         limit=8,
                     ),
                     "api_key_env_var": self.api_key_env_var,
-                    "has_api_key_env": bool(
-                        os.environ.get(self.api_key_env_var, "").strip()
-                    ),
+                    "has_api_key_env": bool(_env_value(self.api_key_env_var)),
                     "llm_explanations": {
                         "api_key_env_var": self.openai_api_key_env_var,
-                        "has_api_key_env": bool(
-                            os.environ.get(
-                                self.openai_api_key_env_var, ""
-                            ).strip()
-                        ),
+                        "has_api_key_env": bool(_env_value(self.openai_api_key_env_var)),
                         "model": workbench_explainer_model(),
                     },
                 }
@@ -228,9 +222,9 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             return
         try:
             payload = self._read_json_body()
-            api_key = str(payload.get("api_key") or "").strip() or os.environ.get(
-                self.api_key_env_var, ""
-            ).strip()
+            api_key = str(payload.get("api_key") or "").strip() or _env_value(
+                self.api_key_env_var
+            )
             if not api_key:
                 raise ValueError(
                     f"Provide an API key in the form or export {self.api_key_env_var}."
@@ -334,7 +328,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         analysis_path = _string_or_none(analysis.get("analysis_path"))
         return ensure_cached_workbench_explanations(
             analysis,
-            api_key=os.environ.get(self.openai_api_key_env_var, "").strip() or None,
+            api_key=_env_value(self.openai_api_key_env_var) or None,
             analysis_path=(
                 Path(analysis_path).expanduser()
                 if analysis_path
@@ -375,6 +369,10 @@ def _string_or_none(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _env_value(name: str) -> str:
+    return EuclidEnv.load().get(name).strip()
 
 
 def _asset_content_type(asset_name: str) -> str:

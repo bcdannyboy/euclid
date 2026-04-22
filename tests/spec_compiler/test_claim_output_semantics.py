@@ -18,9 +18,9 @@ FORECAST_OBJECT_TYPES_CONTRACT_PATH = REPO_ROOT / "schemas/contracts/forecast-ob
 ABSTENTION_TYPES_CONTRACT_PATH = REPO_ROOT / "schemas/contracts/abstention-types.yaml"
 
 EXPECTED_LANES = {
-    "descriptive_only",
-    "predictively_supported",
-    "mechanistically_compatible_hypothesis",
+    "descriptive_structure",
+    "predictive_within_declared_scope",
+    "mechanistically_compatible_law",
 }
 EXPECTED_FORECAST_OBJECT_TYPES = {
     "point",
@@ -124,29 +124,29 @@ def test_claim_lane_contract_closes_meaning_evidence_publication_and_abstention_
 
     assert payload["meaning_axis"] == "claim_lane"
     assert payload["global_rules"]["predictive_nonpromotion_after_descriptive_success"] == (
-        "downgrade_to_descriptive_only_without_abstention"
+        "downgrade_to_descriptive_structure_without_abstention"
     )
     assert payload["global_rules"]["probabilistic_meaning_axis"] == "forecast_object_type"
     assert payload["global_rules"]["mechanistic_meaning_axis"] == "claim_lane_with_external_evidence"
 
     entries = {entry["claim_lane"]: entry for entry in payload["contracts"]}
 
-    descriptive = entries["descriptive_only"]
+    descriptive = entries["descriptive_structure"]
     assert "descriptive_compression" in descriptive["required_evidence_classes"]
     assert "historical_structure_summary" in descriptive["allowed_to_say"]
     assert "prediction_artifact" in descriptive["may_publish"]
     assert "probabilistic_forecast_claim" in descriptive["forbidden_without_upgrade"]
     assert descriptive["abstention_interaction"] == "typed_abstention_only_when_descriptive_publication_fails"
 
-    predictive = entries["predictively_supported"]
+    predictive = entries["predictive_within_declared_scope"]
     assert "predictive_generalization" in predictive["required_evidence_classes"]
     assert "point_forecast_within_declared_validation_scope" in predictive["allowed_to_say"]
     assert "claim_card" in predictive["may_publish"]
-    assert predictive["abstention_interaction"] == "downgrade_to_descriptive_only_when_predictive_support_fails"
+    assert predictive["abstention_interaction"] == "downgrade_to_descriptive_structure_when_predictive_support_fails"
 
-    mechanistic = entries["mechanistically_compatible_hypothesis"]
+    mechanistic = entries["mechanistically_compatible_law"]
     assert "boundary_specific_external_evidence" in mechanistic["required_evidence_classes"]
-    assert mechanistic["requires_lower_lane_support"] == "predictively_supported"
+    assert mechanistic["requires_lower_lane_support"] == "predictive_within_declared_scope"
     assert "mechanism_claim" in mechanistic["allowed_to_say"]
     assert mechanistic["publication_status"] == "requires_bound_external_evidence_contracts"
 
@@ -161,14 +161,14 @@ def test_forecast_object_contract_closes_point_and_probabilistic_output_meaning(
     entries = {entry["forecast_object_type"]: entry for entry in payload["contracts"]}
 
     point = entries["point"]
-    assert point["minimum_claim_lane"] == "descriptive_only"
+    assert point["minimum_claim_lane"] == "descriptive_structure"
     assert point["semantic_family"] == "point_functional"
     assert point["calibration_mode"] == "not_applicable_for_point_only_publication"
     assert "location_parameter" in point["meaning"]
 
     for probabilistic_id in {"distribution", "interval", "quantile", "event_probability"}:
         entry = entries[probabilistic_id]
-        assert entry["minimum_claim_lane"] == "predictively_supported"
+        assert entry["minimum_claim_lane"] == "predictive_within_declared_scope"
         assert entry["semantic_family"] == "probabilistic"
         assert entry["calibration_mode"] == "required"
         assert entry["requires_contracts"], f"{probabilistic_id} must declare required contracts"

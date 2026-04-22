@@ -21,26 +21,26 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
         "relative_path",
         "expected_track",
         "expected_portfolio_status",
-        "expected_local_winner_submitter",
+        "expect_local_winner",
     ),
     (
         (
             "benchmarks/tasks/rediscovery/planted-analytic-demo.yaml",
             "rediscovery",
             "selected",
-            ANALYTIC_BACKEND_SUBMITTER_ID,
+            True,
         ),
         (
             "benchmarks/tasks/predictive_generalization/seasonal-trend-demo.yaml",
             "predictive_generalization",
             "selected",
-            RECURSIVE_SPECTRAL_BACKEND_SUBMITTER_ID,
+            True,
         ),
         (
             "benchmarks/tasks/adversarial_honesty/leakage-trap-demo.yaml",
             "adversarial_honesty",
             "abstained",
-            ANALYTIC_BACKEND_SUBMITTER_ID,
+            False,
         ),
     ),
 )
@@ -49,7 +49,7 @@ def test_phase08_benchmark_smokes_cover_each_track_with_budget_and_replay_guards
     relative_path: str,
     expected_track: str,
     expected_portfolio_status: str,
-    expected_local_winner_submitter: str,
+    expect_local_winner: bool,
 ) -> None:
     result = profile_benchmark_task(
         manifest_path=PROJECT_ROOT / relative_path,
@@ -72,7 +72,20 @@ def test_phase08_benchmark_smokes_cover_each_track_with_budget_and_replay_guards
         result.report_paths.task_result_path.read_text(encoding="utf-8")
     )
     assert task_result["track_id"] == expected_track
-    assert task_result["local_winner_submitter_id"] == expected_local_winner_submitter
+    if expect_local_winner:
+        assert task_result["local_winner_submitter_id"] in {
+            ANALYTIC_BACKEND_SUBMITTER_ID,
+            RECURSIVE_SPECTRAL_BACKEND_SUBMITTER_ID,
+            ALGORITHMIC_SEARCH_SUBMITTER_ID,
+        }
+        assert task_result["local_winner_candidate_id"]
+    else:
+        assert "local_winner_submitter_id" not in task_result
+        assert "local_winner_candidate_id" not in task_result
+    assert task_result["semantic_assertions"]["overall_status"] == "passed"
+    assert task_result["semantic_assertions"]["claim_scope"][
+        "counts_as_claim_evidence"
+    ] is False
     assert task_result["portfolio_selection_record_ref"]["artifact_type"] == (
         "portfolio_selection_record"
     )

@@ -62,7 +62,7 @@
       "point_forecast_within_declared_validation_scope",
       "cross_entity_panel_forecast_within_declared_validation_scope"
     ],
-    "claim_type": "predictively_supported",
+    "claim_type": "predictive_within_declared_scope",
     "predictive_support_status": "confirmatory_supported"
   },
   "comparison_universe": {
@@ -104,6 +104,22 @@
         "failure_reason_code": null,
         "mean_loss_differential": 4.0,
         "paired_origin_count": 2,
+        "paired_predictive_test_result": {
+          "confidence_interval": [
+            4.0,
+            4.0
+          ],
+          "confidence_interval_method": "newey_west_hac_t_interval",
+          "mean_loss_differential": 4.0,
+          "practical_margin": 0.0,
+          "promotion_allowed": true,
+          "raw_metric_comparison_role": "diagnostic_only",
+          "reason_codes": [],
+          "replay_identity": "predictive-promotion:1d8bf46d0207ef9d688cf1b039b800d7daa0f151cd9b84d763053a996261019e",
+          "schema_name": "paired_predictive_test_result@1.0.0",
+          "statistical_test_backend": "statsmodels_hac_mean_loss_differential",
+          "status": "passed"
+        },
         "per_horizon_mean_loss_differentials": [
           {
             "horizon": 1,

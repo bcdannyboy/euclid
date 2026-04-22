@@ -9,7 +9,7 @@ from typing import Any, Mapping
 
 import yaml
 
-from euclid.artifacts import FilesystemArtifactStore
+from euclid.artifacts import ArtifactIntegrityError, FilesystemArtifactStore
 from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.loader import ContractCatalog, load_contract_catalog
 from euclid.contracts.refs import TypedRef
@@ -59,6 +59,7 @@ from euclid.modules.mechanistic_evidence import register_mechanistic_evidence
 from euclid.modules.probabilistic_evaluation import (
     emit_probabilistic_prediction_artifact,
 )
+from euclid.modules.predictive_tests import evaluate_predictive_promotion
 from euclid.modules.replay import (
     ReplayedOutcome,
     build_artifact_hash_records,
@@ -659,11 +660,26 @@ def replay_demo(
     effective_bundle_ref = _coerce_typed_ref(
         bundle_ref if bundle_ref is not None else summary_payload["bundle_ref"]
     )
-    replay_result = _replay_registered_run(
-        bundle_ref=effective_bundle_ref,
-        catalog=catalog,
-        registry=registry,
-    )
+    try:
+        replay_result = _replay_registered_run(
+            bundle_ref=effective_bundle_ref,
+            catalog=catalog,
+            registry=registry,
+        )
+    except ArtifactIntegrityError as exc:
+        replay_result = OperatorReplayResult(
+            bundle_ref=effective_bundle_ref,
+            run_result_ref=_coerce_typed_ref(summary_payload["run_result_ref"]),
+            selected_candidate_ref=_coerce_typed_ref(
+                summary_payload.get("selected_candidate_ref")
+                or summary_payload["run_result_ref"]
+            ),
+            replay_verification_status="failed",
+            confirmatory_primary_score=float(
+                summary_payload["confirmatory_primary_score"]
+            ),
+            failure_reason_codes=(_replay_integrity_reason_code(exc),),
+        )
     summary = DemoReplaySummary(
         bundle_ref=effective_bundle_ref,
         run_result_ref=replay_result.run_result_ref,
@@ -676,6 +692,15 @@ def replay_demo(
         failure_reason_codes=replay_result.failure_reason_codes,
     )
     return DemoReplayResult(paths=paths, summary=summary, replay_result=replay_result)
+
+
+def _replay_integrity_reason_code(exc: ArtifactIntegrityError) -> str:
+    message = str(exc).lower()
+    if "content hash mismatch" in message:
+        return "artifact_hash_mismatch"
+    if "artifact is missing" in message:
+        return "missing_required_hash"
+    return "replay_artifact_integrity_error"
 
 
 def _replay_registered_run(
@@ -1250,6 +1275,7 @@ def run_demo_probabilistic_evaluation(
                     ),
                     predictive_gate_policy_manifest=predictive_gate_policy.manifest,
                     calibration_result_manifest=calibration_result.manifest,
+                    comparison_universe_manifest=comparison_universe.manifest,
                 ),
             ).to_manifest(catalog),
             parent_refs=(
@@ -1520,6 +1546,18 @@ def run_demo_probabilistic_evaluation(
                         "claim_ceiling": claim_decision.claim_ceiling,
                         "predictive_support_status": (
                             claim_decision.predictive_support_status
+                        ),
+                        "invariance_support_status": (
+                            claim_decision.invariance_support_status
+                        ),
+                        "transport_support_status": (
+                            claim_decision.transport_support_status
+                        ),
+                        "stochastic_support_status": (
+                            claim_decision.stochastic_support_status
+                        ),
+                        "downgrade_reason_codes": list(
+                            claim_decision.downgrade_reason_codes
                         ),
                         "allowed_interpretation_codes": list(
                             claim_decision.allowed_interpretation_codes
@@ -2170,6 +2208,7 @@ def _run_shared_local_point_workflow(
                 ),
                 predictive_gate_policy_manifest=predictive_gate_policy.manifest,
                 calibration_result_manifest=calibration_result.manifest,
+                comparison_universe_manifest=comparison_universe.manifest,
             ),
         ).to_manifest(catalog),
         parent_refs=(
@@ -2430,6 +2469,14 @@ def _run_shared_local_point_workflow(
                     "claim_ceiling": claim_decision.claim_ceiling,
                     "predictive_support_status": (
                         claim_decision.predictive_support_status
+                    ),
+                    "invariance_support_status": (
+                        claim_decision.invariance_support_status
+                    ),
+                    "transport_support_status": claim_decision.transport_support_status,
+                    "stochastic_support_status": claim_decision.stochastic_support_status,
+                    "downgrade_reason_codes": list(
+                        claim_decision.downgrade_reason_codes
                     ),
                     "allowed_interpretation_codes": list(
                         claim_decision.allowed_interpretation_codes
@@ -3340,9 +3387,9 @@ def _register_requested_mechanistic_evidence(
         )
     payload = request.mechanistic_evidence_payload
     lower_claim_ceiling = (
-        "predictively_supported"
+        "predictive_within_declared_scope"
         if predictive_status == "passed"
-        else "descriptive_only"
+        else "descriptive_structure"
     )
     return register_mechanistic_evidence(
         catalog=catalog,
@@ -3722,6 +3769,15 @@ def _probabilistic_paired_comparison_record(
             "score_result_ref": comparator_score_result.ref.as_dict(),
         }
     primary_score_delta = comparator_primary_score - candidate_primary_score
+    predictive_test = evaluate_predictive_promotion(
+        candidate_losses=(candidate_primary_score,),
+        baseline_losses=(comparator_primary_score,),
+        split_protocol_id="declared_confirmatory_holdout",
+        baseline_id=comparator_id,
+        practical_margin=0.0,
+        calibration_status="not_applicable_for_forecast_type",
+        leakage_status="passed",
+    )
     return {
         "comparator_id": comparator_id,
         "comparator_kind": "baseline",
@@ -3737,6 +3793,7 @@ def _probabilistic_paired_comparison_record(
             if candidate_primary_score < comparator_primary_score
             else "within_margin"
         ),
+        "paired_predictive_test_result": predictive_test.as_manifest(),
         "score_result_ref": comparator_score_result.ref.as_dict(),
     }
 

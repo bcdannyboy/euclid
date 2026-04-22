@@ -124,6 +124,12 @@ def test_emit_probabilistic_prediction_artifact_preserves_forecast_object_typing
         assert "point_forecast" not in row
         for field_name in required_fields:
             assert field_name in row
+        if forecast_object_type == "event_probability":
+            assert (
+                row["event_definition"]["threshold_source"]
+                == "declared_literal"
+            )
+            assert row["event_definition"]["event_id"] != "target_ge_origin_target"
 
 
 def test_emit_probabilistic_prediction_artifact_rejects_wrong_policy_type() -> None:

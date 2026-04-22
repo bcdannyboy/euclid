@@ -3,16 +3,38 @@ vocabulary: claim_lanes
 title: Claim Lanes
 closed: true
 source_doc_refs:
-  - README.md
-  - docs/search-core.md
-  - docs/modeling-pipeline.md
+- README.md
+- docs/reference/search-core.md
+- docs/reference/modeling-pipeline.md
 entries:
-  - id: descriptive_only
-    binding_status: retained
-    description: Claim lane for reducers that survive descriptive admissibility without predictive promotion.
-  - id: predictively_supported
-    binding_status: retained
-    description: Claim lane for reducers that survive the retained predictive governance and baseline-comparison protocol.
-  - id: mechanistically_compatible_hypothesis
-    binding_status: extension_surface
-    description: Deferred claim lane reserved for future mechanistic compatibility surfaces with independent external evidence contracts.
+- id: descriptive_structure
+  binding_status: retained
+  description: Claim lane for observed structure under the declared coding law, without
+    predictive, invariant, stochastic, or transport promotion.
+- id: predictive_within_declared_scope
+  binding_status: retained
+  description: Claim lane for reducers that survive the declared predictive governance
+    and baseline-comparison protocol only within that validation scope.
+- id: invariant_predictive_law
+  binding_status: gated_extension
+  description: Claim lane for predictive statements backed by passed invariance evaluation
+    across declared environments.
+- id: stochastic_law
+  binding_status: gated_extension
+  description: Claim lane for stochastic statements backed by declared probabilistic
+    evidence, calibration, and replay.
+- id: mechanistically_compatible_law
+  binding_status: gated_extension
+  description: Claim lane for mechanism-compatible statements backed by predictive
+    support and independent external mechanism evidence contracts.
+- id: transport_supported_law
+  binding_status: gated_extension
+  description: Claim lane for law statements backed by explicit out-of-environment
+    or unseen-entity transport evidence.
+- id: abstained
+  binding_status: lifecycle_state
+  description: Non-claim lane for typed abstention-only publication.
+- id: downgraded
+  binding_status: lifecycle_state
+  description: Non-claim lane for failed promotion attempts that resolve to a lower
+    supported lane.

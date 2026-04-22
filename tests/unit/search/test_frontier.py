@@ -185,3 +185,61 @@ def test_bounded_search_frontier_requires_full_axis_evidence() -> None:
         )
 
     assert exc_info.value.code == "incomplete_frontier_evidence"
+
+
+def test_frontier_accepts_scientific_evidence_axes_when_comparable() -> None:
+    result = construct_stage_local_frontier(
+        candidate_metrics=(
+            FrontierCandidateMetrics(
+                candidate_id="stable",
+                primitive_family="analytic",
+                candidate_hash="hash-stable",
+                total_code_bits=20.0,
+                structure_code_bits=2.0,
+                description_gain_bits=4.0,
+                axis_values={
+                    "fit_loss": 0.1,
+                    "out_of_sample_score": 0.7,
+                    "support_stability": 0.9,
+                    "parameter_stability": 0.8,
+                    "invariance_score": 0.4,
+                    "robustness_score": 0.5,
+                    "calibration_score": 0.6,
+                },
+            ),
+            FrontierCandidateMetrics(
+                candidate_id="fragile",
+                primitive_family="analytic",
+                candidate_hash="hash-fragile",
+                total_code_bits=21.0,
+                structure_code_bits=2.0,
+                description_gain_bits=3.0,
+                axis_values={
+                    "fit_loss": 0.4,
+                    "out_of_sample_score": 0.5,
+                    "support_stability": 0.4,
+                    "parameter_stability": 0.2,
+                    "invariance_score": 0.1,
+                    "robustness_score": 0.2,
+                    "calibration_score": 0.3,
+                },
+            ),
+        ),
+        requested_axes=(
+            "fit_loss",
+            "out_of_sample_score",
+            "support_stability",
+            "parameter_stability",
+            "invariance_score",
+            "robustness_score",
+            "calibration_score",
+        ),
+        frontier_width=2,
+        shortlist_limit=1,
+        search_class="exact_finite_enumeration",
+    )
+
+    assert result.coverage.incomparable_axes == ()
+    assert [candidate.candidate_id for candidate in result.frontier_candidates] == [
+        "stable"
+    ]

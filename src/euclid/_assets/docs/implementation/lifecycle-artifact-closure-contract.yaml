@@ -1,0 +1,476 @@
+version: 1
+kind: lifecycle_artifact_closure_contract
+authority_snapshot_id: euclid-authority-2026-04-15-b
+traceability_id: euclid-traceability-2026-04-15-v1
+required_proof_kinds:
+- producer
+- downstream_consumer
+- replay
+- tamper_or_missing_negative
+rules:
+- Artifact existence alone never closes a lifecycle capability row.
+- Schema validation alone never closes a lifecycle capability row.
+- Roundtrip-only proof never closes a lifecycle capability row.
+artifact_families:
+- artifact_family_id: abstention
+  capability_row_ids:
+  - lifecycle_artifact:abstention
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: calibration_result
+  capability_row_ids:
+  - lifecycle_artifact:calibration_result
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: candidate_spec
+  capability_row_ids:
+  - lifecycle_artifact:candidate_spec
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: canonicalization_policy
+  capability_row_ids:
+  - lifecycle_artifact:canonicalization_policy
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: catalog_entry
+  capability_row_ids:
+  - lifecycle_artifact:catalog_entry
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: causal_availability_window
+  capability_row_ids:
+  - lifecycle_artifact:causal_availability_window
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: claim_card
+  capability_row_ids:
+  - lifecycle_artifact:claim_card
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: claim_card_or_abstention
+  capability_row_ids:
+  - lifecycle_artifact:claim_card_or_abstention
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: comparison_universe
+  capability_row_ids:
+  - lifecycle_artifact:comparison_universe
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: dataset_lineage_snapshot
+  capability_row_ids:
+  - lifecycle_artifact:dataset_lineage_snapshot
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: dataset_snapshot
+  capability_row_ids:
+  - lifecycle_artifact:dataset_snapshot
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: evaluation_event_log
+  capability_row_ids:
+  - lifecycle_artifact:evaluation_event_log
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: evaluation_plan
+  capability_row_ids:
+  - lifecycle_artifact:evaluation_plan
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: evidence_independence_attestation
+  capability_row_ids:
+  - lifecycle_artifact:evidence_independence_attestation
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: external_evidence_bundle
+  capability_row_ids:
+  - lifecycle_artifact:external_evidence_bundle
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: feature_materialization_report
+  capability_row_ids:
+  - lifecycle_artifact:feature_materialization_report
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: feature_view
+  capability_row_ids:
+  - lifecycle_artifact:feature_view
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: freeze_event
+  capability_row_ids:
+  - lifecycle_artifact:freeze_event
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: frontier
+  capability_row_ids:
+  - lifecycle_artifact:frontier
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: frozen_shortlist
+  capability_row_ids:
+  - lifecycle_artifact:frozen_shortlist
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: lifecycle_gate_decision
+  capability_row_ids:
+  - lifecycle_artifact:lifecycle_gate_decision
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: mechanistic_evidence_dossier
+  capability_row_ids:
+  - lifecycle_artifact:mechanistic_evidence_dossier
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: observation_record
+  capability_row_ids:
+  - lifecycle_artifact:observation_record
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: point_score_result
+  capability_row_ids:
+  - lifecycle_artifact:point_score_result
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: prediction_artifact
+  capability_row_ids:
+  - lifecycle_artifact:prediction_artifact
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: predictive_gate_policy
+  capability_row_ids:
+  - lifecycle_artifact:predictive_gate_policy
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: publication_record
+  capability_row_ids:
+  - lifecycle_artifact:publication_record
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: reducer_artifact
+  capability_row_ids:
+  - lifecycle_artifact:reducer_artifact
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: rejected_diagnostics
+  capability_row_ids:
+  - lifecycle_artifact:rejected_diagnostics
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: replay_verification_report
+  capability_row_ids:
+  - lifecycle_artifact:replay_verification_report
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: reproducibility_bundle
+  capability_row_ids:
+  - lifecycle_artifact:reproducibility_bundle
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: robustness_report
+  capability_row_ids:
+  - lifecycle_artifact:robustness_report
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: run_manifest
+  capability_row_ids:
+  - lifecycle_artifact:run_manifest
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: run_result
+  capability_row_ids:
+  - lifecycle_artifact:run_result
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: scorecard
+  capability_row_ids:
+  - lifecycle_artifact:scorecard
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: search_budget
+  capability_row_ids:
+  - lifecycle_artifact:search_budget
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: search_plan
+  capability_row_ids:
+  - lifecycle_artifact:search_plan
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: shared_plus_local_aggregation_table
+  capability_row_ids:
+  - lifecycle_artifact:shared_plus_local_aggregation_table
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: shared_plus_local_decomposition_policy
+  capability_row_ids:
+  - lifecycle_artifact:shared_plus_local_decomposition_policy
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: source_digest
+  capability_row_ids:
+  - lifecycle_artifact:source_digest
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: split_manifest
+  capability_row_ids:
+  - lifecycle_artifact:split_manifest
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'
+- artifact_family_id: time_safety_audit
+  capability_row_ids:
+  - lifecycle_artifact:time_safety_audit
+  producer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_all_active_docs_point_to_definitive_master_plan`'
+  downstream_consumer_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_superseded_plans_are_labeled_historical`'
+  replay_test_ids:
+  - '`tests/spec_compiler/test_plan_authority_routing.py::test_no_live_doc_describes_superseded_plan_as_active`'
+  tamper_or_missing_negative_test_ids:
+  - '`tests/spec_compiler/test_public_claims_truthfulness.py::test_package_metadata_does_not_overclaim_certification`'

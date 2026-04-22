@@ -5,8 +5,8 @@
 - Scope: Fixture scope statement for the Euclid canonical-pack compiler.
 
 ## Canonical Docs
-- Fixture Euclid Project (`README.md`) | Related: [[Fixture System Map]]
-- Fixture System Map (`docs/system.md`) | Related: [[Fixture Euclid Project]]
+- Fixture Euclid Project (`docs/canonical/euclid-project.md`) | Related: [[Fixture System Map]]
+- Fixture System Map (`docs/canonical/system-map.md`) | Related: [[Fixture Euclid Project]]
 
 ## Vocabularies
 - abstention_types: `schemas/core/abstention-types.yaml` -> no_admissible_reducer

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+from scipy import stats
+
 from euclid.contracts.loader import load_contract_catalog
 from euclid.manifests.base import ManifestEnvelope
 from euclid.manifests.runtime_models import (
+    DistributionPredictionRow,
     EventProbabilityPredictionRow,
     IntervalPredictionRow,
     PredictionArtifactManifest,
@@ -100,6 +104,44 @@ def test_interval_calibration_keeps_diagnostics_and_blocks_publication() -> None
     ]
 
 
+def test_distribution_calibration_pit_matches_scipy_normal_cdf() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _score_policy_manifest(catalog, "distribution")
+    artifact = _prediction_artifact(
+        catalog=catalog,
+        candidate_id="distribution_candidate",
+        forecast_object_type="distribution",
+        score_policy=score_policy,
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="gaussian",
+                location=0.0,
+                scale=2.0,
+                support_kind="continuous",
+                realized_observation=1.0,
+            ),
+        ),
+    )
+    contract = build_calibration_contract(
+        catalog=catalog,
+        forecast_object_type="distribution",
+        thresholds={"max_ks_distance": 1.0},
+    )
+
+    result = evaluate_prediction_calibration(
+        catalog=catalog,
+        calibration_contract_manifest=contract,
+        prediction_artifact_manifest=artifact,
+    )
+
+    assert result.body["diagnostics"][0]["mean_pit"] == pytest.approx(
+        stats.norm.cdf(0.5)
+    )
+
+
 def test_evaluate_prediction_calibration_passes_reliable_event_probabilities() -> None:
     catalog = load_contract_catalog(PROJECT_ROOT)
     score_policy = _score_policy_manifest(catalog, "event_probability")
@@ -158,11 +200,13 @@ def test_evaluate_prediction_calibration_passes_reliable_event_probabilities() -
 def _score_policy_manifest(catalog, forecast_object_type: str) -> ManifestEnvelope:
     schema_name = {
         "point": "point_score_policy_manifest@1.0.0",
+        "distribution": "probabilistic_score_policy_manifest@1.0.0",
         "interval": "interval_score_policy_manifest@1.0.0",
         "event_probability": "event_probability_score_policy_manifest@1.0.0",
     }[forecast_object_type]
     primary_score = {
         "point": "absolute_error",
+        "distribution": "continuous_ranked_probability_score",
         "interval": "interval_score",
         "event_probability": "brier_score",
     }[forecast_object_type]

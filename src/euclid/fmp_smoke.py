@@ -16,6 +16,7 @@ import yaml
 from euclid.benchmarks import profile_benchmark_task
 from euclid.operator_runtime import replay_operator, run_operator
 from euclid.operator_runtime.resources import resolve_asset_root
+from euclid.runtime.env import EuclidEnv
 
 FMP_EOD_ENDPOINT = "https://financialmodelingprep.com/stable/historical-price-eod/full"
 FMP_DOCS_URL = "https://site.financialmodelingprep.com/developer/docs/stable/historical-price-eod-full"
@@ -602,10 +603,8 @@ def _slug(value: str) -> str:
     return normalized or "symbol"
 
 
-def _read_api_key(env_var: str) -> str:
-    import os
-
-    api_key = os.environ.get(env_var, "").strip()
+def _read_api_key(env_var: str, *, env_file: Path | None = None) -> str:
+    api_key = EuclidEnv.load(env_file=env_file).get(env_var).strip()
     if api_key:
         return api_key
     raise SystemExit(

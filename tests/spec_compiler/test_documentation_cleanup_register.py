@@ -13,6 +13,7 @@ SURVIVING_IMPLEMENTATION_FILES = (
     "docs/implementation/certification-command-contract.yaml",
     "docs/implementation/certification-evidence-contract.yaml",
     "docs/implementation/certification-fixture-spec.yaml",
+    "docs/implementation/enhancement-traceability.yaml",
     "docs/implementation/euclid-closure-map.yaml",
     "docs/implementation/lifecycle-artifact-closure-contract.yaml",
     "docs/implementation/subtask-test-traceability.yaml",

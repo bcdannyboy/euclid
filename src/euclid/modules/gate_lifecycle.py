@@ -32,6 +32,8 @@ def resolve_scorecard_status(
     descriptive_failure_reason_codes: Sequence[str] = (),
     robustness_reason_codes: Sequence[str] = (),
     predictive_governance_reason_codes: Sequence[str] = (),
+    falsification_status: str = "passed",
+    falsification_reason_codes: Sequence[str] = (),
     mechanistic_requested: bool = False,
     mechanistic_evidence_status: str | None = None,
     mechanistic_reason_codes: Sequence[str] = (),
@@ -50,6 +52,8 @@ def resolve_scorecard_status(
         time_safety_status=time_safety_status,
         calibration_status=calibration_status,
         predictive_governance_reason_codes=predictive_governance_reason_codes,
+        falsification_status=falsification_status,
+        falsification_reason_codes=falsification_reason_codes,
     )
     resolved_mechanistic_status, resolved_mechanistic_reason_codes = (
         _resolve_mechanistic_status(
@@ -103,6 +107,8 @@ def _resolve_predictive_status(
     time_safety_status: str,
     calibration_status: str,
     predictive_governance_reason_codes: Sequence[str],
+    falsification_status: str,
+    falsification_reason_codes: Sequence[str],
 ) -> tuple[str, tuple[str, ...]]:
     if descriptive_status != "passed":
         return "not_requested", ("predictive_not_requested",)
@@ -114,6 +120,13 @@ def _resolve_predictive_status(
         return "blocked", ("calibration_failed",)
     if calibration_status not in _NON_BLOCKING_CALIBRATION_STATUSES:
         return "blocked", ("calibration_record_missing_or_invalid",)
+    if falsification_status not in {"passed", "not_requested"}:
+        return (
+            "blocked",
+            _normalized_codes(
+                ("falsification_failed", *falsification_reason_codes)
+            ),
+        )
     if not candidate_beats_baseline:
         return "blocked", ("baseline_rule_failed",)
     if not confirmatory_promotion_allowed:
@@ -142,7 +155,7 @@ def _resolve_mechanistic_status(
     if mechanistic_evidence_status == "blocked_predictive_floor":
         return "blocked_predictive_floor", ("predictive_floor_required",)
     return (
-        "downgraded_to_predictively_supported",
+        "downgraded_to_predictive_within_declared_scope",
         _normalized_codes(
             mechanistic_reason_codes or ("mechanistic_requirements_failed",)
         ),

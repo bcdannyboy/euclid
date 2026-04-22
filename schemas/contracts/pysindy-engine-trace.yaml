@@ -1,0 +1,32 @@
+schema_name: pysindy_engine_trace@1.0.0
+kind: contract_schema
+owner_ref: search_planning_owner
+owning_module: search
+canonical_source_path: docs/reference/search-core.md
+required_fields:
+  - pysindy_version
+  - library_kind
+  - library_config
+  - optimizer_kind
+  - differentiation_method
+  - feature_library_names
+  - coefficients
+  - support_mask
+  - support_count
+  - equations
+  - row_count
+  - claim_boundary
+required_replay_fields:
+  - search_plan_id
+  - random_seed
+  - row_fingerprints
+  - engine_config
+claim_boundary:
+  claim_publication_allowed: false
+  reason_codes:
+    - search_engine_not_claim_authority
+notes:
+  - PySINDy may propose sparse dynamics, but Euclid-owned expression IR, CIR,
+    refit, scoring, replay, and publication gates determine all claim scope.
+  - Coefficients are initialization and trace evidence only; canonical
+    structural identity is the lowered Euclid expression support.

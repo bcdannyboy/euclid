@@ -58,6 +58,7 @@ from euclid.modules.gate_lifecycle import resolve_scorecard_status
 from euclid.modules.probabilistic_evaluation import (
     emit_probabilistic_prediction_artifact,
 )
+from euclid.modules.predictive_tests import evaluate_predictive_promotion
 from euclid.modules.replay import (
     ReplayedOutcome,
     build_artifact_hash_records,
@@ -1194,6 +1195,7 @@ def run_demo_probabilistic_evaluation(
                     ),
                     predictive_gate_policy_manifest=predictive_gate_policy.manifest,
                     calibration_result_manifest=calibration_result.manifest,
+                    comparison_universe_manifest=comparison_universe.manifest,
                 ),
             ).to_manifest(catalog),
             parent_refs=(
@@ -1990,6 +1992,7 @@ def _run_shared_local_point_workflow(
                 ),
                 predictive_gate_policy_manifest=predictive_gate_policy.manifest,
                 calibration_result_manifest=calibration_result.manifest,
+                comparison_universe_manifest=comparison_universe.manifest,
             ),
         ).to_manifest(catalog),
         parent_refs=(
@@ -3212,6 +3215,15 @@ def _probabilistic_paired_comparison_record(
             "score_result_ref": comparator_score_result.ref.as_dict(),
         }
     primary_score_delta = comparator_primary_score - candidate_primary_score
+    predictive_test = evaluate_predictive_promotion(
+        candidate_losses=(candidate_primary_score,),
+        baseline_losses=(comparator_primary_score,),
+        split_protocol_id="declared_confirmatory_holdout",
+        baseline_id=comparator_id,
+        practical_margin=0.0,
+        calibration_status="not_applicable_for_forecast_type",
+        leakage_status="passed",
+    )
     return {
         "comparator_id": comparator_id,
         "comparator_kind": "baseline",
@@ -3227,6 +3239,7 @@ def _probabilistic_paired_comparison_record(
             if candidate_primary_score < comparator_primary_score
             else "within_margin"
         ),
+        "paired_predictive_test_result": predictive_test.as_manifest(),
         "score_result_ref": comparator_score_result.ref.as_dict(),
     }
 

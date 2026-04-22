@@ -902,7 +902,7 @@ def test_search_candidate_record_requires_explicit_total_code_bits() -> None:
 def test_build_frontier_honors_declared_non_default_axes() -> None:
     search_plan = _search_plan(
         frontier_axes=("description_gain_bits",),
-        predictive_mode="descriptive_only",
+        predictive_mode="descriptive_structure",
     )
     candidate_records = (
         SearchCandidateRecord(

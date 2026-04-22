@@ -16,7 +16,7 @@ from euclid.search.backends import (
 
 
 @dataclass(frozen=True)
-class DecompositionAdapterCandidate:
+class LegacyDecompositionProposal:
     candidate_id: str
     form_class: str = "closed_form_expression"
     feature_dependencies: tuple[str, ...] = ()
@@ -27,9 +27,9 @@ class DecompositionAdapterCandidate:
     max_lag: int | None = None
 
 
-def normalize_decomposition_candidate(
+def normalize_legacy_decomposition_candidate(
     *,
-    spec: DecompositionAdapterCandidate,
+    spec: LegacyDecompositionProposal,
     search_plan,
     feature_view,
     observation_model: BoundObservationModel,
@@ -57,24 +57,34 @@ def normalize_decomposition_candidate(
     return rebind_cir_backend_origin(
         candidate,
         backend_origin_record=CIRBackendOriginRecord(
-            adapter_id="ai_feynman-decomposition",
-            adapter_class="decomposition",
+            adapter_id="legacy-non-claim-decomposition-compat",
+            adapter_class="legacy_non_claim_decomposition_adapter",
             source_candidate_id=spec.candidate_id,
             search_class=search_plan.search_class,
             backend_family=adapter.family_id,
             proposal_rank=proposal_rank,
-            backend_private_fields=("expression_trace", "search_trace"),
+            comparability_scope="legacy_compatibility_only_not_production_evidence",
+            backend_private_fields=(
+                "legacy_compatibility_trace",
+                "replacement_engine_trace",
+            ),
         ),
         transient_diagnostics={
-            "backend_adapter_contract": {
-                "adapter_class": "decomposition",
+            "legacy_non_claim_adapter": {
+                "adapter_class": "legacy_non_claim_decomposition_adapter",
                 "source_candidate_id": spec.candidate_id,
+                "production_evidence_allowed": False,
+                "replacement_engine_id": "decomposition-engine-v1",
+                "reason_codes": [
+                    "legacy_relabel_adapter_not_production_evidence",
+                    "real_decomposition_trace_required_for_decomposition_claims",
+                ],
             }
         },
     )
 
 
 __all__ = [
-    "DecompositionAdapterCandidate",
-    "normalize_decomposition_candidate",
+    "LegacyDecompositionProposal",
+    "normalize_legacy_decomposition_candidate",
 ]

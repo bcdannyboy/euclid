@@ -62,7 +62,7 @@
       "point_forecast_within_declared_validation_scope",
       "cross_entity_panel_forecast_within_declared_validation_scope"
     ],
-    "claim_type": "predictively_supported",
+    "claim_type": "predictive_within_declared_scope",
     "predictive_support_status": "confirmatory_supported"
   },
   "comparison_universe": {

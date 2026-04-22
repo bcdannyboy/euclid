@@ -1,0 +1,36 @@
+schema_name: paired_predictive_test_result@1.0.0
+kind: contract_schema
+owner_ref: evaluation_governance_owner
+owning_module: evaluation_governance
+canonical_source_path: schemas/contracts/paired-predictive-test-result.yaml
+phase_ref: P11
+description: >
+  Statistical paired predictive promotion result. Raw metric comparisons are
+  diagnostic-only and cannot directly authorize publication.
+required_fields:
+  - status
+  - promotion_allowed
+  - reason_codes
+  - mean_loss_differential
+  - confidence_interval
+  - practical_margin
+  - raw_metric_comparison_role
+  - replay_identity
+status_values:
+  - passed
+  - downgraded
+  - abstained
+promotion_requirements:
+  - declared_split_protocol
+  - baseline_comparison
+  - uncertainty_margin
+  - leakage_check
+  - calibration_check_when_applicable
+claim_boundary:
+  raw_metric_comparison_role: diagnostic_only
+  claim_publication_allowed_without_passed_gate: false
+replay:
+  required_fields:
+    - replay_identity
+    - reason_codes
+    - confidence_interval

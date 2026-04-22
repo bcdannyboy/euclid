@@ -15,14 +15,14 @@ from euclid.search.backends import (
     SpectralSearchBackendAdapter,
 )
 
-_SPARSE_LIBRARY_ADAPTERS = {
+_LEGACY_ADAPTERS = {
     "recursive": RecursiveSearchBackendAdapter,
     "spectral": SpectralSearchBackendAdapter,
 }
 
 
 @dataclass(frozen=True)
-class SparseLibraryAdapterCandidate:
+class LegacySparseProposal:
     candidate_id: str
     primitive_family: str
     form_class: str
@@ -35,19 +35,19 @@ class SparseLibraryAdapterCandidate:
     max_lag: int | None = None
 
 
-def normalize_sparse_library_candidate(
+def normalize_legacy_sparse_candidate(
     *,
-    spec: SparseLibraryAdapterCandidate,
+    spec: LegacySparseProposal,
     search_plan,
     feature_view,
     observation_model: BoundObservationModel,
     proposal_rank: int = 0,
 ) -> CandidateIntermediateRepresentation:
     try:
-        adapter = _SPARSE_LIBRARY_ADAPTERS[spec.primitive_family]()
+        adapter = _LEGACY_ADAPTERS[spec.primitive_family]()
     except KeyError as exc:  # pragma: no cover - defensive
         raise ValueError(
-            f"unsupported sparse-library primitive family: {spec.primitive_family!r}"
+            f"unsupported legacy sparse primitive family: {spec.primitive_family!r}"
         ) from exc
     proposal = DescriptiveSearchProposal(
         candidate_id=spec.candidate_id,
@@ -71,24 +71,34 @@ def normalize_sparse_library_candidate(
     return rebind_cir_backend_origin(
         candidate,
         backend_origin_record=CIRBackendOriginRecord(
-            adapter_id="sindy-sparse-library",
-            adapter_class="sparse_library",
+            adapter_id="legacy-non-claim-sparse-compat",
+            adapter_class="legacy_non_claim_sparse_adapter",
             source_candidate_id=spec.candidate_id,
             search_class=search_plan.search_class,
             backend_family=spec.primitive_family,
             proposal_rank=proposal_rank,
-            backend_private_fields=("library_trace", "coefficient_path"),
+            comparability_scope="legacy_compatibility_only_not_production_evidence",
+            backend_private_fields=(
+                "legacy_compatibility_trace",
+                "replacement_engine_trace",
+            ),
         ),
         transient_diagnostics={
-            "backend_adapter_contract": {
-                "adapter_class": "sparse_library",
+            "legacy_non_claim_adapter": {
+                "adapter_class": "legacy_non_claim_sparse_adapter",
                 "source_candidate_id": spec.candidate_id,
+                "production_evidence_allowed": False,
+                "replacement_engine_id": "pysindy-engine-v1",
+                "reason_codes": [
+                    "legacy_relabel_adapter_not_production_evidence",
+                    "external_engine_trace_required_for_sindy_claims",
+                ],
             }
         },
     )
 
 
 __all__ = [
-    "SparseLibraryAdapterCandidate",
-    "normalize_sparse_library_candidate",
+    "LegacySparseProposal",
+    "normalize_legacy_sparse_candidate",
 ]

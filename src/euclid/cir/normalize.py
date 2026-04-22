@@ -14,6 +14,7 @@ from euclid.cir.models import (
     CIRCanonicalSerialization,
     CIREvidenceLayer,
     CIRExecutionLayer,
+    CIRExpressionPayload,
     CIRForecastOperator,
     CIRHistoryAccessContract,
     CIRInputSignature,
@@ -26,6 +27,21 @@ from euclid.cir.models import (
     CIRStructuralLayer,
 )
 from euclid.contracts.errors import ContractValidationError
+from euclid.expr.ast import (
+    DistributionParameter,
+    Expr,
+    Feature,
+    NoiseTerm,
+    Parameter,
+    State,
+    walk_expression,
+)
+from euclid.expr.serialization import (
+    expression_canonical_json,
+    expression_hash,
+    expression_to_dict,
+)
+from euclid.math.observation_models import PointObservationModel
 from euclid.reducers.models import (
     BoundObservationModel,
     ReducerAdmissibilityObject,
@@ -222,6 +238,76 @@ def build_cir_candidate_from_algorithmic_program(
     )
 
 
+def build_cir_candidate_from_expression(
+    *,
+    expression: Expr,
+    cir_family_id: str,
+    cir_form_class: str,
+    input_signature: CIRInputSignature,
+    forecast_operator: CIRForecastOperator,
+    model_code_decomposition: CIRModelCodeDecomposition,
+    backend_origin_record: CIRBackendOriginRecord,
+    replay_hooks: CIRReplayHooks,
+    assumptions: Mapping[str, object] | None = None,
+    domain_constraints: Mapping[str, object] | None = None,
+    unit_constraints: Mapping[str, object] | None = None,
+    transient_diagnostics: Mapping[str, object] | None = None,
+) -> CandidateIntermediateRepresentation:
+    expression_payload = CIRExpressionPayload(
+        expression_tree=expression_to_dict(expression),
+        expression_canonical_json=expression_canonical_json(expression),
+        expression_canonical_hash=expression_hash(expression),
+        assumptions=dict(assumptions or {}),
+        domain_constraints=dict(domain_constraints or {}),
+        unit_constraints=dict(unit_constraints or {}),
+        parameter_declarations=_expression_names(expression, Parameter),
+        feature_dependencies=_expression_names(expression, Feature),
+        state_dependencies=_expression_names(expression, State),
+        stochastic_dependencies=tuple(
+            sorted(
+                {
+                    node.name
+                    for node in walk_expression(expression)
+                    if isinstance(node, (NoiseTerm, DistributionParameter))
+                }
+            )
+        ),
+    )
+    candidate = CandidateIntermediateRepresentation(
+        structural_layer=CIRStructuralLayer(
+            cir_family_id=cir_family_id,
+            cir_form_class=cir_form_class,
+            input_signature=input_signature,
+            state_signature=CIRStateSignature(),
+            expression_payload=expression_payload,
+        ),
+        execution_layer=CIRExecutionLayer(
+            history_access_contract=CIRHistoryAccessContract(
+                contract_id="expression_ir_full_prefix",
+                access_mode="full_prefix",
+                max_lag=None,
+                allowed_side_information=input_signature.side_information_fields,
+            ),
+            state_update_law_id=f"expression_ir::{expression_payload.expression_canonical_hash}",
+            forecast_operator=forecast_operator,
+            observation_model_binding=BoundObservationModel.from_runtime(
+                PointObservationModel()
+            ),
+        ),
+        evidence_layer=CIREvidenceLayer(
+            canonical_serialization=CIRCanonicalSerialization(
+                canonical_bytes=b"{}",
+                content_hash="sha256:placeholder",
+            ),
+            model_code_decomposition=model_code_decomposition,
+            backend_origin_record=backend_origin_record,
+            replay_hooks=replay_hooks,
+            transient_diagnostics=transient_diagnostics or {},
+        ),
+    )
+    return normalize_cir_candidate(candidate)
+
+
 def rebind_cir_backend_origin(
     candidate: CandidateIntermediateRepresentation,
     *,
@@ -304,6 +390,7 @@ def _normalize_structural_layer(layer: CIRStructuralLayer) -> CIRStructuralLayer
         ),
         parameter_block=_normalize_parameter_block(layer.parameter_block),
         composition_graph=layer.composition_graph.normalize(),
+        expression_payload=layer.expression_payload,
     )
 
 
@@ -365,6 +452,18 @@ def _normalize_replay_hooks(replay_hooks: CIRReplayHooks) -> CIRReplayHooks:
     )
 
 
+def _expression_names(expression: Expr, node_type) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                node.name
+                for node in walk_expression(expression)
+                if isinstance(node, node_type)
+            }
+        )
+    )
+
+
 def _algorithmic_update_rule(program) -> ReducerStateUpdateRule:
     def update(
         state: ReducerStateObject,
@@ -405,6 +504,7 @@ def _algorithmic_update_rule(program) -> ReducerStateUpdateRule:
 
 __all__ = [
     "build_cir_candidate_from_algorithmic_program",
+    "build_cir_candidate_from_expression",
     "build_cir_candidate_from_reducer",
     "normalize_cir_candidate",
     "require_full_cir_closure",

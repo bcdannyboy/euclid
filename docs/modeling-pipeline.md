@@ -101,7 +101,7 @@ Confirmatory, robustness, and other non-search axes are intentionally excluded f
 
 Point and non-point outputs are separate publication lanes.
 
-- Point outputs can support predictive-law publication if the surrounding scorecard, comparator, and replay requirements pass.
+- Point outputs can support predictive-within-scope publication if the surrounding scorecard, comparator, and replay requirements pass.
 - Non-point outputs require forecast-object-specific evaluation and, for predictive promotion, successful calibration.
 - When a publishable point law and a publishable probabilistic lane share the same validation scope and publication record, downstream surfaces can present the internal `holistic_equation` payload as a unified deterministic-plus-stochastic equation for the series.
 

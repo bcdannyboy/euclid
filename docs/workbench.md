@@ -82,7 +82,7 @@ The workbench is designed to avoid overclaiming. Backend normalization and front
 In practice that means the app refuses to promote:
 
 - stale synthetic holistic payloads
-- exact-closure artifacts as predictive laws or holistic equations
+- exact-closure artifacts as predictive-within-scope symbolic claims or unified equations
 - non-publishable saved outputs
 - benchmark-local descriptive summaries into operator-level claims
 - probabilistic lanes whose calibration status does not have a `publishable` gate effect

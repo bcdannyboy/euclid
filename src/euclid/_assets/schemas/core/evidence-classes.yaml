@@ -3,25 +3,31 @@ vocabulary: evidence_classes
 title: Evidence Classes
 closed: true
 source_doc_refs:
-  - README.md
-  - docs/contracts-manifests.md
-  - docs/modeling-pipeline.md
+- README.md
+- docs/reference/contracts-manifests.md
+- docs/reference/modeling-pipeline.md
 entries:
-  - id: descriptive_compression
-    binding_status: retained
-    description: Evidence from the coding law, admissibility rules, and structural comparison protocol that supports descriptive claims.
-  - id: predictive_generalization
-    binding_status: retained
-    description: Evidence from time-safe predictive evaluation, approved baselines, and confirmatory governance.
-  - id: robustness
-    binding_status: retained
-    description: Evidence from stability, perturbation, and null-comparison protocols that tests whether support survives required stress conditions.
-  - id: replay_verification
-    binding_status: retained
-    description: Typed replay evidence showing that a publication record can be reproduced from the declared artifacts and policies.
-  - id: readiness_and_closure
-    binding_status: retained
-    description: Typed readiness and closure evidence that determines whether a result is publishable in the declared catalog scope.
-  - id: boundary_specific_external_evidence
-    binding_status: boundary_only
-    description: Explicit external evidence references reserved for deferred mechanistic-compatibility boundaries rather than retained predictive promotion.
+- id: descriptive_compression
+  binding_status: retained
+  description: Evidence from the coding law, admissibility rules, and structural comparison
+    protocol that supports descriptive claims.
+- id: predictive_generalization
+  binding_status: retained
+  description: Evidence from time-safe predictive evaluation, approved baselines,
+    and confirmatory governance.
+- id: robustness
+  binding_status: retained
+  description: Evidence from stability, perturbation, and null-comparison protocols
+    that tests whether support survives required stress conditions.
+- id: replay_verification
+  binding_status: retained
+  description: Typed replay evidence showing that a publication record can be reproduced
+    from the declared artifacts and policies.
+- id: readiness_and_closure
+  binding_status: retained
+  description: Typed readiness and closure evidence that determines whether a result
+    is publishable in the declared catalog scope.
+- id: boundary_specific_external_evidence
+  binding_status: boundary_only
+  description: Explicit external evidence references reserved for deferred mechanistic-compatibility
+    boundaries rather than retained predictive promotion.

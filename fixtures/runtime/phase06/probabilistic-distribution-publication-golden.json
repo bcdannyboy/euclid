@@ -1,21 +1,21 @@
 {
   "catalog_entry": {
     "abstention_ref": null,
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_ba5b3bef16678ebbf57f",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_3c7b4df1dd49aa4ae736",
     "comparator_exposure_status": "satisfied",
     "forecast_object_type": "distribution",
     "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
     "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
     "publication_mode": "candidate_publication",
-    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_44272e0b561f18c9da6c",
-    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_dded80828c332d71d7d8"
+    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_e555d9c3d4b801be7311",
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_e04d980650ba41f2debf"
   },
   "claim": {
     "allowed_interpretation_codes": [
       "historical_structure_summary",
       "probabilistic_forecast_within_declared_validation_scope"
     ],
-    "claim_type": "predictively_supported",
+    "claim_type": "predictive_within_declared_scope",
     "predictive_support_status": "confirmatory_supported"
   },
   "comparison": {
@@ -33,6 +33,22 @@
         "comparison_status": "comparable",
         "failure_reason_code": null,
         "mean_loss_differential": 67.277649457814,
+        "paired_predictive_test_result": {
+          "confidence_interval": [
+            67.277649457814,
+            67.277649457814
+          ],
+          "confidence_interval_method": "newey_west_hac_t_interval",
+          "mean_loss_differential": 67.277649457814,
+          "practical_margin": 0.0,
+          "promotion_allowed": true,
+          "raw_metric_comparison_role": "diagnostic_only",
+          "reason_codes": [],
+          "replay_identity": "predictive-promotion:629498f8d3e578e4fcebb4ab09ba4bc794923c70398cc1dee5b1ba09e2af3c6c",
+          "schema_name": "paired_predictive_test_result@1.0.0",
+          "statistical_test_backend": "statsmodels_hac_mean_loss_differential",
+          "status": "passed"
+        },
         "practical_significance_margin": 0.0,
         "practical_significance_status": "candidate_better_than_margin",
         "primary_score_delta": 67.277649457814,
@@ -64,11 +80,11 @@
     "bundle_ref": "reproducibility_bundle_manifest@1.0.0:phase06-probabilistic-distribution-demo_bundle",
     "replay_verification_status": "verified",
     "required_manifest_refs": [
-      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_89f2ef49bf546e77be37",
-      "scorecard_manifest@1.1.0:scorecard_manifest_44272e0b561f18c9da6c",
-      "claim_card_manifest@1.1.0:claim_card_manifest_ba5b3bef16678ebbf57f",
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_dc6b121ad5f3991d986e",
+      "scorecard_manifest@1.1.0:scorecard_manifest_e555d9c3d4b801be7311",
+      "claim_card_manifest@1.1.0:claim_card_manifest_3c7b4df1dd49aa4ae736",
       "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
-      "validation_scope_manifest@1.0.0:validation_scope_manifest_dded80828c332d71d7d8",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_e04d980650ba41f2debf",
       "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
       "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568"
     ],
@@ -84,7 +100,7 @@
       "publication_decision_resolved",
       "run_result_assembled"
     ],
-    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_dded80828c332d71d7d8"
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_e04d980650ba41f2debf"
   },
   "request_id": "phase06-probabilistic-distribution-demo",
   "run_result_ref": "run_result_manifest@1.1.0:phase06-probabilistic-distribution-demo_run_result",
@@ -96,7 +112,7 @@
   "summary_refs": {
     "abstention_ref": null,
     "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_ba5b3bef16678ebbf57f",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_3c7b4df1dd49aa4ae736",
     "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
     "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb"
   }

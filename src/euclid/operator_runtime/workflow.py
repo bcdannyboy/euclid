@@ -42,6 +42,7 @@ from euclid.modules.evaluation_governance import (
 )
 from euclid.modules.gate_lifecycle import resolve_scorecard_status
 from euclid.modules.mechanistic_evidence import register_mechanistic_evidence
+from euclid.modules.predictive_tests import evaluate_predictive_promotion
 from euclid.modules.replay import (
     ReplayedOutcome,
     build_artifact_hash_records,
@@ -730,13 +731,26 @@ def run_operator_reducer_workflow(
                         forward_validation_candidate_runtime.baseline_primary_score
                     ),
                     "primary_score_delta": _stable_float(
-                        forward_validation_candidate_runtime.confirmatory_primary_score
-                        - forward_validation_candidate_runtime.baseline_primary_score
+                        forward_validation_candidate_runtime.baseline_primary_score
+                        - forward_validation_candidate_runtime.confirmatory_primary_score
                     ),
                     "mean_loss_differential": _stable_float(
-                        forward_validation_candidate_runtime.confirmatory_primary_score
-                        - forward_validation_candidate_runtime.baseline_primary_score
+                        forward_validation_candidate_runtime.baseline_primary_score
+                        - forward_validation_candidate_runtime.confirmatory_primary_score
                     ),
+                    "paired_predictive_test_result": evaluate_predictive_promotion(
+                        candidate_losses=(
+                            forward_validation_candidate_runtime.confirmatory_primary_score,
+                        ),
+                        baseline_losses=(
+                            forward_validation_candidate_runtime.baseline_primary_score,
+                        ),
+                        split_protocol_id="declared_confirmatory_holdout",
+                        baseline_id="constant_baseline",
+                        practical_margin=0.0,
+                        calibration_status="not_applicable_for_forecast_type",
+                        leakage_status="passed",
+                    ).as_manifest(),
                     "score_result_ref": (
                         baseline_point_score_result.manifest.ref.as_dict()
                     ),
@@ -818,6 +832,7 @@ def run_operator_reducer_workflow(
                 ),
                 predictive_gate_policy_manifest=predictive_gate_policy.manifest,
                 calibration_result_manifest=calibration_result.manifest,
+                comparison_universe_manifest=comparison_universe.manifest,
             ),
         ).to_manifest(catalog),
         parent_refs=(
@@ -887,9 +902,9 @@ def run_operator_reducer_workflow(
                 field_path="mechanistic_evidence",
             )
         lower_claim_ceiling = (
-            "predictively_supported"
+            "predictive_within_declared_scope"
             if scorecard_decision.predictive_status == "passed"
-            else "descriptive_only"
+            else "descriptive_structure"
         )
         mechanistic_evidence = register_mechanistic_evidence(
             catalog=catalog,
@@ -1235,6 +1250,18 @@ def run_operator_reducer_workflow(
                         "claim_ceiling": claim_decision.claim_ceiling,
                         "predictive_support_status": (
                             claim_decision.predictive_support_status
+                        ),
+                        "invariance_support_status": (
+                            claim_decision.invariance_support_status
+                        ),
+                        "transport_support_status": (
+                            claim_decision.transport_support_status
+                        ),
+                        "stochastic_support_status": (
+                            claim_decision.stochastic_support_status
+                        ),
+                        "downgrade_reason_codes": list(
+                            claim_decision.downgrade_reason_codes
                         ),
                         "allowed_interpretation_codes": list(
                             claim_decision.allowed_interpretation_codes
@@ -1617,6 +1644,18 @@ def run_operator_reducer_workflow(
                             "claim_ceiling": claim_decision.claim_ceiling,
                             "predictive_support_status": (
                                 claim_decision.predictive_support_status
+                            ),
+                            "invariance_support_status": (
+                                claim_decision.invariance_support_status
+                            ),
+                            "transport_support_status": (
+                                claim_decision.transport_support_status
+                            ),
+                            "stochastic_support_status": (
+                                claim_decision.stochastic_support_status
+                            ),
+                            "downgrade_reason_codes": list(
+                                claim_decision.downgrade_reason_codes
                             ),
                             "allowed_interpretation_codes": list(
                                 claim_decision.allowed_interpretation_codes
@@ -3528,16 +3567,8 @@ def _claim_decision_publishable_predictive_law(
     claim_decision: Any,
     scorecard_body: Mapping[str, Any],
 ) -> bool:
-    allowed_interpretation_codes = tuple(
-        str(code) for code in claim_decision.allowed_interpretation_codes
-    )
-    return (
-        publication_mode == "candidate_publication"
-        and str(scorecard_body.get("descriptive_status")) == "passed"
-        and str(scorecard_body.get("predictive_status")) == "passed"
-        and claim_decision.predictive_support_status == "confirmatory_supported"
-        and _CLAIM_INTERPRETATION_POINT in allowed_interpretation_codes
-    )
+    del publication_mode, claim_decision, scorecard_body
+    return False
 
 
 def _predictive_law_projection(

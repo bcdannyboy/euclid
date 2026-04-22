@@ -57,7 +57,7 @@ def _snapshot(path: Path, *, lower_claim_ceiling: str) -> dict[str, Any]:
             "mechanistic_status": (
                 "passed"
                 if evaluation.dossier.status == "passed"
-                else "downgraded_to_predictively_supported"
+                else "downgraded_to_predictive_within_declared_scope"
             ),
             "mechanistic_reason_codes": list(evaluation.dossier.reason_codes),
             "forecast_object_type": "point",
@@ -80,12 +80,12 @@ def _snapshot(path: Path, *, lower_claim_ceiling: str) -> dict[str, Any]:
 def test_mechanistic_positive_publication_matches_golden_fixture() -> None:
     assert _snapshot(
         POSITIVE_FIXTURE,
-        lower_claim_ceiling="predictively_supported",
+        lower_claim_ceiling="predictive_within_declared_scope",
     ) == json.loads(POSITIVE_GOLDEN.read_text(encoding="utf-8"))
 
 
 def test_mechanistic_overlap_downgrade_matches_golden_fixture() -> None:
     assert _snapshot(
         NEGATIVE_FIXTURE,
-        lower_claim_ceiling="predictively_supported",
+        lower_claim_ceiling="predictive_within_declared_scope",
     ) == json.loads(NEGATIVE_GOLDEN.read_text(encoding="utf-8"))

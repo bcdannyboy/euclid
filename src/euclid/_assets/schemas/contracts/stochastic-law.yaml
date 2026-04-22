@@ -1,0 +1,39 @@
+schema_name: stochastic_model_manifest@1.0.0
+kind: contract_schema
+owner_ref: probabilistic_evaluation_owner
+owning_module: probabilistic_evaluation
+canonical_source_path: schemas/contracts/stochastic-law.yaml
+phase_ref: P10
+description: >
+  Explicit stochastic observation and residual-process evidence used for
+  probabilistic forecast objects. Heuristic Gaussian support cannot satisfy this
+  contract.
+required_fields:
+  - candidate_id
+  - observation_family
+  - residual_location
+  - residual_scale
+  - residual_parameter_summary
+  - horizon_scale_law
+  - production_evidence
+  - heuristic_gaussian_support
+  - replay_identity
+admitted_observation_families:
+  - gaussian
+  - student_t
+  - laplace
+  - poisson
+  - negative_binomial
+  - bernoulli
+  - beta
+  - lognormal
+forbidden_production_evidence:
+  - heuristic_gaussian_scale_inflation
+claim_boundary:
+  stochastic_model_alone_can_publish_claim: false
+  requires_scoring_calibration_and_promotion_gate: true
+replay:
+  required_fields:
+    - replay_identity
+    - residual_parameter_summary
+    - horizon_scale_law

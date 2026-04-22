@@ -4,38 +4,38 @@ owners:
   - id: mechanistic_evidence_council
     display_name: Mechanistic Evidence Council
 global_rules:
-  requires_lower_lane_support: predictively_supported
+  requires_lower_lane_support: predictive_within_declared_scope
   external_evidence_must_be_domain_bound: true
   predictive_fit_is_insufficient: true
-  missing_requirement_effect: downgrade_to_predictively_supported
+  missing_requirement_effect: downgrade_to_predictive_within_declared_scope
 contracts:
   - requirement_id: mechanism_mapping
     owner_ref: mechanistic_evidence_council
-    required_for_claim_lane: mechanistically_compatible_hypothesis
+    required_for_claim_lane: mechanistically_compatible_law
     meaning: Typed map from reducer terms to domain entities and activities.
     acceptance_rule: declared_mapping_is_complete_and_non_circular
-    failure_effect: downgrade_to_predictively_supported
+    failure_effect: downgrade_to_predictive_within_declared_scope
   - requirement_id: units_consistency
     owner_ref: mechanistic_evidence_council
-    required_for_claim_lane: mechanistically_compatible_hypothesis
+    required_for_claim_lane: mechanistically_compatible_law
     meaning: Bound units or dimensions make the mechanism map numerically coherent.
     acceptance_rule: declared_units_and_transforms_are_mutually_compatible
-    failure_effect: downgrade_to_predictively_supported
+    failure_effect: downgrade_to_predictive_within_declared_scope
   - requirement_id: invariance_or_intervention_support
     owner_ref: mechanistic_evidence_council
-    required_for_claim_lane: mechanistically_compatible_hypothesis
+    required_for_claim_lane: mechanistically_compatible_law
     meaning: Domain evidence shows the mapped mechanism survives invariance checks or interventions.
     acceptance_rule: at_least_one_bound_invariance_or_intervention_contract_passes
-    failure_effect: downgrade_to_predictively_supported
+    failure_effect: downgrade_to_predictive_within_declared_scope
   - requirement_id: external_evidence_bundle
     owner_ref: mechanistic_evidence_council
-    required_for_claim_lane: mechanistically_compatible_hypothesis
+    required_for_claim_lane: mechanistically_compatible_law
     meaning: Domain-specific evidence bundle anchors the mechanism claim outside predictive fit.
     acceptance_rule: every cited source is typed_and_versioned
-    failure_effect: downgrade_to_predictively_supported
+    failure_effect: downgrade_to_predictive_within_declared_scope
   - requirement_id: evidence_independence_attestation
     owner_ref: mechanistic_evidence_council
-    required_for_claim_lane: mechanistically_compatible_hypothesis
+    required_for_claim_lane: mechanistically_compatible_law
     meaning: Mechanistic evidence is not merely a restatement of predictive artifacts.
     acceptance_rule: evidence_lineage_is_disjoint_from_primary_predictive_score_evidence
-    failure_effect: downgrade_to_predictively_supported
+    failure_effect: downgrade_to_predictive_within_declared_scope

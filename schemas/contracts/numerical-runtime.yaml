@@ -1,0 +1,26 @@
+kind: numerical_runtime_contract
+schema_version: numerical-runtime-v1
+required_sections:
+  - python
+  - libraries
+  - julia
+  - blas_lapack
+  - platform
+  - cpu
+required_libraries:
+  - numpy
+  - pandas
+  - scipy
+  - sympy
+  - pint
+  - statsmodels
+  - scikit-learn
+  - pysindy
+  - pysr
+  - egglog
+  - joblib
+replay_mismatch_reason_codes:
+  - library_version_mismatch
+  - julia_runtime_mismatch
+  - blas_lapack_mismatch
+  - platform_mismatch

@@ -49,13 +49,13 @@ def test_operator_run_emits_mechanistic_dossier(tmp_path: Path) -> None:
     )
     assert mechanistic_dossier.body["status"] == "passed"
     assert mechanistic_dossier.body["resolved_claim_ceiling"] == (
-        "mechanistically_compatible_hypothesis"
+        "mechanistically_compatible_law"
     )
     assert inspection.scorecard is not None
     assert inspection.scorecard.manifest.body["mechanistic_status"] == "passed"
     assert inspection.claim_card is not None
     assert inspection.claim_card.manifest.body["claim_type"] == (
-        "mechanistically_compatible_hypothesis"
+        "mechanistically_compatible_law"
     )
     assert entry.mechanistic_evidence_ref == mechanistic_dossier.ref
     assert (

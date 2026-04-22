@@ -34,7 +34,7 @@ score_policy:
 practical_significance_margin: 0.02
 budget_policy:
   wall_clock_seconds: 120
-  candidate_limit: 1
+  candidate_limit: 2
 baseline_registry:
 - baseline_id: naive_last_value
   manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml

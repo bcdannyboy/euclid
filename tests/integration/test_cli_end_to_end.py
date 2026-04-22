@@ -8,6 +8,7 @@ import yaml
 from typer.testing import CliRunner
 
 from euclid.cli import app
+from euclid.operator_runtime.resources import resolve_example_path
 
 RUNNER = CliRunner()
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -25,13 +26,11 @@ def _imported_modules(path: Path) -> set[str]:
 
 
 def _write_manifest(tmp_path: Path, *, request_id: str) -> Path:
-    payload = yaml.safe_load(
-        (PROJECT_ROOT / "examples/current_release_run.yaml").read_text(
-            encoding="utf-8"
-        )
-    )
+    payload = yaml.safe_load(resolve_example_path("current_release_run.yaml").read_text(
+        encoding="utf-8"
+    ))
     payload["request_id"] = request_id
-    payload["dataset_csv"] = str(PROJECT_ROOT / "examples/minimal_dataset.csv")
+    payload["dataset_csv"] = str(resolve_example_path("minimal_dataset.csv"))
     manifest_path = tmp_path / f"{request_id}.yaml"
     manifest_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
     return manifest_path

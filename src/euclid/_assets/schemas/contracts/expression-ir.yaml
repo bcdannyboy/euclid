@@ -1,0 +1,105 @@
+version: 1
+kind: expression_ir_contract
+schema_name: expression_ir_manifest@1.0.0
+owners:
+  - id: expression_ir_contract_council
+    display_name: Expression IR Contract Council
+canonicalization:
+  serialization: canonical_json
+  digest: sha256
+  replay_identity_fields:
+    - expression_tree
+    - assumptions
+    - domain_constraints
+    - unit_constraints
+    - parameter_declarations
+    - feature_dependencies
+    - state_dependencies
+    - stochastic_dependencies
+node_kinds:
+  - literal
+  - parameter
+  - feature
+  - state
+  - lag
+  - delay
+  - derivative
+  - integral
+  - unary_op
+  - binary_op
+  - nary_op
+  - conditional
+  - piecewise
+  - noise_term
+  - distribution_parameter
+  - function_call
+operator_families:
+  arithmetic:
+    - add
+    - sub
+    - mul
+    - div
+    - protected_div
+    - neg
+    - abs
+    - min
+    - max
+    - pow
+    - pow2
+    - sqrt
+  transcendental:
+    - exp
+    - log
+    - protected_log
+    - sin
+    - cos
+    - tan
+    - tanh
+    - sigmoid
+    - logit
+  boolean:
+    - gt
+    - ge
+    - lt
+    - le
+    - eq
+    - and
+    - or
+    - not
+  temporal:
+    - lag
+    - finite_difference
+    - rolling_mean
+    - rolling_sum
+    - cumulative_sum
+    - convolution
+    - seasonal_phase
+    - derivative_estimate
+    - integral_estimate
+  distribution_parameters:
+    - location_parameter
+    - scale_parameter
+    - rate_parameter
+    - probability_parameter
+    - dispersion_parameter
+domain_constraints:
+  fail_closed_codes:
+    - unsafe_domain
+    - nonpositive_log_argument
+    - division_by_zero
+    - invalid_expression_literal
+    - unsupported_expression_operator
+unit_constraints:
+  registry: pint
+  fail_closed_codes:
+    - incompatible_units
+    - invalid_expression_unit
+    - unit_validation_failed
+external_engine_boundaries:
+  direct_claim_publication: forbidden
+  required_boundary_reason: external_engine_not_claim_authority
+  allowed_lowering_target: expression_ir
+compatibility:
+  retained_legacy_surfaces:
+    - algorithmic_dsl
+  compatibility_mode: lower_to_expression_ir_before_cir_publication

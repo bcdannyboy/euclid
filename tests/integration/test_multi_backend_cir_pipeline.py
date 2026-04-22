@@ -3,12 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from euclid.adapters.decomposition import (
-    DecompositionAdapterCandidate,
-    normalize_decomposition_candidate,
+    LegacyDecompositionProposal,
+    normalize_legacy_decomposition_candidate,
 )
 from euclid.adapters.sparse_library import (
-    SparseLibraryAdapterCandidate,
-    normalize_sparse_library_candidate,
+    LegacySparseProposal,
+    normalize_legacy_sparse_candidate,
 )
 from euclid.contracts.loader import load_contract_catalog
 from euclid.contracts.refs import TypedRef
@@ -36,8 +36,8 @@ def test_heterogeneous_adapter_candidates_flow_through_common_fit_and_scoring() 
     observation_model = BoundObservationModel.from_runtime(PointObservationModel())
     score_policy = _score_policy_manifest(catalog, evaluation_plan)
 
-    decomposition_candidate = normalize_decomposition_candidate(
-        spec=DecompositionAdapterCandidate(
+    decomposition_candidate = normalize_legacy_decomposition_candidate(
+        spec=LegacyDecompositionProposal(
             candidate_id="decomposition_lag1",
             feature_dependencies=("lag_1",),
             parameter_values={"intercept": 1.0, "lag_coefficient": 0.9},
@@ -48,8 +48,8 @@ def test_heterogeneous_adapter_candidates_flow_through_common_fit_and_scoring() 
         observation_model=observation_model,
         proposal_rank=0,
     )
-    sparse_candidate = normalize_sparse_library_candidate(
-        spec=SparseLibraryAdapterCandidate(
+    sparse_candidate = normalize_legacy_sparse_candidate(
+        spec=LegacySparseProposal(
             candidate_id="sparse_recursive",
             primitive_family="recursive",
             form_class="state_recurrence",
@@ -88,6 +88,12 @@ def test_heterogeneous_adapter_candidates_flow_through_common_fit_and_scoring() 
 
         assert artifact.body["forecast_object_type"] == "point"
         assert score_result.body["comparison_status"] == "comparable"
+        assert (
+            candidate.evidence_layer.transient_diagnostics["legacy_non_claim_adapter"][
+                "production_evidence_allowed"
+            ]
+            is False
+        )
         assert artifact.body["candidate_id"] in {
             "decomposition_lag1",
             "sparse_recursive",

@@ -32,7 +32,7 @@ def test_failed_calibration_blocks_publication(tmp_path: Path) -> None:
         "calibration_failed"
     ]
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_only"
+    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert inspection.claim_card.manifest.body["predictive_support_status"] == "blocked"
     assert (
         "probabilistic_forecast_within_declared_validation_scope"
@@ -57,7 +57,7 @@ def test_calibration_success_allows_publication(tmp_path: Path) -> None:
     assert inspection.scorecard is not None
     assert inspection.scorecard.manifest.body["predictive_status"] == "passed"
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictively_supported"
+    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
     assert (
         inspection.claim_card.manifest.body["predictive_support_status"]
         == "confirmatory_supported"

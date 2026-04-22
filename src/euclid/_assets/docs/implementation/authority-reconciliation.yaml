@@ -1,0 +1,73 @@
+version: 1
+kind: authority_reconciliation
+authority_snapshot_id: euclid-authority-2026-04-15-b
+source_authority_refs:
+- README.md
+- docs/reference/system.md
+- docs/reference/modeling-pipeline.md
+- docs/reference/search-core.md
+- docs/reference/contracts-manifests.md
+- docs/reference/benchmarks-readiness.md
+- docs/reference/workbench.md
+- docs/reference/testing-truthfulness.md
+allowed_statuses:
+- mapped
+- requires_matrix_expansion
+- excluded
+allowed_exclusion_reasons:
+- compatibility_only_surface
+- non_claim_ui_surface
+- historical_alias
+- documentation_index_only
+entries:
+- concept_id: reference_workspace
+  status: mapped
+  authority_refs:
+  - README.md
+  - docs/reference/system.md
+  mapped_row_ids:
+  - clean_install_surface:release_status
+- concept_id: workbench_evidence_studio
+  status: mapped
+  authority_refs:
+  - docs/reference/workbench.md
+  mapped_row_ids:
+  - clean_install_surface:operator_run
+- concept_id: benchmark_semantic_success_boundary
+  status: mapped
+  authority_refs:
+  - docs/reference/benchmarks-readiness.md
+  mapped_row_ids:
+  - benchmark_surface:benchmark_execution
+- concept_id: evaluation_surface_expansions
+  status: requires_matrix_expansion
+  authority_refs:
+  - docs/reference/modeling-pipeline.md
+  - docs/reference/contracts-manifests.md
+  required_new_row_ids:
+  - evaluation_surface:score_law_comparability
+  - evaluation_surface:horizon_weight_comparability
+  - evaluation_surface:scored_origin_set_comparability
+  - evaluation_surface:descriptive_floor_abstention
+  - evaluation_surface:finite_code_term_validity
+- concept_id: search_surface_expansions
+  status: requires_matrix_expansion
+  authority_refs:
+  - docs/reference/search-core.md
+  required_new_row_ids:
+  - search_surface:exact_enumeration_traversal_count
+  - search_surface:stochastic_seed_restart_disclosure
+  - search_surface:frontier_dominance_semantics
+- concept_id: contract_surface_expansions
+  status: requires_matrix_expansion
+  authority_refs:
+  - docs/reference/contracts-manifests.md
+  required_new_row_ids:
+  - contract_surface:backend_adapter_contract
+  - contract_surface:typed_reference_registry
+  - contract_surface:schema_enum_registry
+- concept_id: compatibility_demo_surface
+  status: excluded
+  authority_refs:
+  - docs/reference/runtime-cli.md
+  exclusion_reason: compatibility_only_surface

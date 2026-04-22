@@ -1,0 +1,489 @@
+phase_id: P16
+phase_title: Documentation Replacement
+phase_status: complete
+covered_ids:
+- P16-T01
+- P16-T01-S01
+- P16-T01-S02
+- P16-T01-S03
+- P16-T01-S04
+- P16-T02
+- P16-T02-S01
+- P16-T02-S02
+- P16-T02-S03
+- P16-T02-S04
+- P16-T02-S05
+- P16-T02-S06
+- P16-T03
+- P16-T03-S01
+- P16-T03-S02
+- P16-T03-S03
+- P16-T03-S04
+- P16-T04
+- P16-T04-S01
+- P16-T04-S02
+- P16-T04-S03
+- P16-T04-S04
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/spec_compiler
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit tests/integration tests/benchmarks
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/golden tests/regression
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_documented_live_commands.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions: &id002
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+replay:
+  assertions: &id003
+  - replay_metadata_complete
+  - replay_identity_stable
+  - replay_mismatch_fails_closed
+claim_scope:
+  assertions: &id004
+  - no_unjustified_claim_promotion
+  - phase_incomplete_blocks_exit
+  - live_api_success_is_not_scientific_truth
+edge_cases:
+  required: &id001
+  - empty_input
+  - single_row_input
+  - missing_values
+  - nonfinite_values
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - invalid_credentials
+  - rate_limit
+  - timeout
+  - malformed_payload
+  - empty_payload
+  - replay_mismatch
+artifact_outputs:
+- build/reports/p16-gate-evidence.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and
+  claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P16-T01:
+    status: complete
+    implementation_files: &id005
+    - README.md
+    - docs/reference/README.md
+    - docs/reference/system.md
+    - docs/reference/runtime-cli.md
+    - docs/reference/modeling-pipeline.md
+    - docs/reference/search-core.md
+    - docs/reference/contracts-manifests.md
+    - docs/reference/benchmarks-readiness.md
+    - docs/reference/workbench.md
+    - docs/reference/testing-truthfulness.md
+    - docs/reference/examples/fixture-walkthroughs.md
+    - schemas/core/source-map.yaml
+    - schemas/core/math-source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    test_files: &id006
+    - tests/spec_compiler/test_document_state_labels.py
+    - tests/spec_compiler/test_authority_reconciliation.py
+    - tests/spec_compiler/test_authority_snapshot.py
+    - tests/spec_compiler/test_source_map.py
+    - tests/spec_compiler/test_canonical_fixture_walkthroughs.py
+    - tests/spec_compiler/test_public_claims_truthfulness.py
+    - tests/spec_compiler/test_release_surface_truthfulness.py
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T01
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T01
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T01-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T01-S01
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T01-S01
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T01-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T01-S02
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T01-S02
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T01-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T01-S03
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T01-S03
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T01-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T01-S04
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T01-S04
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02-S01
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02-S01
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02-S02
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02-S02
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02-S03
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02-S03
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02-S04
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02-S04
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02-S05
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02-S05
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T02-S06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T02-S06
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T02-S06
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T03
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T03
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T03-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T03-S01
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T03-S01
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T03-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T03-S02
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T03-S02
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T03-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T03-S03
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T03-S03
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T03-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T03-S04
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T03-S04
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T04
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T04
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T04-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T04-S01
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T04-S01
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T04-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T04-S02
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T04-S02
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T04-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T04-S03
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T04-S03
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P16-T04-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P16.yaml#P16-T04-S04
+    - tests/spec_compiler
+    evidence_refs:
+    - gate:tests/gates/P16.yaml#P16-T04-S04
+    - docs/reference/system.md
+    - schemas/core/source-map.yaml
+    - docs/implementation/authority-reconciliation.yaml
+    - docs/implementation/authority-snapshot.yaml
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004

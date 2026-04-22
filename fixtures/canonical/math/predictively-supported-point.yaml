@@ -1,7 +1,7 @@
 version: 1
 kind: canonical_math_fixture
-fixture_id: predictively_supported_point
-claim_lane: predictively_supported
+fixture_id: predictive_within_declared_scope_point
+claim_lane: predictive_within_declared_scope
 forecast_object_type: point
 primary_score: squared_error
 comparison_regime_id: unconditional_model_pair

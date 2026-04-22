@@ -1,6 +1,6 @@
 {
   "abstention_type": null,
-  "claim_type": "descriptive_only",
+  "claim_type": "descriptive_structure",
   "comparison_universe": {
     "baseline_score_result_ref": "point_score_result_manifest@1.0.0:point_score_result_manifest_de04e1172217ec1acaf6",
     "candidate_beats_baseline": false,
@@ -13,7 +13,7 @@
   },
   "published_entry": {
     "abstention_ref": null,
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_92c6e6b29ee8ef72c4a9",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_501478b1fa59ad3b2369",
     "comparator_exposure_status": "satisfied",
     "publication_mode": "candidate_publication"
   },
@@ -22,8 +22,9 @@
     "replay_verification_status": "verified",
     "required_manifest_refs": [
       "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_97038c510321c937bcc9",
-      "scorecard_manifest@1.1.0:scorecard_manifest_a2cf33751d0bd4bc3a29",
-      "claim_card_manifest@1.1.0:claim_card_manifest_92c6e6b29ee8ef72c4a9"
+      "scorecard_manifest@1.1.0:scorecard_manifest_84c280ca0c308d26b2a2",
+      "claim_card_manifest@1.1.0:claim_card_manifest_501478b1fa59ad3b2369",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_16114a93d89b279219f0"
     ],
     "stage_order": [
       "dataset_snapshot_frozen",
@@ -43,7 +44,7 @@
   "run_result_refs": {
     "abstention": null,
     "candidate": "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_97038c510321c937bcc9",
-    "claim_card": "claim_card_manifest@1.1.0:claim_card_manifest_92c6e6b29ee8ef72c4a9",
-    "scorecard": "scorecard_manifest@1.1.0:scorecard_manifest_a2cf33751d0bd4bc3a29"
+    "claim_card": "claim_card_manifest@1.1.0:claim_card_manifest_501478b1fa59ad3b2369",
+    "scorecard": "scorecard_manifest@1.1.0:scorecard_manifest_84c280ca0c308d26b2a2"
   }
 }

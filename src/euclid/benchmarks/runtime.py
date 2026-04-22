@@ -19,14 +19,14 @@ from euclid.benchmarks.reporting import (
     BenchmarkTaskReportArtifactPaths,
     build_benchmark_suite_task_semantics,
     build_benchmark_surface_diagnostics,
+    build_benchmark_task_semantic_summary,
     build_benchmark_task_track_summary,
     write_benchmark_task_report_artifacts,
 )
 from euclid.benchmarks.submitters import (
-    ALGORITHMIC_SEARCH_SUBMITTER_ID,
+    PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID,
     BenchmarkHarnessContext,
     BenchmarkSubmitterResult,
-    PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID,
     run_benchmark_submitter,
 )
 from euclid.contracts.errors import ContractValidationError
@@ -44,6 +44,7 @@ from euclid.operator_runtime.intake_planning import build_operator_intake_plan
 from euclid.performance import (
     PerformanceTelemetryArtifact,
     TelemetryRecorder,
+    benchmark_budget_report,
     write_performance_telemetry,
 )
 from euclid.runtime.hashing import sha256_digest
@@ -174,6 +175,23 @@ def profile_benchmark_task(
             "manifest_path": str(task_manifest.source_path),
             "benchmark_root": str(benchmark_tree.root),
             "resume_enabled": resume,
+            "benchmark_budget_report": benchmark_budget_report(
+                task_id=task_manifest.task_id,
+                candidate_limit=int(
+                    task_manifest.frozen_protocol.budget_policy.get(
+                        "candidate_limit",
+                        0,
+                    )
+                ),
+                wall_clock_seconds=int(
+                    task_manifest.frozen_protocol.budget_policy.get(
+                        "wall_clock_seconds",
+                        0,
+                    )
+                ),
+                parallel_workers=max(1, int(parallel_workers)),
+                submitter_count=len(task_manifest.submitter_ids),
+            ),
         },
     )
     telemetry_path = write_performance_telemetry(
@@ -264,8 +282,20 @@ def _surface_status(
         for result in task_results
         if result.task_manifest.task_id in requirement.task_ids
     )
-    benchmark_passed = len(matched) == len(requirement.task_ids) and all(
-        result.report_paths.task_result_path.is_file() for result in matched
+    task_semantic_status = {
+        result.task_manifest.task_id: _task_semantic_status(result)
+        for result in matched
+    }
+    task_semantic_assertion_status = {
+        result.task_manifest.task_id: _task_semantic_assertion_status(result)
+        for result in matched
+    }
+    benchmark_passed = (
+        len(matched) == len(requirement.task_ids)
+        and all(status == "verified" for status in task_semantic_status.values())
+        and all(
+            status == "passed" for status in task_semantic_assertion_status.values()
+        )
     )
     if not requirement.replay_required:
         replay_passed = True
@@ -294,6 +324,30 @@ def _surface_status(
             "task_result_paths": [
                 str(result.report_paths.task_result_path) for result in matched
             ],
+            "semantic_status": (
+                "verified"
+                if task_semantic_status
+                and all(status == "verified" for status in task_semantic_status.values())
+                else "missing"
+            ),
+            "semantic_assertion_status": (
+                "passed"
+                if task_semantic_assertion_status
+                and all(
+                    status == "passed"
+                    for status in task_semantic_assertion_status.values()
+                )
+                else (
+                    "missing"
+                    if any(
+                        status == "missing"
+                        for status in task_semantic_assertion_status.values()
+                    )
+                    else "failed"
+                )
+            ),
+            "task_semantic_status": task_semantic_status,
+            "task_semantic_assertion_status": task_semantic_assertion_status,
             **build_benchmark_surface_diagnostics(
                 tuple(result.task_manifest for result in matched),
                 replay_verification_status=replay_verification_status,
@@ -760,7 +814,120 @@ def _suite_semantic_summary(
         "abstention_modes": abstention_modes,
         "replay_obligations": replay_obligations,
         "calibration_expectations": calibration_expectations,
+        "run_support_object_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["run_support_object_ids"]
+            }
+        ),
+        "claim_lane_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["claim_lane_ids"]
+            }
+        ),
+        "replay_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["replay_ids"]
+            }
+        ),
+        "engine_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["engine_ids"]
+            }
+        ),
+        "score_policy_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["score_policy_ids"]
+            }
+        ),
+        "threshold_ids": sorted(
+            {
+                value
+                for result in task_results
+                for value in build_benchmark_task_semantic_summary(
+                    result.task_manifest
+                )["threshold_ids"]
+            }
+        ),
     }
+
+
+def _task_semantic_status(result: ProfiledBenchmarkTaskResult) -> str:
+    if not result.report_paths.task_result_path.is_file():
+        return "missing"
+    try:
+        payload = json.loads(
+            result.report_paths.task_result_path.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return "missing"
+    if payload.get("status") not in {"completed", "passed"}:
+        return "failed"
+    semantic_summary = payload.get("semantic_summary")
+    if not isinstance(semantic_summary, dict):
+        return "missing"
+    required_keys = {
+        "run_support_object_ids",
+        "claim_lane_ids",
+        "replay_ids",
+        "engine_ids",
+        "score_policy_ids",
+        "threshold_ids",
+    }
+    if any(
+        not isinstance(semantic_summary.get(key), list) or not semantic_summary[key]
+        for key in required_keys
+    ):
+        return "missing"
+    if _semantic_assertion_status(payload) != "passed":
+        return "failed"
+    return "verified"
+
+
+def _task_semantic_assertion_status(result: ProfiledBenchmarkTaskResult) -> str:
+    if not result.report_paths.task_result_path.is_file():
+        return "missing"
+    try:
+        payload = json.loads(
+            result.report_paths.task_result_path.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return "missing"
+    return _semantic_assertion_status(payload)
+
+
+def _semantic_assertion_status(payload: dict[str, Any]) -> str:
+    semantic_assertions = payload.get("semantic_assertions")
+    if not isinstance(semantic_assertions, dict):
+        return "missing"
+    status = semantic_assertions.get("overall_status")
+    if status == "passed":
+        claim_scope = semantic_assertions.get("claim_scope")
+        if isinstance(claim_scope, dict) and claim_scope.get(
+            "counts_as_claim_evidence"
+        ):
+            return "failed"
+        return "passed"
+    return "failed"
 
 
 def _search_class_coverage(
@@ -917,7 +1084,21 @@ def _dataset_path(
     *,
     project_root: Path,
 ) -> Path:
-    return (project_root / task_manifest.dataset_ref).resolve()
+    dataset_ref = Path(task_manifest.dataset_ref)
+    candidate = (project_root / dataset_ref).resolve()
+    if candidate.exists():
+        return candidate
+
+    packaged_prefix = Path("src") / "euclid" / "_assets"
+    try:
+        relative_to_asset_root = dataset_ref.relative_to(packaged_prefix)
+    except ValueError:
+        return candidate
+
+    packaged_candidate = (project_root / relative_to_asset_root).resolve()
+    if packaged_candidate.exists():
+        return packaged_candidate
+    return candidate
 
 
 def _resolve_project_root(project_root: Path | str | None) -> Path:

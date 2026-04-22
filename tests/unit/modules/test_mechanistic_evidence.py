@@ -27,7 +27,7 @@ def test_mechanistic_evidence_upgrades_claim_after_floor_and_checks_pass(
         external_evidence_ref=_ref(
             "external_evidence_manifest@1.0.0", "glucose_bundle"
         ),
-        lower_claim_ceiling="predictively_supported",
+        lower_claim_ceiling="predictive_within_declared_scope",
         term_bindings=(
             {
                 "term_id": "lag1_state",
@@ -55,7 +55,7 @@ def test_mechanistic_evidence_upgrades_claim_after_floor_and_checks_pass(
     assert evaluation.evidence_independence.status == "passed"
     assert evaluation.dossier.status == "passed"
     assert evaluation.dossier.resolved_claim_ceiling == (
-        "mechanistically_compatible_hypothesis"
+        "mechanistically_compatible_law"
     )
 
     scorecard = resolve_scorecard_status(
@@ -83,8 +83,8 @@ def test_mechanistic_evidence_upgrades_claim_after_floor_and_checks_pass(
     )
 
     assert scorecard.mechanistic_status == "passed"
-    assert claim.claim_type == "mechanistically_compatible_hypothesis"
-    assert claim.claim_ceiling == "mechanistically_compatible_hypothesis"
+    assert claim.claim_type == "mechanistically_compatible_law"
+    assert claim.claim_ceiling == "mechanistically_compatible_law"
     assert "mechanism_claim" in claim.allowed_interpretation_codes
     assert "mechanism_claim" not in claim.forbidden_interpretation_codes
 
@@ -99,7 +99,7 @@ def test_mechanistic_evidence_overlap_downgrades_to_predictive_support() -> None
         external_evidence_ref=_ref(
             "external_evidence_manifest@1.0.0", "glucose_bundle"
         ),
-        lower_claim_ceiling="predictively_supported",
+        lower_claim_ceiling="predictive_within_declared_scope",
         term_bindings=(
             {
                 "term_id": "lag1_state",
@@ -129,9 +129,14 @@ def test_mechanistic_evidence_overlap_downgrades_to_predictive_support() -> None
     )
 
     assert evaluation.evidence_independence.status == "failed"
-    assert evaluation.dossier.status == "downgraded_to_predictively_supported"
+    assert (
+        evaluation.dossier.status
+        == "downgraded_to_predictive_within_declared_scope"
+    )
     assert "predictive_evidence_overlap" in evaluation.dossier.reason_codes
-    assert evaluation.dossier.resolved_claim_ceiling == "predictively_supported"
+    assert evaluation.dossier.resolved_claim_ceiling == (
+        "predictive_within_declared_scope"
+    )
 
     scorecard = resolve_scorecard_status(
         candidate_admissible=True,
@@ -157,8 +162,11 @@ def test_mechanistic_evidence_overlap_downgrades_to_predictive_support() -> None
         }
     )
 
-    assert scorecard.mechanistic_status == "downgraded_to_predictively_supported"
-    assert claim.claim_type == "predictively_supported"
+    assert (
+        scorecard.mechanistic_status
+        == "downgraded_to_predictive_within_declared_scope"
+    )
+    assert claim.claim_type == "predictive_within_declared_scope"
     assert "mechanism_claim" not in claim.allowed_interpretation_codes
     assert "mechanism_claim" in claim.forbidden_interpretation_codes
 
@@ -173,7 +181,7 @@ def test_mechanistic_evidence_cannot_outrun_predictive_floor() -> None:
         external_evidence_ref=_ref(
             "external_evidence_manifest@1.0.0", "glucose_bundle"
         ),
-        lower_claim_ceiling="descriptive_only",
+        lower_claim_ceiling="descriptive_structure",
         term_bindings=(
             {
                 "term_id": "lag1_state",
@@ -194,5 +202,5 @@ def test_mechanistic_evidence_cannot_outrun_predictive_floor() -> None:
     )
 
     assert evaluation.dossier.status == "blocked_predictive_floor"
-    assert evaluation.dossier.resolved_claim_ceiling == "descriptive_only"
+    assert evaluation.dossier.resolved_claim_ceiling == "descriptive_structure"
     assert evaluation.dossier.reason_codes == ("predictive_floor_required",)

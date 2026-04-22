@@ -1,8 +1,8 @@
 version: 1
 kind: full_vision_matrix
 scope_authority_refs:
-- docs/system.md
-- docs/system.md
+- docs/reference/system.md
+- docs/reference/system.md
 benchmark_governed_outcome_vocabulary:
   abstention_modes:
   - calibrated_or_abstain
@@ -24,8 +24,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -36,8 +36,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -47,8 +47,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -58,8 +58,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -69,8 +69,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -80,8 +80,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -91,8 +91,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -102,8 +102,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -114,8 +114,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -126,8 +126,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -138,8 +138,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -150,8 +150,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -161,8 +161,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -173,9 +173,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -185,9 +185,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -197,9 +197,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -209,9 +209,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -221,9 +221,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -233,9 +233,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -245,9 +245,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -257,9 +257,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -269,9 +269,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -281,9 +281,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -293,8 +293,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -305,8 +305,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -317,8 +317,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -329,8 +329,8 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/search-core.md
+  - docs/reference/system.md
+  - docs/reference/search-core.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -341,8 +341,8 @@ rows:
   binding_status: boundary_only
   runtime_surface: false
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - governance_spec
 - row_id: evidence_lane:descriptive_compression
@@ -351,8 +351,8 @@ rows:
   binding_status: retained
   runtime_surface: false
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - golden_regression
   - governance_spec
@@ -362,8 +362,8 @@ rows:
   binding_status: retained
   runtime_surface: false
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - governance_spec
@@ -373,8 +373,8 @@ rows:
   binding_status: retained
   runtime_surface: false
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
   - replay
@@ -385,8 +385,8 @@ rows:
   binding_status: retained
   runtime_surface: false
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - replay
   - governance_spec
@@ -396,8 +396,8 @@ rows:
   binding_status: retained
   runtime_surface: false
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - golden_regression
@@ -407,9 +407,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -419,9 +419,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -431,9 +431,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -443,9 +443,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -455,9 +455,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -468,9 +468,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -480,9 +480,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -492,9 +492,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -504,9 +504,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -516,9 +516,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -528,9 +528,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -540,9 +540,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -552,9 +552,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -564,9 +564,9 @@ rows:
   binding_status: boundary_only
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -577,9 +577,9 @@ rows:
   binding_status: boundary_only
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -590,9 +590,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -602,9 +602,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -614,9 +614,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -626,9 +626,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -638,9 +638,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -650,9 +650,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -662,9 +662,9 @@ rows:
   binding_status: boundary_only
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -675,9 +675,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -687,9 +687,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -699,9 +699,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -711,9 +711,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -723,9 +723,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -736,9 +736,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -748,9 +748,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -760,9 +760,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -772,9 +772,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -784,9 +784,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -796,9 +796,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -808,9 +808,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -821,9 +821,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -833,9 +833,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -845,9 +845,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -857,9 +857,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -870,9 +870,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -883,9 +883,9 @@ rows:
   binding_status: boundary_only
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - benchmark_semantic
@@ -896,9 +896,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -908,9 +908,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -920,9 +920,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -932,9 +932,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -944,9 +944,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -956,9 +956,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -968,9 +968,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -980,9 +980,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -992,9 +992,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1004,9 +1004,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1016,9 +1016,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1028,9 +1028,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1040,9 +1040,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1052,9 +1052,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1064,9 +1064,9 @@ rows:
   binding_status: extension_surface
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/benchmarks-readiness.md
-  - docs/benchmarks-readiness.md
+  - docs/reference/system.md
+  - docs/reference/benchmarks-readiness.md
+  - docs/reference/benchmarks-readiness.md
   minimum_closing_evidence_classes:
   - benchmark_semantic
   - replay
@@ -1076,9 +1076,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -1089,9 +1089,9 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - semantic_runtime
   - replay
@@ -1102,8 +1102,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: clean_install_surface:determinism_same_seed
@@ -1112,8 +1112,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: clean_install_surface:operator_replay
@@ -1122,8 +1122,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: clean_install_surface:operator_run
@@ -1132,8 +1132,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: clean_install_surface:packaged_notebook_smoke
@@ -1142,8 +1142,8 @@ rows:
   binding_status: compatibility_only
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: clean_install_surface:performance_runtime_smoke
@@ -1152,8 +1152,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: clean_install_surface:release_status
@@ -1162,8 +1162,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
+  - docs/reference/system.md
+  - docs/reference/system.md
   minimum_closing_evidence_classes:
   - packaging_install
 - row_id: replay_surface:operator_native_replay
@@ -1172,8 +1172,8 @@ rows:
   binding_status: retained
   runtime_surface: true
   governing_doc_refs:
-  - docs/system.md
-  - docs/system.md
-  - docs/modeling-pipeline.md
+  - docs/reference/system.md
+  - docs/reference/system.md
+  - docs/reference/modeling-pipeline.md
   minimum_closing_evidence_classes:
   - replay

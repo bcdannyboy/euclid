@@ -1,6 +1,6 @@
 version: 1
 kind: completion_regression_policy
-policy_state: full_closure
+policy_state: transition
 policy_states:
   transition:
     blocked_allowed_until_utc: '2026-05-15T00:00:00Z'

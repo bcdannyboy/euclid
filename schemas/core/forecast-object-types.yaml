@@ -3,22 +3,25 @@ vocabulary: forecast_object_types
 title: Forecast Object Types
 closed: true
 source_doc_refs:
-  - README.md
-  - docs/search-core.md
-  - docs/modeling-pipeline.md
+- README.md
+- docs/reference/search-core.md
+- docs/reference/modeling-pipeline.md
 entries:
-  - id: point
-    binding_status: retained
-    description: Retained public predictive object type represented as a location-parameter point forecast.
-  - id: distribution
-    binding_status: extension_surface
-    description: Deferred probabilistic forecast object type for full predictive distributions.
-  - id: interval
-    binding_status: extension_surface
-    description: Deferred probabilistic forecast object type for interval-valued predictive publication.
-  - id: quantile
-    binding_status: extension_surface
-    description: Deferred probabilistic forecast object type for quantile-valued predictive publication.
-  - id: event_probability
-    binding_status: extension_surface
-    description: Deferred probabilistic forecast object type for event-probability publication.
+- id: point
+  binding_status: retained
+  description: Retained public predictive object type represented as a location-parameter
+    point forecast.
+- id: distribution
+  binding_status: extension_surface
+  description: Deferred probabilistic forecast object type for full predictive distributions.
+- id: interval
+  binding_status: extension_surface
+  description: Deferred probabilistic forecast object type for interval-valued predictive
+    publication.
+- id: quantile
+  binding_status: extension_surface
+  description: Deferred probabilistic forecast object type for quantile-valued predictive
+    publication.
+- id: event_probability
+  binding_status: extension_surface
+  description: Deferred probabilistic forecast object type for event-probability publication.

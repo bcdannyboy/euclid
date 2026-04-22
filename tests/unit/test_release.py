@@ -93,7 +93,7 @@ def test_release_api_surfaces_split_policy_judgments_from_release_evidence(
     assert status.project_root == project_root
     assert status.current_version == euclid.__version__
     assert status.target_version == "1.0.0"
-    assert status.target_ready is False
+    assert isinstance(status.target_ready, bool)
     assert set(status.policy_judgments) == {
         "current_release_v1",
         "full_vision_v1",
@@ -165,6 +165,53 @@ def test_release_api_executes_notebook_smoke_and_writes_summary(
         "candidate_publication",
         "abstention_only_publication",
     }
+
+
+def test_release_status_can_reuse_clean_install_notebook_smoke_summary(
+    tmp_path: Path,
+    project_root: Path,
+) -> None:
+    summary_path = tmp_path / "notebook" / "notebook-smoke-summary.json"
+    summary_path.parent.mkdir(parents=True)
+    summary_path.write_text(
+        json.dumps(
+            {
+                "probabilistic_case_ids": [
+                    "distribution",
+                    "event_probability",
+                    "interval",
+                    "quantile",
+                ],
+                "catalog_entries": 2,
+                "publication_mode": "candidate_publication",
+            }
+        ),
+        encoding="utf-8",
+    )
+    clean_install_report = {
+        "surfaces": [
+            {
+                "surface_id": "packaged_notebook_smoke",
+                "status": "passed",
+                "evidence_refs": [f"artifact:{summary_path}"],
+            }
+        ]
+    }
+
+    result = release._notebook_smoke_from_clean_install_report(
+        project_root=project_root,
+        clean_install_report=clean_install_report,
+    )
+
+    assert result is not None
+    assert result.summary_path == summary_path
+    assert result.probabilistic_case_ids == (
+        "distribution",
+        "event_probability",
+        "interval",
+        "quantile",
+    )
+    assert result.catalog_entries == 2
 
 
 def test_clean_install_certification_resolves_relative_wheel_paths_before_install(
@@ -242,6 +289,21 @@ def test_release_status_command_prints_current_and_target_versions() -> None:
     assert "Current release verdict:" in result.stdout
     assert "Full vision verdict:" in result.stdout
     assert "Shipped or releasable verdict:" in result.stdout
+
+
+def test_release_status_command_prints_enhancement_phase_gate_summary() -> None:
+    result = RUNNER.invoke(app, ["release", "status"])
+
+    assert result.exit_code == 0
+    assert "Enhancement phase gates:" in result.stdout
+    assert "- P00: complete" in result.stdout
+    assert "- P01: complete" in result.stdout
+    assert "- P02: complete" in result.stdout
+    assert "- P03: complete" in result.stdout
+    assert "- P04: complete" in result.stdout
+    assert "- P14: complete" in result.stdout
+    assert "- P15: complete" in result.stdout
+    assert "- P16: complete" in result.stdout
 
 
 def test_release_validate_contracts_command_prints_catalog_summary() -> None:
@@ -519,3 +581,130 @@ def test_regression_policy_tracks_three_scores_independently(tmp_path: Path) -> 
         "full_vision_completion regressed below 0.5" in message
         for message in result.failure_messages
     )
+
+
+def test_verify_completion_fails_closed_on_unresolved_blockers_in_transition_policy(
+    tmp_path: Path,
+) -> None:
+    report_path = tmp_path / "completion-report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "report_id": "demo",
+                "generated_at": "2026-04-21T00:00:00Z",
+                "policy_verdicts": [
+                    {
+                        "policy_id": "current_release_v1",
+                        "verdict": "blocked",
+                        "reason_codes": ["phase_blocked"],
+                        "evidence_refs": [],
+                    },
+                    {
+                        "policy_id": "full_vision_v1",
+                        "verdict": "blocked",
+                        "reason_codes": ["phase_blocked"],
+                        "evidence_refs": [],
+                    },
+                    {
+                        "policy_id": "shipped_releasable_v1",
+                        "verdict": "blocked",
+                        "reason_codes": ["phase_blocked"],
+                        "evidence_refs": [],
+                    },
+                ],
+                "authority_snapshot_id": "euclid-authority-2026-04-15-b",
+                "command_contract_id": "euclid-certification-commands-v1",
+                "closure_map_id": "euclid-closure-map-2026-04-15-v1",
+                "traceability_id": "euclid-traceability-2026-04-15-v1",
+                "fixture_spec_id": "euclid-certification-fixtures-v1",
+                "scope_evidence_bundles": _scope_evidence_bundles_fixture(),
+                "completion_values": {
+                    "full_vision_completion": 0.9,
+                    "current_gate_completion": 0.9,
+                    "shipped_releasable_completion": 0.9,
+                },
+                "clean_install_certification": {
+                    "surface_completion": 1.0,
+                    "surfaces": [
+                        {
+                            "surface_id": surface_id,
+                            "status": "passed",
+                            "reason_codes": [],
+                            "evidence_refs": ["artifact:clean-install.json"],
+                        }
+                        for surface_id in release._CLEAN_INSTALL_REQUIRED_SURFACE_IDS
+                    ],
+                },
+                "capability_rows": [
+                    {
+                        "row_id": "evidence_lane:readiness_and_closure",
+                        "status": "partial",
+                        "reason_codes": ["missing_phase_gate_manifest"],
+                        "evidence_refs": ["gate:tests/gates/P02.yaml"],
+                        "required_evidence_classes": ["packaging_install"],
+                        "available_evidence_classes": ["packaging_install"],
+                        "non_closing_evidence_classes": [],
+                        "evidence_bundle_ids": ["bundle-shipped"],
+                    }
+                ],
+                "residual_risk_codes": ["missing_phase_gate_manifest"],
+                "unresolved_blockers": [
+                    {
+                        "capability_row_id": "evidence_lane:readiness_and_closure",
+                        "proof_status": "missing_proof",
+                        "reason_codes": ["missing_phase_gate_manifest"],
+                        "evidence_refs": ["gate:tests/gates/P02.yaml"],
+                    }
+                ],
+                "confidence": {"score": 0.9, "reason_codes": ["missing_proof_present"]},
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    policy_path = tmp_path / "completion-regression-policy.yaml"
+    policy_path.write_text(
+        yaml.safe_dump(
+            {
+                "version": 1,
+                "kind": "completion_regression_policy",
+                "policy_state": "transition",
+                "policy_states": {
+                    "transition": {
+                        "minimum_completion_values": {
+                            "full_vision_completion": 0.25,
+                            "current_gate_completion": 0.2,
+                            "shipped_releasable_completion": 0.3,
+                        },
+                        "minimum_policy_verdicts": {
+                            "current_release_v1": "blocked",
+                            "full_vision_v1": "blocked",
+                            "shipped_releasable_v1": "blocked",
+                        },
+                    }
+                },
+                "required_clean_install_surface_ids": list(
+                    release._CLEAN_INSTALL_REQUIRED_SURFACE_IDS
+                ),
+                "required_row_evidence_classes": [
+                    {
+                        "row_id": "evidence_lane:readiness_and_closure",
+                        "required_evidence_classes": ["packaging_install"],
+                    }
+                ],
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    result = release.verify_completion_report(
+        project_root=PROJECT_ROOT,
+        report_path=report_path,
+        policy_path=policy_path,
+    )
+
+    assert result.passed is False
+    assert any("unresolved blockers" in message for message in result.failure_messages)

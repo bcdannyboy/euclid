@@ -10,6 +10,15 @@ _ASSET_STACK = ExitStack()
 _PACKAGED_ASSET_ROOT: Path | None = None
 
 
+class EuclidAssetError(FileNotFoundError):
+    """Typed failure for canonical packaged asset resolution."""
+
+    def __init__(self, message: str, *, code: str, asset_path: Path) -> None:
+        self.code = code
+        self.asset_path = asset_path
+        super().__init__(message)
+
+
 def _close_asset_stack() -> None:
     _ASSET_STACK.close()
 
@@ -83,8 +92,10 @@ def resolve_contract_root(project_root: Path | str | None = None) -> Path:
     root = resolve_asset_root(project_root)
     contract_registry = root / "schemas" / "contracts" / "schema-registry.yaml"
     if not contract_registry.is_file():
-        raise FileNotFoundError(
-            f"missing packaged contract catalog at {contract_registry}"
+        raise EuclidAssetError(
+            f"missing packaged contract catalog at {contract_registry}",
+            code="euclid_asset_missing",
+            asset_path=contract_registry,
         )
     return root
 
@@ -96,7 +107,11 @@ def resolve_example_path(
 ) -> Path:
     path = resolve_asset_root(project_root) / "examples" / name
     if not path.is_file():
-        raise FileNotFoundError(f"missing packaged example {name!r} at {path}")
+        raise EuclidAssetError(
+            f"missing packaged example {name!r} at {path}",
+            code="euclid_asset_missing",
+            asset_path=path,
+        )
     return path
 
 
@@ -106,8 +121,10 @@ def resolve_fixture_path(
 ) -> Path:
     path = resolve_asset_root(project_root) / "fixtures" / Path(*relative_parts)
     if not path.is_file():
-        raise FileNotFoundError(
-            f"missing packaged fixture {'/'.join(relative_parts)!r} at {path}"
+        raise EuclidAssetError(
+            f"missing packaged fixture {'/'.join(relative_parts)!r} at {path}",
+            code="euclid_asset_missing",
+            asset_path=path,
         )
     return path
 
@@ -124,7 +141,11 @@ def resolve_notebook_path(
         / name
     )
     if not path.is_file():
-        raise FileNotFoundError(f"missing packaged notebook {name!r} at {path}")
+        raise EuclidAssetError(
+            f"missing packaged notebook {name!r} at {path}",
+            code="euclid_asset_missing",
+            asset_path=path,
+        )
     return path
 
 
@@ -137,6 +158,7 @@ def default_run_output_root(
 
 
 __all__ = [
+    "EuclidAssetError",
     "default_run_output_root",
     "resolve_asset_root",
     "resolve_checkout_root",

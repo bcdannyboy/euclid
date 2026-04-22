@@ -1,0 +1,42 @@
+version: 1
+kind: invariance_evaluation_contract
+owners:
+  - id: invariance_gate_council
+    display_name: Invariance Gate Council
+purpose: Gate invariant and transport-supported claim lanes before publication.
+environment_construction:
+  supported_policies:
+    - explicit_label
+    - entity
+    - rolling_era
+    - volatility_regime
+    - intervention_window
+  min_environment_count_for_invariant_claim: 2
+  construction_policy_must_be_recorded: true
+invariance_scoring:
+  required_metrics:
+    - residual_spread
+    - max_parameter_drift
+    - min_support_jaccard
+    - max_holdout_degradation
+  pass_effect: invariant_predictive_law_may_be_requested
+  fail_effect: downgrade_to_predictive_within_declared_scope
+transport_scoring:
+  required_evidence:
+    - source_environment_ids
+    - target_environment_ids
+    - target_holdout_scores
+  pass_effect: transport_supported_law_may_be_requested
+  fail_effect: downgrade_to_predictive_within_declared_scope
+replay:
+  required_fields:
+    - environment_construction_ref
+    - replay_identity
+    - metrics
+    - reason_codes
+claim_scope:
+  forbidden_without_passed_invariance:
+    - invariant_claim
+    - universal_claim
+  forbidden_without_passed_transport:
+    - transport_claim

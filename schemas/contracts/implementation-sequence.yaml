@@ -51,8 +51,8 @@ module_sequence:
     layer_id: registration_and_intake
     depends_on: []
     canonical_doc_refs:
-      - docs/system.md
-      - docs/contracts-manifests.md
+      - docs/reference/system.md
+      - docs/reference/contracts-manifests.md
     evidence:
       math_refs: []
       contract_refs:
@@ -77,11 +77,11 @@ module_sequence:
     depends_on:
       - manifest_registry
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/mechanistic-evidence.yaml
@@ -100,8 +100,8 @@ module_sequence:
     depends_on:
       - manifest_registry
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:
@@ -122,8 +122,8 @@ module_sequence:
       - manifest_registry
       - ingestion
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:
@@ -143,8 +143,8 @@ module_sequence:
     depends_on:
       - snapshotting
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:
@@ -177,8 +177,8 @@ module_sequence:
       - snapshotting
       - timeguard
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:
@@ -202,8 +202,8 @@ module_sequence:
       - snapshotting
       - timeguard
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:
@@ -236,11 +236,11 @@ module_sequence:
     depends_on:
       - split_planning
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/search-core.md
+        - docs/reference/search-core.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -272,11 +272,11 @@ module_sequence:
       - split_planning
       - search_planning
     canonical_doc_refs:
-      - docs/contracts-manifests.md
-      - docs/search-core.md
+      - docs/reference/contracts-manifests.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -313,10 +313,10 @@ module_sequence:
       - search_planning
       - features
     canonical_doc_refs:
-      - docs/system.md
+      - docs/reference/system.md
     evidence:
       math_refs:
-        - docs/search-core.md
+        - docs/reference/search-core.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -351,10 +351,10 @@ module_sequence:
       - search_planning
       - features
     canonical_doc_refs:
-      - docs/system.md
+      - docs/reference/system.md
     evidence:
       math_refs:
-        - docs/search-core.md
+        - docs/reference/search-core.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -384,10 +384,10 @@ module_sequence:
       - algorithmic_dsl
       - shared_plus_local_decomposition
     canonical_doc_refs:
-      - docs/search-core.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/search-core.md
+        - docs/reference/search-core.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -433,10 +433,10 @@ module_sequence:
       - evaluation_governance
       - timeguard
     canonical_doc_refs:
-      - docs/search-core.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -476,11 +476,11 @@ module_sequence:
       - timeguard
       - shared_plus_local_decomposition
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/scoring.yaml
@@ -510,11 +510,11 @@ module_sequence:
       - probabilistic_evaluation
       - evaluation_governance
     canonical_doc_refs:
-      - docs/contracts-manifests.md
+      - docs/reference/contracts-manifests.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -554,11 +554,11 @@ module_sequence:
       - candidate_fitting
       - evaluation_governance
     canonical_doc_refs:
-      - docs/system.md
+      - docs/reference/system.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -603,10 +603,10 @@ module_sequence:
       - evaluation
       - probabilistic_evaluation
     canonical_doc_refs:
-      - docs/search-core.md
+      - docs/reference/search-core.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -632,11 +632,11 @@ module_sequence:
       - mechanistic_evidence
       - evaluation_governance
     canonical_doc_refs:
-      - docs/system.md
+      - docs/reference/system.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -674,10 +674,10 @@ module_sequence:
     depends_on:
       - gate_lifecycle
     canonical_doc_refs:
-      - docs/system.md
+      - docs/reference/system.md
     evidence:
       math_refs:
-        - docs/modeling-pipeline.md
+        - docs/reference/modeling-pipeline.md
       contract_refs:
         - schemas/contracts/module-registry.yaml
         - schemas/contracts/schema-registry.yaml
@@ -725,8 +725,8 @@ module_sequence:
       - gate_lifecycle
       - claims
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:
@@ -771,8 +771,8 @@ module_sequence:
       - claims
       - replay
     canonical_doc_refs:
-      - docs/system.md
-      - docs/search-core.md
+      - docs/reference/system.md
+      - docs/reference/search-core.md
     evidence:
       math_refs: []
       contract_refs:

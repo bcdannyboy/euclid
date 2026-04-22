@@ -1,0 +1,1128 @@
+phase_id: P13
+phase_title: Benchmark Universe Replacement
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P13-T01
+- P13-T01-S01
+- P13-T01-S02
+- P13-T01-S03
+- P13-T01-S04
+- P13-T01-S05
+- P13-T02
+- P13-T02-S01
+- P13-T02-S02
+- P13-T02-S03
+- P13-T02-S04
+- P13-T02-S05
+- P13-T02-S06
+- P13-T02-S07
+- P13-T02-S08
+- P13-T03
+- P13-T03-S01
+- P13-T03-S02
+- P13-T03-S03
+- P13-T03-S04
+- P13-T03-S05
+- P13-T03-S06
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/benchmarks tests/benchmarks
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/benchmarks
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/golden tests/regression
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_benchmark_live_smoke.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions: &id002
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+replay:
+  assertions: &id003
+  - replay_metadata_complete
+  - replay_identity_stable
+  - replay_mismatch_fails_closed
+claim_scope:
+  assertions: &id004
+  - no_unjustified_claim_promotion
+  - phase_incomplete_blocks_exit
+  - live_api_success_is_not_scientific_truth
+edge_cases:
+  required: &id001
+  - empty_input
+  - single_row_input
+  - missing_values
+  - nonfinite_values
+  - duplicate_timestamps
+  - out_of_order_timestamps
+  - invalid_credentials
+  - rate_limit
+  - timeout
+  - malformed_payload
+  - empty_payload
+  - replay_mismatch
+artifact_outputs:
+- build/reports/p13-gate-evidence.json
+known_external_provider_volatility:
+- Live provider values are schema/freshness checked, not exact-value checked.
+- Provider success cannot close scientific claim gates without fixture, replay, and
+  claim-scope evidence.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P13-T01:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T01
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T01
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T01-S01:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T01-S01
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T01-S01
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T01-S02:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T01-S02
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T01-S02
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T01-S03:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T01-S03
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T01-S03
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T01-S04:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T01-S04
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T01-S04
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T01-S05:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T01-S05
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T01-S05
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S01:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S01
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S01
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S02:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S02
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S02
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S03:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S03
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S03
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S04:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S04
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S04
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S05:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S05
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S05
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S06:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S06
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S06
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S07:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S07
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S07
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T02-S08:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T02-S08
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T02-S08
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03-S01:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03-S01
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03-S01
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03-S02:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03-S02
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03-S02
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03-S03:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03-S03
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03-S03
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03-S04:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03-S04
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03-S04
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03-S05:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03-S05
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03-S05
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P13-T03-S06:
+    status: complete
+    implementation_files:
+    - benchmarks/suites/current-release.yaml
+    - benchmarks/suites/full-vision.yaml
+    - benchmarks/tasks/**
+    - examples/current_release_run.yaml
+    - examples/full_vision_run.yaml
+    - schemas/readiness/full-vision-matrix.yaml
+    - src/euclid/_assets/benchmarks/suites/current-release.yaml
+    - src/euclid/_assets/benchmarks/suites/full-vision.yaml
+    - src/euclid/_assets/benchmarks/tasks/**
+    - src/euclid/_assets/examples/current_release_run.yaml
+    - src/euclid/_assets/examples/full_vision_run.yaml
+    - src/euclid/benchmarks/manifests.py
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/testing/redaction.py
+    test_files:
+    - tests/benchmarks/test_p13_benchmark_universe.py
+    - tests/benchmarks/test_multi_backend_portfolio.py
+    - tests/benchmarks/test_real_series_honesty_regressions.py
+    - tests/benchmarks/test_current_release_readiness.py
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/unit/benchmarks/test_manifests.py
+    - tests/regression/test_benchmark_evidence_redaction.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/integration/test_release_candidate_workflow.py
+    gate_refs:
+    - tests/gates/P13.yaml#P13-T03-S06
+    evidence_refs:
+    - gate:tests/gates/P13.yaml#P13-T03-S06
+    - artifact:build/reports/current_release_suite_evidence.json
+    - artifact:build/reports/full_vision_suite_evidence.json
+    - artifact:build/reports/research-readiness.json
+    - test:tests/benchmarks/test_p13_benchmark_universe.py
+    - test:tests/benchmarks/test_multi_backend_portfolio.py
+    - test:tests/benchmarks/test_real_series_honesty_regressions.py
+    - test:tests/regression/test_benchmark_evidence_redaction.py
+    - test:tests/integration/test_release_candidate_workflow.py
+    - doc:docs/evidence/p13-benchmark-universe.md
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004

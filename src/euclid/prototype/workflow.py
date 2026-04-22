@@ -40,6 +40,7 @@ from euclid.modules.evaluation_governance import (
     resolve_confirmatory_promotion_allowed,
 )
 from euclid.modules.gate_lifecycle import resolve_scorecard_status
+from euclid.modules.predictive_tests import evaluate_predictive_promotion
 from euclid.modules.replay import (
     ReplayedOutcome,
     build_artifact_hash_records,
@@ -360,8 +361,9 @@ def run_prototype_reducer_workflow(
         candidate_evaluations
     )
     if telemetry is None:
-        accepted_candidate_runtime = _select_accepted_candidate(
-            candidate_evaluations
+        selected_candidate_runtime = _select_candidate(
+            candidate_evaluations,
+            minimum_description_gain_bits=minimum_description_gain_bits,
         )
     else:
         with telemetry.span(
@@ -369,12 +371,11 @@ def run_prototype_reducer_workflow(
             category="portfolio_selection",
             attributes={"candidate_family_count": len(candidate_evaluations)},
         ):
-            accepted_candidate_runtime = _select_accepted_candidate(
-                candidate_evaluations
+            selected_candidate_runtime = _select_candidate(
+                candidate_evaluations,
+                minimum_description_gain_bits=minimum_description_gain_bits,
             )
-    selected_candidate_runtime = (
-        accepted_candidate_runtime or best_overall_candidate_runtime
-    )
+    accepted_candidate_runtime = _select_accepted_candidate(candidate_evaluations)
 
     selected_candidate_spec = _register_runtime_model(
         registry,
@@ -673,13 +674,26 @@ def run_prototype_reducer_workflow(
                         selected_candidate_runtime.baseline_primary_score
                     ),
                     "primary_score_delta": _stable_float(
-                        selected_candidate_runtime.confirmatory_primary_score
-                        - selected_candidate_runtime.baseline_primary_score
+                        selected_candidate_runtime.baseline_primary_score
+                        - selected_candidate_runtime.confirmatory_primary_score
                     ),
                     "mean_loss_differential": _stable_float(
-                        selected_candidate_runtime.confirmatory_primary_score
-                        - selected_candidate_runtime.baseline_primary_score
+                        selected_candidate_runtime.baseline_primary_score
+                        - selected_candidate_runtime.confirmatory_primary_score
                     ),
+                    "paired_predictive_test_result": evaluate_predictive_promotion(
+                        candidate_losses=(
+                            selected_candidate_runtime.confirmatory_primary_score,
+                        ),
+                        baseline_losses=(
+                            selected_candidate_runtime.baseline_primary_score,
+                        ),
+                        split_protocol_id="declared_confirmatory_holdout",
+                        baseline_id="constant_baseline",
+                        practical_margin=0.0,
+                        calibration_status="not_applicable_for_forecast_type",
+                        leakage_status="passed",
+                    ).as_manifest(),
                     "score_result_ref": (
                         baseline_point_score_result.manifest.ref.as_dict()
                     ),
@@ -742,6 +756,7 @@ def run_prototype_reducer_workflow(
                 ),
                 predictive_gate_policy_manifest=predictive_gate_policy.manifest,
                 calibration_result_manifest=calibration_result.manifest,
+                comparison_universe_manifest=comparison_universe.manifest,
             ),
         ).to_manifest(catalog),
         parent_refs=(
@@ -1554,9 +1569,9 @@ def replay_prototype_run(
         point_loss_id=_DEFAULT_LOSS_ID,
         family_ids=tuple(search_plan.manifest.body["candidate_family_ids"]),
     )
-    replay_candidate = (
-        _select_accepted_candidate(candidates)
-        or _select_best_overall_candidate(candidates)
+    replay_candidate = _select_candidate(
+        candidates,
+        minimum_description_gain_bits=minimum_description_gain_bits,
     )
     scorecard_decision = resolve_scorecard_status(
         candidate_admissible=replay_candidate.admissible,
@@ -1891,6 +1906,20 @@ def _select_accepted_candidate(
         if candidate.admissible:
             return candidate
     return None
+
+
+def _select_candidate(
+    candidates: tuple[_CandidateEvaluation, ...],
+    *,
+    minimum_description_gain_bits: float,
+) -> _CandidateEvaluation:
+    for candidate in candidates:
+        if (
+            candidate.admissible
+            and candidate.description_gain_bits >= minimum_description_gain_bits
+        ):
+            return candidate
+    return min(candidates, key=lambda candidate: candidate.exploratory_primary_score)
 
 
 def _evaluate_candidate_family(

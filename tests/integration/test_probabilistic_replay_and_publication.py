@@ -60,7 +60,7 @@ def test_failed_probabilistic_support_downgrades_or_abstains_correctly(
         == validation_scope.ref.as_dict()
     )
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_only"
+    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert inspection.claim_card.manifest.body["predictive_support_status"] == "blocked"
     assert inspection.scorecard is not None
     assert inspection.scorecard.manifest.body["predictive_status"] == "blocked"
@@ -118,7 +118,7 @@ def _assert_probabilistic_run_replays_and_publishes(
     assert entry.primary_score_result_ref == result.summary.score_result_ref
     assert entry.primary_calibration_result_ref == result.summary.calibration_result_ref
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictively_supported"
+    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
     assert (
         inspection.claim_card.manifest.body["predictive_support_status"]
         == "confirmatory_supported"

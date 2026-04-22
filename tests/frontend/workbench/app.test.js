@@ -1169,7 +1169,7 @@ describe("workbench packaged asset harness", () => {
     const analysis = buildAtlasFixture();
     analysis.operator_point.publication = {
       status: "publishable",
-      headline: "Operator point publication remains backend-backed for the predictive law path.",
+      headline: "Operator point publication remains backend-backed for the predictive-within-scope path.",
     };
     analysis.claim_class = "predictive_law";
     analysis.gap_report = ["no_backend_joint_claim"];
@@ -1202,7 +1202,7 @@ describe("workbench packaged asset harness", () => {
       composition_operator: "additive_residual",
       selected_probabilistic_lane: "distribution",
       honesty_note:
-        "Stale saved holistic payload should not outrank the surviving predictive law.",
+        "Stale saved holistic payload should not outrank the surviving predictive-within-scope claim.",
       equation: {
         label:
           String.raw`y(t) = \left(1 + 0.9\cdot y(t-1)\right) + \left(-0.25 + 0.1\cdot y(t-1)\right) + \varepsilon_t`,
@@ -1508,7 +1508,7 @@ describe("workbench packaged asset harness", () => {
     const analysis = buildAtlasFixture();
     analysis.operator_point.publication = {
       status: "publishable",
-      headline: "Operator point publication remains backend-backed for the predictive law path.",
+      headline: "Operator point publication remains backend-backed for the predictive-within-scope path.",
     };
     analysis.claim_class = "predictive_law";
     analysis.gap_report = [

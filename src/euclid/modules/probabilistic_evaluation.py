@@ -30,6 +30,12 @@ from euclid.modules.evaluation import (
 from euclid.modules.features import FeatureView
 from euclid.modules.split_planning import EvaluationPlan, EvaluationSegment
 from euclid.runtime.hashing import sha256_digest
+from euclid.stochastic.event_definitions import EventDefinition
+from euclid.stochastic.observation_models import get_observation_model
+from euclid.stochastic.process_models import (
+    StochasticPredictiveSupport,
+    fit_residual_stochastic_model,
+)
 
 _DISTRIBUTION_POLICY_SCHEMA = "probabilistic_score_policy_manifest@1.0.0"
 _INTERVAL_POLICY_SCHEMA = "interval_score_policy_manifest@1.0.0"
@@ -59,7 +65,7 @@ class _ProbabilisticScorePolicy:
 
 
 @dataclass(frozen=True)
-class _GaussianPredictiveSupport:
+class _StochasticPredictiveSupport:
     location: float
     scale: float
     distribution_family: str = "gaussian_location_scale"
@@ -98,7 +104,7 @@ def emit_probabilistic_prediction_artifact(
         evaluation_plan.entity_panel if len(evaluation_plan.entity_panel) > 1 else ()
     )
     entity_weights = _default_entity_weights(entity_panel)
-    support_cache: dict[tuple[str, int], dict[int, _GaussianPredictiveSupport]] = {}
+    support_cache: dict[tuple[str, int], dict[int, _StochasticPredictiveSupport]] = {}
 
     rows = []
     missing_scored_origins: list[dict[str, Any]] = []
@@ -314,97 +320,33 @@ def _probabilistic_support_path(
     *,
     fit_result: CandidateWindowFitResult,
     point_path: Mapping[int, float],
-) -> dict[int, _GaussianPredictiveSupport]:
+) -> dict[int, _StochasticPredictiveSupport]:
     family_id = fit_result.fitted_candidate.structural_layer.cir_family_id
-    base_scale = _base_scale(fit_result)
-    if family_id == "analytic":
-        return _analytic_support_path(point_path=point_path, base_scale=base_scale)
-    if family_id == "recursive":
-        return _recursive_support_path(point_path=point_path, base_scale=base_scale)
-    if family_id == "spectral":
-        parameters = {
-            parameter.name: parameter.value
-            for parameter in (
-                fit_result.fitted_candidate.structural_layer.parameter_block.parameters
-            )
-        }
-        return _spectral_support_path(
-            point_path=point_path,
-            base_scale=base_scale,
-            parameters=parameters,
+    if family_id not in {"analytic", "recursive", "spectral", "algorithmic"}:
+        raise ContractValidationError(
+            code="unsupported_prediction_candidate",
+            message=(
+                "probabilistic prediction artifacts support analytic, recursive, "
+                "spectral, and algorithmic fitted candidates only"
+            ),
+            field_path="candidate.structural_layer.cir_family_id",
+            details={"family_id": family_id},
         )
-    if family_id == "algorithmic":
-        return _algorithmic_support_path(point_path=point_path, base_scale=base_scale)
-    raise ContractValidationError(
-        code="unsupported_prediction_candidate",
-        message=(
-            "probabilistic prediction artifacts support analytic, recursive, "
-            "spectral, and algorithmic fitted candidates only"
-        ),
-        field_path="candidate.structural_layer.cir_family_id",
-        details={"family_id": family_id},
-    )
-
-
-def _analytic_support_path(
-    *,
-    point_path: Mapping[int, float],
-    base_scale: float,
-) -> dict[int, _GaussianPredictiveSupport]:
-    return {
-        horizon: _GaussianPredictiveSupport(
-            location=_stable_float(point_path[horizon]),
-            scale=_stable_float(base_scale * math.sqrt(horizon)),
-        )
-        for horizon in sorted(point_path)
-    }
-
-
-def _recursive_support_path(
-    *,
-    point_path: Mapping[int, float],
-    base_scale: float,
-) -> dict[int, _GaussianPredictiveSupport]:
-    return {
-        horizon: _GaussianPredictiveSupport(
-            location=_stable_float(point_path[horizon]),
-            scale=_stable_float(base_scale * (1.0 + (0.15 * (horizon - 1)))),
-        )
-        for horizon in sorted(point_path)
-    }
-
-
-def _spectral_support_path(
-    *,
-    point_path: Mapping[int, float],
-    base_scale: float,
-    parameters: Mapping[str, float | int],
-) -> dict[int, _GaussianPredictiveSupport]:
-    amplitude = max(
-        abs(float(parameters.get("cosine_coefficient", 0.0))),
-        abs(float(parameters.get("sine_coefficient", 0.0))),
-        1.0,
+    stochastic_model = fit_residual_stochastic_model(
+        candidate_id=fit_result.candidate_id,
+        residuals=_stochastic_residual_proxy(fit_result),
+        point_path=point_path,
+        family_id="gaussian",
+        horizon_scale_law="sqrt_horizon",
     )
     return {
-        horizon: _GaussianPredictiveSupport(
-            location=_stable_float(point_path[horizon]),
-            scale=_stable_float(base_scale * (1.0 + ((amplitude / 10.0) * horizon))),
+        horizon: _StochasticPredictiveSupport(
+            location=support.location,
+            scale=support.scale,
+            distribution_family=support.distribution_family,
+            support_kind=support.support_kind,
         )
-        for horizon in sorted(point_path)
-    }
-
-
-def _algorithmic_support_path(
-    *,
-    point_path: Mapping[int, float],
-    base_scale: float,
-) -> dict[int, _GaussianPredictiveSupport]:
-    return {
-        horizon: _GaussianPredictiveSupport(
-            location=_stable_float(point_path[horizon]),
-            scale=_stable_float(base_scale * (1.0 + (0.2 * (horizon - 1)))),
-        )
-        for horizon in sorted(point_path)
+        for horizon, support in stochastic_model.support_path().items()
     }
 
 
@@ -412,7 +354,7 @@ def _build_row(
     *,
     forecast_object_type: str,
     scored_origin,
-    support: _GaussianPredictiveSupport,
+    support: _StochasticPredictiveSupport,
     realized_observation: float,
     origin_row: Mapping[str, Any],
     entity: str | None = None,
@@ -455,18 +397,25 @@ def _build_row(
         )
     if forecast_object_type == "event_probability":
         threshold = _stable_float(float(origin_row["target"]))
-        event_probability = _stable_float(
-            1.0 - _standard_normal_cdf((threshold - support.location) / support.scale)
-        )
-        return EventProbabilityPredictionRow(
-            event_definition={
-                "event_id": "target_ge_origin_target",
+        event_definition = EventDefinition.from_manifest(
+            {
+                "event_id": "declared_target_threshold",
                 "operator": "greater_than_or_equal",
                 "threshold": threshold,
-                "threshold_source": "origin_target",
-            },
+                "threshold_source": "declared_literal",
+                "variable": "target",
+                "calibration_required": True,
+            }
+        )
+        observation_model = get_observation_model("gaussian").bind(
+            {"location": support.location, "scale": support.scale}
+        )
+        event_probability = _stable_float(event_definition.probability(observation_model))
+        realized_event = event_definition.evaluate(realized_observation)
+        return EventProbabilityPredictionRow(
+            event_definition=event_definition.as_manifest(),
             event_probability=event_probability,
-            realized_event=realized_observation >= threshold,
+            realized_event=realized_event,
             **row_kwargs,
         )
     raise ContractValidationError(
@@ -494,8 +443,9 @@ def _base_scale(fit_result: CandidateWindowFitResult) -> float:
     return _stable_float(max(rmse, 0.25 + (0.05 * parameter_scale)))
 
 
-def _standard_normal_cdf(value: float) -> float:
-    return 0.5 * (1.0 + math.erf(value / math.sqrt(2.0)))
+def _stochastic_residual_proxy(fit_result: CandidateWindowFitResult) -> tuple[float, ...]:
+    base_scale = _base_scale(fit_result)
+    return (-base_scale, base_scale)
 
 
 __all__ = ["emit_probabilistic_prediction_artifact"]

@@ -2,7 +2,7 @@
 
 The main way to run Euclid is through `euclid` and `python -m euclid`.
 
-The certified runtime is the governed path from ordered observations to replayable symbolic outputs: descriptive equations, predictive laws, and, when a publishable point law and a publishable probabilistic lane clear the same scope, the unified deterministic-plus-stochastic equation surface shown downstream.
+The certified runtime is the governed path from ordered observations to replayable symbolic outputs: descriptive equations, predictive-within-scope symbolic claims, and, when a publishable point-lane claim and a publishable probabilistic lane clear the same scope, the unified deterministic-plus-stochastic equation surface shown downstream.
 
 The root CLI is defined in `src/euclid/cli/__init__.py`. It exposes the main operator workflow and labels `demo` as compatibility-only tooling.
 
@@ -32,6 +32,33 @@ The most important certified commands are:
 ## Compatibility-only commands
 
 The demo tree remains packaged because the repo still ships retained local demos and inspection helpers, but the CLI help text explicitly treats them as non-certified surfaces. Those commands live in `src/euclid/demo.py` and the parallel orchestration code in `src/euclid/operator_runtime/_compat_runtime.py`.
+
+## Canonical Assets
+
+Runtime assets resolve through `euclid.operator_runtime.resources`. Packaged
+assets under `src/euclid/_assets` are canonical for examples, fixtures,
+contracts, readiness policies, notebooks, and workbench files. Root-level public
+mirrors are not assumed by runtime code; tests must use the resolver instead of
+hard-coded checkout paths such as `examples/current_release_run.yaml`.
+
+Missing packaged assets raise `EuclidAssetError` with code
+`euclid_asset_missing`. This replaces generic file-existence behavior so release
+and replay failures carry typed evidence.
+
+## Numerical Runtime
+
+The runtime dependency foundation includes NumPy, pandas, SciPy, SymPy, Pint,
+statsmodels, scikit-learn, PySINDy, PySR, egglog, joblib, SQLAlchemy, Pydantic,
+PyYAML, Typer, PyArrow, httpx, python-dotenv, vcrpy, responses/respx,
+pytest-timeout, pytest-xdist, and Hypothesis. Ray is intentionally optional via
+the `distributed` extra because distributed execution is a policy decision, not
+a default local requirement.
+
+Replay bundles record numerical environment metadata through
+`euclid.runtime.numerical_environment`: Python version, package versions, Julia
+availability for PySR, BLAS/LAPACK status, platform, and CPU metadata. PySR
+package metadata is captured even when Julia is unavailable; Julia absence is a
+typed runtime diagnostic rather than a silent import failure.
 
 ## Operator request model
 
@@ -103,7 +130,7 @@ Replay is then executed and must verify before publication completes. The main r
 - `src/euclid/operator_runtime/replay.py`
 - `src/euclid/modules/replay.py`
 
-That matters because Euclid only publishes symbolic claims that close under replay. Predictive laws and unified equations are governed runtime artifacts with seed, manifest, and stage-order provenance, not post hoc renderings layered on after the run.
+That matters because Euclid only publishes symbolic claims that close under replay. Predictive-within-scope symbolic claims and unified equations are governed runtime artifacts with seed, manifest, and stage-order provenance, not post hoc renderings layered on after the run.
 
 ## Extension lanes
 
@@ -115,7 +142,7 @@ The runtime can extend beyond plain point evaluation:
 - shared-plus-local decomposition
 - robustness override lanes
 
-These lanes change required artifacts, admissibility rules, and publication behavior. Shared-plus-local runs require declared entity panel equality, mechanistic publication requires external evidence, and residual structure can block predictive-law publication even when descriptive status passes. A unified deterministic-plus-stochastic equation only appears when the probabilistic lane also reaches publishable status on the same validation scope and publication record.
+These lanes change required artifacts, admissibility rules, and publication behavior. Shared-plus-local runs require declared entity panel equality, mechanistic publication requires external evidence, and residual structure can block predictive-within-scope publication even when descriptive status passes. A unified deterministic-plus-stochastic equation only appears when the probabilistic lane also reaches publishable status on the same validation scope and publication record.
 
 ## Smoke and packaging surfaces
 

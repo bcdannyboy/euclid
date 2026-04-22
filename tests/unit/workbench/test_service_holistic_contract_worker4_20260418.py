@@ -17,14 +17,14 @@ GLD_CSV = "analysis-holistic-contract-worker4-gld-price-close-20260418.csv"
 ABSTENTION_REASONS = [
     "robustness_failed",
     "perturbation_protocol_failed",
-    "descriptive_only",
+    "descriptive_structure",
 ]
 GLD_GAP_REPORT = [
     "operator_not_publishable",
     "no_backend_joint_claim",
     "probabilistic_evidence_thin",
     "requires_posthoc_symbolic_synthesis",
-    "descriptive_only",
+    "descriptive_structure",
 ]
 DESCRIPTIVE_SELECTION_SCOPE = "shared_planning_cir_only"
 DESCRIPTIVE_SELECTION_RULE = (
@@ -158,7 +158,7 @@ def test_spy_fixture_rejects_legacy_synthetic_holistic_metadata_worker4_20260418
         },
         "claim_card": {
             "claim_type": "point_forecast",
-            "claim_ceiling": "predictively_supported",
+            "claim_ceiling": "predictive_within_declared_scope",
             "predictive_support_status": "confirmatory_supported",
             "allowed_interpretation_codes": [
                 "point_forecast_within_declared_validation_scope"
@@ -281,7 +281,7 @@ def test_gld_fixture_keeps_abstained_operator_out_of_holistic_claims_worker4_202
 
     assert normalized["operator_point"]["publication"]["status"] == "abstained"
     assert normalized["operator_point"]["abstention"]["blocked_ceiling"] == (
-        "descriptive_only"
+        "descriptive_structure"
     )
     assert set(probabilistic) >= {
         "distribution",

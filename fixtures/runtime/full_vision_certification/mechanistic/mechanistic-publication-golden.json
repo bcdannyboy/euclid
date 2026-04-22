@@ -1,12 +1,12 @@
 {
   "dossier": {
     "status": "passed",
-    "resolved_claim_ceiling": "mechanistically_compatible_hypothesis",
+    "resolved_claim_ceiling": "mechanistically_compatible_law",
     "reason_codes": []
   },
   "claim": {
-    "claim_type": "mechanistically_compatible_hypothesis",
-    "claim_ceiling": "mechanistically_compatible_hypothesis",
+    "claim_type": "mechanistically_compatible_law",
+    "claim_ceiling": "mechanistically_compatible_law",
     "allowed_interpretation_codes": [
       "historical_structure_summary",
       "point_forecast_within_declared_validation_scope",

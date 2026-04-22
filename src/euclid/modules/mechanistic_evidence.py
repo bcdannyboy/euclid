@@ -14,6 +14,11 @@ from euclid.manifests.runtime_models import (
     MechanisticEvidenceDossierManifest,
     UnitsCheckManifest,
 )
+from euclid.modules.claims import (
+    CLAIM_LANE_MECHANISTIC,
+    CLAIM_LANE_PREDICTIVE,
+    normalize_claim_lane,
+)
 
 
 @dataclass(frozen=True)
@@ -47,6 +52,10 @@ def evaluate_mechanistic_evidence(
     external_evidence_records: Sequence[Mapping[str, Any]],
     predictive_evidence_refs: Sequence[TypedRef] = (),
 ) -> MechanisticEvidenceEvaluation:
+    normalized_lower_claim_ceiling = normalize_claim_lane(
+        lower_claim_ceiling,
+        allow_legacy=True,
+    )
     if not mechanistic_evidence_id:
         raise ContractValidationError(
             code="invalid_mechanistic_evidence",
@@ -112,7 +121,7 @@ def evaluate_mechanistic_evidence(
     )
 
     dossier_status, resolved_claim_ceiling, dossier_reason_codes = _dossier_status(
-        lower_claim_ceiling=lower_claim_ceiling,
+        lower_claim_ceiling=normalized_lower_claim_ceiling,
         mapping_status=mechanism_mapping.status,
         units_status=units_check.status,
         invariance_status=invariance_test.status,
@@ -133,7 +142,7 @@ def evaluate_mechanistic_evidence(
         invariance_test_ref=invariance_test.ref,
         evidence_independence_ref=evidence_independence.ref,
         status=dossier_status,
-        lower_claim_ceiling=lower_claim_ceiling,
+        lower_claim_ceiling=normalized_lower_claim_ceiling,
         resolved_claim_ceiling=resolved_claim_ceiling,
         reason_codes=dossier_reason_codes,
     )
@@ -306,7 +315,7 @@ def _dossier_status(
     invariance_reason_codes: Sequence[str],
     independence_reason_codes: Sequence[str],
 ) -> tuple[str, str, tuple[str, ...]]:
-    if lower_claim_ceiling != "predictively_supported":
+    if lower_claim_ceiling != CLAIM_LANE_PREDICTIVE:
         return (
             "blocked_predictive_floor",
             lower_claim_ceiling,
@@ -318,10 +327,10 @@ def _dossier_status(
         invariance_status,
         independence_status,
     } == {"passed"}:
-        return "passed", "mechanistically_compatible_hypothesis", ()
+        return "passed", CLAIM_LANE_MECHANISTIC, ()
     return (
-        "downgraded_to_predictively_supported",
-        "predictively_supported",
+        "downgraded_to_predictive_within_declared_scope",
+        CLAIM_LANE_PREDICTIVE,
         _unique_codes(
             (
                 *mapping_reason_codes,

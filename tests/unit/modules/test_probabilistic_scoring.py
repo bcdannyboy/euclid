@@ -197,7 +197,7 @@ def test_probabilistic_scoring_and_calibration_support_all_admitted_object_types
     assert score_result.body["comparison_status"] == "comparable"
     assert calibration_result.body["status"] == "passed"
     assert claim_decision.publication_mode == "candidate_publication"
-    assert claim_decision.claim_type == "predictively_supported"
+    assert claim_decision.claim_type == "predictive_within_declared_scope"
     assert claim_decision.predictive_support_status == "confirmatory_supported"
     assert claim_decision.allowed_interpretation_codes == (
         "historical_structure_summary",
@@ -205,7 +205,7 @@ def test_probabilistic_scoring_and_calibration_support_all_admitted_object_types
     )
 
 
-def test_probabilistic_calibration_failure_downgrades_claim_to_descriptive_only() -> (
+def test_probabilistic_calibration_failure_downgrades_claim_to_descriptive_structure() -> (
     None
 ):
     catalog = load_contract_catalog(PROJECT_ROOT)
@@ -282,11 +282,47 @@ def test_probabilistic_calibration_failure_downgrades_claim_to_descriptive_only(
     assert scorecard_decision.predictive_status == "blocked"
     assert scorecard_decision.predictive_reason_codes == ("calibration_failed",)
     assert claim_decision.publication_mode == "candidate_publication"
-    assert claim_decision.claim_type == "descriptive_only"
+    assert claim_decision.claim_type == "descriptive_structure"
     assert claim_decision.predictive_support_status == "blocked"
     assert claim_decision.allowed_interpretation_codes == (
         "historical_structure_summary",
     )
+
+
+def test_distribution_scoring_accepts_non_gaussian_stochastic_model() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="distribution",
+        primary_score="log_score",
+    )
+    prediction_artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="student_t_candidate",
+        score_policy=score_policy,
+        forecast_object_type="distribution",
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="student_t_location_scale",
+                location=10.0,
+                scale=1.0,
+                support_kind="all_real",
+                realized_observation=10.5,
+            ),
+        ),
+    )
+
+    score_result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=prediction_artifact,
+    )
+
+    assert score_result.body["comparison_status"] == "comparable"
+    assert score_result.body["aggregated_primary_score"] > 0
 
 
 def _probabilistic_score_policy_manifest(

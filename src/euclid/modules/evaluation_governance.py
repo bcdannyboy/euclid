@@ -306,6 +306,8 @@ class PredictiveGatePolicy:
     minimum_holdout_improvement_rule: str = "nonnegative_mean_primary_score_improvement"
     pairwise_confirmation_rule: str = "declared_pairwise_test_passes"
     requires_calibration_pass: bool = False
+    requires_statistical_promotion: bool = True
+    raw_metric_comparison_role: str = "diagnostic_only"
 
     @property
     def forecast_object_type(self) -> str:
@@ -340,6 +342,10 @@ class PredictiveGatePolicy:
                 ),
                 "pairwise_confirmation_rule": self.pairwise_confirmation_rule,
                 "requires_calibration_pass": self.requires_calibration_pass,
+                "requires_statistical_promotion": (
+                    self.requires_statistical_promotion
+                ),
+                "raw_metric_comparison_role": self.raw_metric_comparison_role,
             },
             catalog=catalog,
         )
@@ -670,6 +676,8 @@ def build_predictive_gate_policy(
         allowed_forecast_object_types=unique_types,
         policy_id=policy_id,
         requires_calibration_pass=requires_calibration_pass,
+        requires_statistical_promotion=True,
+        raw_metric_comparison_role="diagnostic_only",
     )
 
 
@@ -678,17 +686,57 @@ def resolve_confirmatory_promotion_allowed(
     candidate_beats_baseline: bool,
     predictive_gate_policy_manifest: ManifestEnvelope,
     calibration_result_manifest: ManifestEnvelope | None = None,
+    predictive_test_result_manifest: ManifestEnvelope | Mapping[str, Any] | None = None,
+    comparison_universe_manifest: ManifestEnvelope | None = None,
 ) -> bool:
     if not candidate_beats_baseline:
         return False
     requires_calibration_pass = bool(
         predictive_gate_policy_manifest.body.get("requires_calibration_pass", False)
     )
-    if not requires_calibration_pass:
+    if requires_calibration_pass:
+        if calibration_result_manifest is None:
+            return False
+        if calibration_result_manifest.body.get("pass") is not True:
+            return False
+    requires_statistical_promotion = bool(
+        predictive_gate_policy_manifest.body.get("requires_statistical_promotion", True)
+    )
+    if not requires_statistical_promotion:
         return True
-    if calibration_result_manifest is None:
+    predictive_test_body = _predictive_test_result_body(
+        predictive_test_result_manifest=predictive_test_result_manifest,
+        comparison_universe_manifest=comparison_universe_manifest,
+    )
+    if predictive_test_body is None:
         return False
-    return bool(calibration_result_manifest.body.get("pass") is True)
+    return (
+        predictive_test_body.get("promotion_allowed") is True
+        and predictive_test_body.get("status") == "passed"
+        and predictive_test_body.get("raw_metric_comparison_role") == "diagnostic_only"
+        and not predictive_test_body.get("reason_codes")
+    )
+
+
+def _predictive_test_result_body(
+    *,
+    predictive_test_result_manifest: ManifestEnvelope | Mapping[str, Any] | None,
+    comparison_universe_manifest: ManifestEnvelope | None,
+) -> Mapping[str, Any] | None:
+    if isinstance(predictive_test_result_manifest, ManifestEnvelope):
+        return predictive_test_result_manifest.body
+    if isinstance(predictive_test_result_manifest, Mapping):
+        return predictive_test_result_manifest
+    if comparison_universe_manifest is None:
+        return None
+    primary_baseline_id = str(comparison_universe_manifest.body.get("baseline_id", ""))
+    for record in comparison_universe_manifest.body.get("paired_comparison_records", []):
+        if str(record.get("comparator_id", "")) != primary_baseline_id:
+            continue
+        result = record.get("paired_predictive_test_result")
+        if isinstance(result, Mapping):
+            return result
+    return None
 
 
 def _require_matching_comparison_keys(

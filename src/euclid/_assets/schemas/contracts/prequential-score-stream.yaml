@@ -1,0 +1,27 @@
+schema_name: prequential_score_stream@1.0.0
+kind: contract_schema
+owner_ref: evaluation_governance_owner
+owning_module: evaluation_governance
+canonical_source_path: schemas/contracts/prequential-score-stream.yaml
+phase_ref: P11
+description: >
+  Replayable prequential score stream used for per-origin, per-horizon,
+  per-entity, per-regime, and rolling-degradation predictive diagnostics.
+required_fields:
+  - stream_id
+  - candidate_id
+  - baseline_id
+  - per_origin
+  - per_horizon
+  - per_entity
+  - per_regime
+  - rolling_degradation
+  - replay_identity
+claim_boundary:
+  prequential_stream_alone_can_publish_claim: false
+  supports_statistical_promotion_gate: true
+replay:
+  required_fields:
+    - replay_identity
+    - per_origin
+    - baseline_id

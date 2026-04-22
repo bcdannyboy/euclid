@@ -1,0 +1,32 @@
+schema_name: pysr_engine_trace@1.0.0
+kind: contract_schema
+owner_ref: search_planning_owner
+owning_module: search
+canonical_source_path: docs/reference/search-core.md
+required_fields:
+  - pysr_version
+  - symbolic_regression_jl_version
+  - julia_version
+  - operator_set
+  - niterations
+  - timeout_seconds
+  - hall_of_fame
+  - complexity
+  - loss
+  - score
+  - claim_boundary
+required_replay_fields:
+  - search_plan_id
+  - random_seed
+  - row_fingerprints
+  - engine_config
+  - operator_set
+claim_boundary:
+  claim_publication_allowed: false
+  reason_codes:
+    - search_engine_not_claim_authority
+notes:
+  - PySR hall-of-fame equations are proposals only and must lower through the
+    safe SymPy boundary into Euclid expression IR and CIR.
+  - Julia runtime details are replay metadata; they do not create publication
+    authority or claim scope by themselves.

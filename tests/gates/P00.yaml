@@ -1,0 +1,749 @@
+phase_id: P00
+phase_title: Evidence Spine Reset
+phase_status: complete
+blocked_reason: ''
+covered_ids:
+- P00-T01
+- P00-T01-S01
+- P00-T01-S02
+- P00-T01-S03
+- P00-T01-S04
+- P00-T01-S05
+- P00-T01-S06
+- P00-T02
+- P00-T02-S01
+- P00-T02-S02
+- P00-T02-S03
+- P00-T02-S04
+- P00-T03
+- P00-T03-S01
+- P00-T03-S02
+- P00-T03-S03
+- P00-T03-S04
+- P00-T03-S05
+- P00-T03-S06
+- P00-T04
+- P00-T04-S01
+- P00-T04-S02
+- P00-T04-S03
+- P00-T04-S04
+- P00-T05
+- P00-T05-S01
+- P00-T05-S02
+- P00-T05-S03
+- P00-T05-S04
+- P00-T06
+- P00-T06-S01
+- P00-T06-S02
+- P00-T06-S03
+- P00-T06-S04
+- P00-T06-S05
+- P00-T06-S06
+- P00-T06-S07
+- P00-T06-S08
+- P00-T06-S09
+- P00-T06-S10
+- P00-T06-S11
+- P00-T06-S12
+- P00-T06-S13
+- P00-T06-S14
+fixture_unit:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/test_dev_scripts_smoke.py tests/unit/test_runtime_package_layout.py
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/test_completion_regression_ci.py tests/unit/test_completion_report_logic.py
+    tests/unit/benchmarks/test_reporting.py tests/unit/benchmarks/test_runtime.py
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/unit/runtime/test_env_loading.py tests/unit/testing/test_live_api_gate.py
+    tests/unit/testing/test_fixture_provenance.py tests/unit/testing/test_secret_redaction.py
+    tests/unit/testing/test_gate_manifest.py
+fixture_integration:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/integration/test_cli_end_to_end.py tests/integration/test_completion_report_generation.py
+    tests/integration/test_operator_replay_pipeline.py tests/integration/test_live_api_gate_fixture_mode.py
+fixture_regression:
+  commands:
+  - /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/regression/test_live_api_evidence_redaction.py tests/benchmarks/test_full_vision_suite.py
+live_api:
+  commands:
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 ./scripts/live_api_smoke.sh
+  - EUCLID_LIVE_API_TESTS=1 EUCLID_LIVE_API_STRICT=1 /Users/danielbloom/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+    -m pytest -q tests/live/test_fmp_live_ingestion_smoke.py tests/live/test_openai_live_explainer_smoke.py
+  required_env:
+  - FMP_API_KEY
+  - OPENAI_API_KEY
+redaction:
+  assertions: &id002
+  - no_secret_in_stdout
+  - no_secret_in_stderr
+  - no_secret_in_artifact
+  - no_secret_in_url
+  - no_secret_in_header
+  - no_secret_in_exception
+  - no_secret_in_release_bundle
+replay:
+  assertions: &id003
+  - replay_metadata_complete
+  - replay_verified_artifact_ids_recorded
+  - replay_environment_ids_recorded
+  - replay_hash_mismatch_fails_readiness
+claim_scope:
+  assertions: &id004
+  - no_unjustified_claim_promotion
+  - live_api_success_is_not_scientific_truth
+  - benchmark_file_existence_alone_cannot_pass
+edge_cases:
+  required: &id001
+  - missing_env_file
+  - blank_env_value
+  - process_env_override
+  - invalid_boolean_flag
+  - missing_key_strict_mode
+  - disabled_live_tests
+  - provider_http_401
+  - provider_http_429
+  - provider_http_500
+  - provider_timeout
+  - malformed_provider_payload
+  - empty_history
+  - duplicate_dates
+  - out_of_order_rows
+  - fake_secret_in_url
+  - fake_secret_in_header
+  - fake_secret_in_exception
+  - replay_hash_mismatch
+artifact_outputs:
+- build/reports/completion-report.json
+- build/reports/verify-completion.json
+- live-api-evidence.json
+known_external_provider_volatility:
+- FMP prices and volumes are shape-checked, not exact-value checked.
+- OpenAI prose is schema-checked, not exact-text checked.
+id_gates_schema:
+- status
+- implementation_files
+- test_files
+- gate_refs
+- evidence_refs
+- edge_cases
+- redaction_assertions
+- replay_assertions
+- claim_scope_assertions
+id_gates:
+  P00-T01:
+    status: complete
+    implementation_files: &id005
+    - .env.example
+    - .github/workflows/ci.yml
+    - README.md
+    - docs/reference/runtime-cli.md
+    - docs/runtime-cli.md
+    - docs/testing-truthfulness.md
+    - pyproject.toml
+    - schemas/contracts/fixture-provenance.yaml
+    - schemas/contracts/live-api-evidence.yaml
+    - scripts/live_api_smoke.sh
+    - scripts/release_smoke.sh
+    - src/euclid/benchmarks/reporting.py
+    - src/euclid/benchmarks/runtime.py
+    - src/euclid/cli/replay.py
+    - src/euclid/cli/run.py
+    - src/euclid/modules/replay.py
+    - src/euclid/operator_runtime/models.py
+    - src/euclid/operator_runtime/resources.py
+    - src/euclid/readiness/judgment.py
+    - src/euclid/release.py
+    - src/euclid/runtime/env.py
+    - src/euclid/testing/fixtures.py
+    - src/euclid/testing/live_api.py
+    - src/euclid/testing/redaction.py
+    test_files: &id006
+    - tests/benchmarks/test_full_vision_suite.py
+    - tests/integration/test_cli_end_to_end.py
+    - tests/integration/test_completion_report_generation.py
+    - tests/integration/test_live_api_gate_fixture_mode.py
+    - tests/integration/test_operator_replay_pipeline.py
+    - tests/live/README.md
+    - tests/live/test_fmp_live_ingestion_smoke.py
+    - tests/live/test_openai_live_explainer_smoke.py
+    - tests/regression/test_live_api_evidence_redaction.py
+    - tests/unit/benchmarks/test_reporting.py
+    - tests/unit/runtime/test_env_loading.py
+    - tests/unit/test_completion_regression_ci.py
+    - tests/unit/test_completion_report_logic.py
+    - tests/unit/test_dev_scripts_smoke.py
+    - tests/unit/test_runtime_package_layout.py
+    - tests/unit/testing/test_fixture_provenance.py
+    - tests/unit/testing/test_live_api_gate.py
+    - tests/unit/testing/test_secret_redaction.py
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T01-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01-S01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01-S01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T01-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01-S02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01-S02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T01-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01-S03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01-S03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T01-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01-S04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01-S04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T01-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01-S05
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01-S05
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T01-S06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T01-S06
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T01-S06
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T02-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T02-S01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T02-S01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T02-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T02-S02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T02-S02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T02-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T02-S03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T02-S03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T02-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T02-S04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T02-S04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03-S01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03-S01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03-S02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03-S02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03-S03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03-S03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03-S04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03-S04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03-S05
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03-S05
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T03-S06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T03-S06
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T03-S06
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T04-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T04-S01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T04-S01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T04-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T04-S02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T04-S02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T04-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T04-S03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T04-S03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T04-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T04-S04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T04-S04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T05
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T05
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T05-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T05-S01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T05-S01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T05-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T05-S02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T05-S02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T05-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T05-S03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T05-S03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T05-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T05-S04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T05-S04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S01:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S01
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S01
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S02:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S02
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S02
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S03:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S03
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S03
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S04:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S04
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S04
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S05:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S05
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S05
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S06:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S06
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S06
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S07:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S07
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S07
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S08:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S08
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S08
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S09:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S09
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S09
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S10:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S10
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S10
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S11:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S11
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S11
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S12:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S12
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S12
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S13:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S13
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S13
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004
+  P00-T06-S14:
+    status: complete
+    implementation_files: *id005
+    test_files: *id006
+    gate_refs:
+    - tests/gates/P00.yaml#P00-T06-S14
+    evidence_refs:
+    - gate:tests/gates/P00.yaml#P00-T06-S14
+    - artifact:build/reports/completion-report.json
+    edge_cases: *id001
+    redaction_assertions: *id002
+    replay_assertions: *id003
+    claim_scope_assertions: *id004

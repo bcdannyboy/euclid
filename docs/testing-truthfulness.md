@@ -88,6 +88,23 @@ These tests pin:
 - release policy truthfulness
 - packaging, readiness, fixture, and release-surface agreement
 
+Benchmark and readiness gates must close on semantic evidence, not artifact
+existence alone. Task results include `semantic_summary` fields for support
+objects, claim lanes, replay IDs, engines, score policies, and thresholds.
+Replay mismatch, missing semantic summaries, and failed thresholds block release
+readiness even when files are present.
+
+## Live API And Secret Handling
+
+Live gates are disabled locally unless `EUCLID_LIVE_API_TESTS=1` is set. Strict
+release certification also sets `EUCLID_LIVE_API_STRICT=1`, which fails missing
+`FMP_API_KEY` or `OPENAI_API_KEY` rather than skipping. Provider keys load only
+through `src/euclid/runtime/env.py`; `.env` and CI secret injection feed the same
+loader. Sanitized live evidence records provider, endpoint class, schema checks,
+row counts, semantic status, and dependency diagnostics, but never keys,
+authorization headers, secret-bearing URLs, prompt bodies with secrets, or raw
+provider payloads that cannot be stored.
+
 ## Workbench tests
 
 Important suites:

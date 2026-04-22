@@ -42,17 +42,17 @@ def test_failed_mechanistic_support_lowers_claim_ceiling(tmp_path: Path) -> None
     ).manifest
 
     assert result.summary.result_mode == "candidate_publication"
-    assert dossier.body["status"] == "downgraded_to_predictively_supported"
+    assert dossier.body["status"] == "downgraded_to_predictive_within_declared_scope"
     assert inspection.scorecard is not None
     assert inspection.scorecard.manifest.body["mechanistic_status"] == (
-        "downgraded_to_predictively_supported"
+        "downgraded_to_predictive_within_declared_scope"
     )
     assert (
         "invariance_check_failed"
         in inspection.scorecard.manifest.body["mechanistic_reason_codes"]
     )
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictively_supported"
+    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
     assert inspection.claim_card.manifest.body["mechanistic_evidence_ref"] == (
         dossier.ref.as_dict()
     )
@@ -86,7 +86,7 @@ def test_strong_mechanistic_support_updates_publication_record(tmp_path: Path) -
 
     assert inspection.claim_card is not None
     assert inspection.claim_card.manifest.body["claim_type"] == (
-        "mechanistically_compatible_hypothesis"
+        "mechanistically_compatible_law"
     )
     assert entry.mechanistic_evidence_ref == dossier.ref
     assert inspection.entry.mechanistic_evidence_ref == dossier.ref

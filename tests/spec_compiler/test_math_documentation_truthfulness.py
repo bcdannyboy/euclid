@@ -59,19 +59,46 @@ def test_math_doc_uses_github_safe_math_markdown() -> None:
     lines = text.splitlines()
     inside_display_math = False
     block_start = 0
+    display_blocks = 0
 
     for line_number, line in enumerate(lines, start=1):
-        if line.strip() == "$$":
+        if "$$" in line:
+            assert line == "$$", (
+                f"GitHub display math fences must be top-level lines at line "
+                f"{line_number}: {line!r}"
+            )
             inside_display_math = not inside_display_math
-            block_start = line_number if inside_display_math else 0
+            if inside_display_math:
+                display_blocks += 1
+                block_start = line_number
+                assert line_number == 1 or not lines[line_number - 2].strip(), (
+                    f"GitHub display math opening fence at line {line_number} "
+                    "must be preceded by a blank line"
+                )
+            else:
+                assert line_number == len(lines) or not lines[line_number].strip(), (
+                    f"GitHub display math closing fence at line {line_number} "
+                    "must be followed by a blank line"
+                )
+                block_start = 0
             continue
         if not inside_display_math:
+            assert r"\mathbf{1}_" not in line, (
+                "Indicator functions with subscripts must stay in display math "
+                f"so GitHub does not parse underscores as emphasis at line {line_number}"
+            )
             continue
+        assert line == line.lstrip(), (
+            f"GitHub may nest indented display math inside a Markdown block at "
+            f"line {line_number} (block starts at line {block_start}): {line!r}"
+        )
         assert not line.lstrip().startswith(("-", "*", "+", ">", "#")), (
             f"GitHub may parse markdown inside display math at line {line_number} "
             f"(block starts at line {block_start}): {line!r}"
         )
 
+    assert not inside_display_math, "Unclosed display math block in docs/math.md"
+    assert display_blocks >= 1
     assert r"\mathbb{1}\{" not in text
 
 

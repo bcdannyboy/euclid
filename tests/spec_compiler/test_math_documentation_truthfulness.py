@@ -54,6 +54,27 @@ def test_math_doc_states_rewrite_invariance_and_claim_boundaries() -> None:
         assert required in text
 
 
+def test_math_doc_uses_github_safe_math_markdown() -> None:
+    text = _text(MATH_DOC)
+    lines = text.splitlines()
+    inside_display_math = False
+    block_start = 0
+
+    for line_number, line in enumerate(lines, start=1):
+        if line.strip() == "$$":
+            inside_display_math = not inside_display_math
+            block_start = line_number if inside_display_math else 0
+            continue
+        if not inside_display_math:
+            continue
+        assert not line.lstrip().startswith(("-", "*", "+", ">", "#")), (
+            f"GitHub may parse markdown inside display math at line {line_number} "
+            f"(block starts at line {block_start}): {line!r}"
+        )
+
+    assert r"\mathbb{1}\{" not in text
+
+
 def test_reference_index_routes_to_math_document() -> None:
     text = _text(REFERENCE_INDEX)
 

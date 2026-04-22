@@ -43,7 +43,7 @@ $$
 \mathrm{zigzag}(z)=
 \begin{cases}
 2z & z\ge 0\\
--2z-1 & z<0
+{}-2z-1 & z<0
 \end{cases}
 $$
 - Natural-number code length (Elias-delta-like form used in code):
@@ -285,7 +285,7 @@ $$
 with score as mean of $\rho_\tau$ over quantiles in row.
 
 5. **Event probability scores**:
-- Brier: $(p-\mathbb{1}\{\text{event}\})^2$
+- Brier: $(p-\mathbf{1}_{\text{event}})^2$
 - Log score:
   - event true: $-\log p$
   - event false: $-\log(1-p)$
@@ -352,7 +352,7 @@ pass if gap $\le$ threshold (default 0.1).
 ### 11.3 Quantile
 
 For each quantile level $\tau$, compute hit rate
-$\hat h_\tau = \frac{1}{n}\sum \mathbb{1}\{y\le q_\tau\}$, then gap
+$\hat h_\tau = \frac{1}{n}\sum \mathbf{1}_{y\le q_\tau}$, then gap
 $|\hat h_\tau-\tau|$. Use max gap across levels; pass if $\le$ threshold (default 0.15).
 
 ### 11.4 Event probability
@@ -395,9 +395,11 @@ sets $S_e$, and optional train/holdout losses, the retained metrics are:
 `max_holdout_degradation`.
 
 $$
+\begin{aligned}
 \text{residual\_spread}
-= \max_e \operatorname{mean}_{r\in R_e}|r|
-  - \min_e \operatorname{mean}_{r\in R_e}|r|,
+&= \max_e \operatorname{mean}_{r\in R_e}|r|\\
+&\quad {}- \min_e \operatorname{mean}_{r\in R_e}|r|.
+\end{aligned}
 $$
 
 $$

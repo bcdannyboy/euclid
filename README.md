@@ -32,8 +32,6 @@ Repo Euclid does something less cinematic and more useful:
 - records replayable artifacts so a result can be inspected later
 - refuses to promote a pattern into a stronger claim unless the current implementation and tests support it
 
-So the inspiration is the film's delightfully feverish premise: a machine named Euclid deriving patterns from time series. The implementation is the antidote to the fever: schemas, manifests, scorecards, calibration, replay, and abstention paths.
-
 ## System surfaces
 
 The codebase is organized around five cooperating surfaces:

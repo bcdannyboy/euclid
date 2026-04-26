@@ -348,6 +348,7 @@ modules:
   outputs:
   - candidate_spec
   - reducer_artifact
+  - residual_history
   - search_ledger
   - frontier
   - rejected_diagnostics
@@ -410,6 +411,7 @@ modules:
   - entity_panel_contract
   outputs:
   - probabilistic_prediction_artifact
+  - stochastic_model
   - calibration_input_panel
   allowed_dependencies:
   - candidate_fitting

@@ -24,9 +24,11 @@ from euclid.manifests.runtime_models import (
 from euclid.math.prototype_support import build_prototype_support_bundle
 from euclid.math.quantization import FixedStepMidTreadQuantizer
 from euclid.math.reference_descriptions import build_reference_description
+from euclid.math.codelength import description_components as shared_description_components
 from euclid.modules.catalog_publishing import (
     build_publication_record_manifest,
     build_run_result_manifest,
+    stochastic_evidence_fields_from_prediction_artifact,
 )
 from euclid.modules.claims import resolve_claim_publication
 from euclid.modules.evaluation_governance import (
@@ -1060,6 +1062,9 @@ def run_prototype_reducer_workflow(
             claim_card_ref=claim_card.manifest.ref if claim_card else None,
             abstention_ref=abstention.manifest.ref if abstention else None,
             prediction_artifact_refs=(prediction_artifact.manifest.ref,),
+            **stochastic_evidence_fields_from_prediction_artifact(
+                prediction_artifact.manifest
+            ),
             robustness_report_refs=(robustness_report.manifest.ref,),
             reproducibility_bundle_ref=bundle_ref,
             deferred_scope_policy_refs=(),
@@ -1087,7 +1092,11 @@ def run_prototype_reducer_workflow(
                     scorecard_ref=scorecard.manifest.ref,
                     claim_ref=claim_card.manifest.ref if claim_card else None,
                     abstention_ref=abstention.manifest.ref if abstention else None,
-                    supporting_refs=(validation_scope.manifest.ref,),
+                    supporting_refs=(
+                        validation_scope.manifest.ref,
+                        *run_result_manifest.residual_history_refs,
+                        *run_result_manifest.stochastic_model_refs,
+                    ),
                 ),
                 artifact_hash_records=build_artifact_hash_records(
                     snapshot=intake.snapshot,
@@ -1143,6 +1152,14 @@ def run_prototype_reducer_workflow(
                 claim_card_ref=run_result_manifest.primary_claim_card_ref,
                 abstention_ref=run_result_manifest.primary_abstention_ref,
                 prediction_artifact_refs=run_result_manifest.prediction_artifact_refs,
+                residual_history_refs=run_result_manifest.residual_history_refs,
+                stochastic_model_refs=run_result_manifest.stochastic_model_refs,
+                stochastic_support_status=(
+                    run_result_manifest.stochastic_support_status
+                ),
+                stochastic_support_reason_codes=(
+                    run_result_manifest.stochastic_support_reason_codes
+                ),
                 robustness_report_refs=run_result_manifest.robustness_report_refs,
                 deferred_scope_policy_refs=run_result_manifest.deferred_scope_policy_refs,
             ),
@@ -1333,6 +1350,9 @@ def run_prototype_reducer_workflow(
                 claim_card_ref=claim_card.manifest.ref if claim_card else None,
                 abstention_ref=abstention.manifest.ref if abstention else None,
                 prediction_artifact_refs=(prediction_artifact.manifest.ref,),
+                **stochastic_evidence_fields_from_prediction_artifact(
+                    prediction_artifact.manifest
+                ),
                 robustness_report_refs=(robustness_report.manifest.ref,),
                 reproducibility_bundle_ref=bundle_ref,
                 deferred_scope_policy_refs=(),
@@ -1360,7 +1380,11 @@ def run_prototype_reducer_workflow(
                         scorecard_ref=scorecard.manifest.ref,
                         claim_ref=claim_card.manifest.ref if claim_card else None,
                         abstention_ref=abstention.manifest.ref if abstention else None,
-                        supporting_refs=(validation_scope.manifest.ref,),
+                        supporting_refs=(
+                            validation_scope.manifest.ref,
+                            *run_result_manifest.residual_history_refs,
+                            *run_result_manifest.stochastic_model_refs,
+                        ),
                     ),
                     artifact_hash_records=build_artifact_hash_records(
                         snapshot=intake.snapshot,
@@ -1416,6 +1440,14 @@ def run_prototype_reducer_workflow(
                     claim_card_ref=run_result_manifest.primary_claim_card_ref,
                     abstention_ref=run_result_manifest.primary_abstention_ref,
                     prediction_artifact_refs=run_result_manifest.prediction_artifact_refs,
+                    residual_history_refs=run_result_manifest.residual_history_refs,
+                    stochastic_model_refs=run_result_manifest.stochastic_model_refs,
+                    stochastic_support_status=(
+                        run_result_manifest.stochastic_support_status
+                    ),
+                    stochastic_support_reason_codes=(
+                        run_result_manifest.stochastic_support_reason_codes
+                    ),
                     robustness_report_refs=run_result_manifest.robustness_report_refs,
                     deferred_scope_policy_refs=run_result_manifest.deferred_scope_policy_refs,
                 ),
@@ -2283,36 +2315,16 @@ def _description_components(
     reference_bits: float,
     quantizer: FixedStepMidTreadQuantizer,
 ) -> dict[str, float]:
-    residual_indices = [
-        quantizer.quantize_index(actual - fitted)
-        for actual, fitted in zip(actual_values, fitted_values, strict=True)
-    ]
-    parameter_indices = [
-        int(value) if isinstance(value, int) else quantizer.quantize_index(float(value))
-        for value in parameters.values()
-    ]
-    structure_bits = 1.0 if family_id == "seasonal_naive" else 0.0
-    literal_bits = (
-        float(_natural_code_length(int(parameters["season_length"])))
-        if family_id == "seasonal_naive"
-        else 0.0
-    )
-    parameter_bits = float(_code_bits(parameter_indices))
-    data_bits = float(_natural_code_length(len(residual_indices))) + float(
-        _code_bits(residual_indices)
-    )
-    total_bits = (
-        _FAMILY_BITS + structure_bits + literal_bits + parameter_bits + 0.0 + data_bits
-    )
     return {
-        "L_family_bits": _FAMILY_BITS,
-        "L_structure_bits": structure_bits,
-        "L_literals_bits": literal_bits,
-        "L_params_bits": parameter_bits,
-        "L_state_bits": 0.0,
-        "L_data_bits": data_bits,
-        "L_total_bits": _stable_float(total_bits),
-        "reference_bits": _stable_float(reference_bits),
+        key: _stable_float(value)
+        for key, value in shared_description_components(
+            family_id=family_id,
+            parameters=parameters,
+            fitted_values=fitted_values,
+            actual_values=actual_values,
+            reference_bits=reference_bits,
+            quantizer=quantizer,
+        ).items()
     }
 
 

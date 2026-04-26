@@ -40,6 +40,7 @@ from euclid.modules.candidate_fitting import (
 from euclid.modules.catalog_publishing import (
     build_publication_record_manifest,
     build_run_result_manifest,
+    stochastic_evidence_fields_from_prediction_artifact,
 )
 from euclid.modules.claims import resolve_claim_publication
 from euclid.modules.evaluation import emit_point_prediction_artifact
@@ -151,6 +152,7 @@ _PROBABILISTIC_PRIMARY_SCORES = {
     "quantile": "pinball_loss",
     "event_probability": "brier_score",
 }
+_DEFAULT_QUANTILE_LEVELS = (0.1, 0.5, 0.9)
 _PROBABILISTIC_BASELINE_FALLBACK_CANDIDATE_IDS = (
     "analytic_intercept",
     "recursive_running_mean",
@@ -178,6 +180,12 @@ class DemoRequest:
     forecast_object_type: str = "point"
     primary_score_id: str | None = None
     calibration_thresholds: Mapping[str, float] | None = None
+    distribution_family: str = "gaussian"
+    interval_levels: tuple[float, ...] = ()
+    quantile_levels: tuple[float, ...] = ()
+    reliability_bins: Mapping[str, object] | None = None
+    pit_config: Mapping[str, object] | None = None
+    calibration_lane: str = "evaluation_only"
     external_evidence_payload: Mapping[str, object] | None = None
     mechanistic_evidence_payload: Mapping[str, object] | None = None
     robustness_payload: Mapping[str, object] | None = None
@@ -190,6 +198,16 @@ class DemoRequest:
             self,
             "calibration_thresholds",
             dict(self.calibration_thresholds or {}),
+        )
+        object.__setattr__(
+            self,
+            "reliability_bins",
+            dict(self.reliability_bins or {}),
+        )
+        object.__setattr__(
+            self,
+            "pit_config",
+            dict(self.pit_config or {}),
         )
         object.__setattr__(
             self,
@@ -439,6 +457,45 @@ def load_demo_request(manifest_path: Path | None = None) -> DemoRequest:
         ),
         field_path="probabilistic.calibration_thresholds",
     )
+    distribution_family = _normalize_distribution_family(
+        probabilistic_payload.get(
+            "distribution_family",
+            payload.get("distribution_family", "gaussian"),
+        ),
+        field_path="probabilistic.distribution_family",
+    )
+    interval_levels = _tuple_of_floats(
+        probabilistic_payload.get(
+            "interval_levels",
+            payload.get("interval_levels", ()),
+        ),
+        field_path="probabilistic.interval_levels",
+    )
+    quantile_levels = _tuple_of_floats(
+        probabilistic_payload.get(
+            "quantile_levels",
+            payload.get("quantile_levels", ()),
+        ),
+        field_path="probabilistic.quantile_levels",
+    )
+    reliability_bins = _mapping_or_empty(
+        probabilistic_payload.get(
+            "reliability_bins",
+            payload.get("reliability_bins", {}),
+        ),
+        field_path="probabilistic.reliability_bins",
+    )
+    pit_config = _mapping_or_empty(
+        probabilistic_payload.get("pit", payload.get("pit", {})),
+        field_path="probabilistic.pit",
+    )
+    calibration_lane = _string_field(
+        probabilistic_payload.get(
+            "calibration_lane",
+            payload.get("calibration_lane", "evaluation_only"),
+        ),
+        field_path="probabilistic.calibration_lane",
+    )
     external_evidence_payload = _external_evidence_payload(
         payload.get("external_evidence"),
         field_path="external_evidence",
@@ -473,6 +530,12 @@ def load_demo_request(manifest_path: Path | None = None) -> DemoRequest:
         forecast_object_type=forecast_object_type,
         primary_score_id=primary_score_id,
         calibration_thresholds=calibration_thresholds,
+        distribution_family=distribution_family,
+        interval_levels=interval_levels,
+        quantile_levels=quantile_levels,
+        reliability_bins=reliability_bins,
+        pit_config=pit_config,
+        calibration_lane=calibration_lane,
         external_evidence_payload=external_evidence_payload,
         mechanistic_evidence_payload=mechanistic_evidence_payload,
         robustness_payload=robustness_payload,
@@ -1125,6 +1188,9 @@ def run_demo_probabilistic_evaluation(
                 score_policy_manifest=score_policy.manifest,
                 stage_id="confirmatory_holdout",
                 forecast_object_type=request.forecast_object_type,
+                stochastic_family_id=request.distribution_family,
+                interval_levels=request.interval_levels or (0.8,),
+                quantile_levels=request.quantile_levels or _DEFAULT_QUANTILE_LEVELS,
             ),
             parent_refs=(
                 reducer_artifact.manifest.ref,
@@ -1142,6 +1208,9 @@ def run_demo_probabilistic_evaluation(
                 score_policy_manifest=score_policy.manifest,
                 stage_id="confirmatory_holdout",
                 forecast_object_type=request.forecast_object_type,
+                stochastic_family_id=request.distribution_family,
+                interval_levels=request.interval_levels or (0.8,),
+                quantile_levels=request.quantile_levels or _DEFAULT_QUANTILE_LEVELS,
             ),
             parent_refs=(
                 baseline_reducer_artifact.manifest.ref,
@@ -1173,6 +1242,11 @@ def run_demo_probabilistic_evaluation(
                 catalog=catalog,
                 forecast_object_type=request.forecast_object_type,
                 thresholds=request.calibration_thresholds,
+                reliability_bins=request.reliability_bins,
+                pit_config=request.pit_config,
+                interval_levels=request.interval_levels,
+                quantile_levels=request.quantile_levels,
+                calibration_lane=request.calibration_lane,
             )
         )
         calibration_result = registry.register(
@@ -1626,6 +1700,9 @@ def run_demo_probabilistic_evaluation(
             claim_card_ref=claim_card.manifest.ref if claim_card is not None else None,
             abstention_ref=abstention.manifest.ref if abstention is not None else None,
             prediction_artifact_refs=(prediction_artifact.manifest.ref,),
+            **stochastic_evidence_fields_from_prediction_artifact(
+                prediction_artifact.manifest
+            ),
             primary_score_result_ref=score_result.manifest.ref,
             primary_calibration_result_ref=calibration_result.manifest.ref,
             primary_external_evidence_ref=(
@@ -1663,6 +1740,8 @@ def run_demo_probabilistic_evaluation(
                     abstention_ref=abstention.manifest.ref if abstention else None,
                     supporting_refs=(
                         prediction_artifact.manifest.ref,
+                        *run_result_manifest.residual_history_refs,
+                        *run_result_manifest.stochastic_model_refs,
                         validation_scope.manifest.ref,
                         score_result.manifest.ref,
                         calibration_result.manifest.ref,
@@ -1746,6 +1825,14 @@ def run_demo_probabilistic_evaluation(
                 claim_card_ref=run_result_manifest.primary_claim_card_ref,
                 abstention_ref=run_result_manifest.primary_abstention_ref,
                 prediction_artifact_refs=run_result_manifest.prediction_artifact_refs,
+                residual_history_refs=run_result_manifest.residual_history_refs,
+                stochastic_model_refs=run_result_manifest.stochastic_model_refs,
+                stochastic_support_status=(
+                    run_result_manifest.stochastic_support_status
+                ),
+                stochastic_support_reason_codes=(
+                    run_result_manifest.stochastic_support_reason_codes
+                ),
                 primary_score_result_ref=(run_result_manifest.primary_score_result_ref),
                 primary_calibration_result_ref=(
                     run_result_manifest.primary_calibration_result_ref
@@ -2546,6 +2633,9 @@ def _run_shared_local_point_workflow(
         claim_card_ref=claim_card.manifest.ref if claim_card is not None else None,
         abstention_ref=abstention.manifest.ref if abstention is not None else None,
         prediction_artifact_refs=(prediction_artifact.manifest.ref,),
+        **stochastic_evidence_fields_from_prediction_artifact(
+            prediction_artifact.manifest
+        ),
         primary_score_result_ref=point_score_result.manifest.ref,
         primary_calibration_result_ref=calibration_result.manifest.ref,
         primary_external_evidence_ref=(
@@ -2584,6 +2674,8 @@ def _run_shared_local_point_workflow(
                 abstention_ref=abstention.manifest.ref if abstention else None,
                     supporting_refs=(
                         prediction_artifact.manifest.ref,
+                        *run_result_manifest.residual_history_refs,
+                        *run_result_manifest.stochastic_model_refs,
                         validation_scope.manifest.ref,
                         point_score_result.manifest.ref,
                         calibration_result.manifest.ref,
@@ -2665,6 +2757,12 @@ def _run_shared_local_point_workflow(
             claim_card_ref=run_result_manifest.primary_claim_card_ref,
             abstention_ref=run_result_manifest.primary_abstention_ref,
             prediction_artifact_refs=run_result_manifest.prediction_artifact_refs,
+            residual_history_refs=run_result_manifest.residual_history_refs,
+            stochastic_model_refs=run_result_manifest.stochastic_model_refs,
+            stochastic_support_status=run_result_manifest.stochastic_support_status,
+            stochastic_support_reason_codes=(
+                run_result_manifest.stochastic_support_reason_codes
+            ),
             primary_score_result_ref=run_result_manifest.primary_score_result_ref,
             primary_calibration_result_ref=(
                 run_result_manifest.primary_calibration_result_ref
@@ -3171,10 +3269,38 @@ def _tuple_of_strings(value: object, *, field_path: str) -> tuple[str, ...]:
     return items
 
 
+def _tuple_of_floats(value: object, *, field_path: str) -> tuple[float, ...]:
+    if value in (None, ()):
+        return ()
+    if not isinstance(value, list | tuple):
+        raise ValueError(f"{field_path} must be a list of numeric levels")
+    items: list[float] = []
+    for item in value:
+        if not isinstance(item, int | float):
+            raise ValueError(f"{field_path} must contain only numeric levels")
+        items.append(float(item))
+    return tuple(items)
+
+
 def _string_field(value: object, *, field_path: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_path} must be a non-empty string")
     return value
+
+
+def _normalize_distribution_family(value: object, *, field_path: str) -> str:
+    family = _string_field(value, field_path=field_path)
+    aliases = {
+        "gaussian_location_scale": "gaussian",
+        "student_t_location_scale": "student_t",
+        "laplace_location_scale": "laplace",
+    }
+    normalized = aliases.get(family, family)
+    if normalized not in {"gaussian", "student_t", "laplace"}:
+        raise ValueError(
+            f"{field_path} must be gaussian, student_t, laplace, or a known family id"
+        )
+    return normalized
 
 
 def _optional_positive_int(value: object, *, field_path: str) -> int | None:
@@ -3508,25 +3634,30 @@ def _build_probabilistic_score_policy_manifest(
         or _PROBABILISTIC_PRIMARY_SCORES[request.forecast_object_type]
     )
     horizon_weights = _equal_weight_simplex(horizon_set)
+    body: dict[str, object] = {
+        "score_policy_id": (
+            f"{request.request_id}_{request.forecast_object_type}_policy_v1"
+        ),
+        "owner_prompt_id": "prompt.scoring-calibration-v1",
+        "scope_id": "euclid_v1_binding_scope@1.0.0",
+        "forecast_object_type": request.forecast_object_type,
+        "primary_score": primary_score,
+        "aggregation_mode": "per_horizon_mean_then_simplex_weighted_mean",
+        "horizon_weights": horizon_weights,
+        "entity_aggregation_mode": "single_entity_only_no_cross_entity_aggregation",
+        "secondary_diagnostic_ids": [],
+        "forbidden_primary_metric_ids": [],
+        "lower_is_better": True,
+        "comparison_class_rule": "identical_score_policy_required",
+    }
+    if request.interval_levels:
+        body["interval_levels"] = list(request.interval_levels)
+    if request.quantile_levels:
+        body["quantile_levels"] = list(request.quantile_levels)
     return ManifestEnvelope.build(
         schema_name=schema_name,
         module_id="scoring",
-        body={
-            "score_policy_id": (
-                f"{request.request_id}_{request.forecast_object_type}_policy_v1"
-            ),
-            "owner_prompt_id": "prompt.scoring-calibration-v1",
-            "scope_id": "euclid_v1_binding_scope@1.0.0",
-            "forecast_object_type": request.forecast_object_type,
-            "primary_score": primary_score,
-            "aggregation_mode": "per_horizon_mean_then_simplex_weighted_mean",
-            "horizon_weights": horizon_weights,
-            "entity_aggregation_mode": "single_entity_only_no_cross_entity_aggregation",
-            "secondary_diagnostic_ids": [],
-            "forbidden_primary_metric_ids": [],
-            "lower_is_better": True,
-            "comparison_class_rule": "identical_score_policy_required",
-        },
+        body=body,
         catalog=catalog,
     )
 

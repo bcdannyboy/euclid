@@ -5,28 +5,28 @@ authority_snapshot_id: euclid-authority-2026-04-15-b
 generated_at_utc: '2026-04-22T00:00:00Z'
 scope_authority_docs:
 - path: README.md
-  sha256: 89b53492094bbf2ffc7704027f8ec2c2dcefc1aceb7d90cef869b774f56bca73
+  sha256: 8107491503a3e03bccbbe43b50978554b64acee642671ba445ba2497c468e8b4
   last_updated_on: '2026-04-22'
 - path: docs/reference/system.md
-  sha256: ff93e0b88c69e82683e977048e915325a902539bbde68699baa2d55d72e5b012
+  sha256: e3bf9ae44ebef3fc90a504c6fde261fc5b7bea7603f45c186b7110d95d6a98f3
   last_updated_on: '2026-04-22'
 - path: docs/reference/contracts-manifests.md
-  sha256: 81feb4940ec6474a8966599c941011f6a6888c9d6900b4baa85356488800ab43
-  last_updated_on: '2026-04-22'
+  sha256: 249608c0b2dc73907f0ef028945d4b556e713e8a9b6cd6d111f971202fd76f0e
+  last_updated_on: '2026-04-25'
 - path: docs/reference/benchmarks-readiness.md
   sha256: dc09f108836aae756cc04151c05c062a10f5382471f6f5cdb9c2f8adb78c1903
   last_updated_on: '2026-04-22'
 - path: docs/reference/modeling-pipeline.md
-  sha256: 68b7be7325f02a580f5739b2945a946b515042c0701b8db3c3052fddce217321
-  last_updated_on: '2026-04-22'
+  sha256: fdf54a12e5aa23d2b0f03b79e0a37042511cb91ec4a9cef041fdcd4da8e7ca99
+  last_updated_on: '2026-04-25'
 - path: docs/reference/search-core.md
-  sha256: 17b899e912d22c007a7b5a1b45c8167a2cb40f7542db1bd97a0bac5ce76c7b6b
-  last_updated_on: '2026-04-22'
+  sha256: 934a9b38393e9ed024e2b35473ceeea00b5ffdf6e6a7f326e27ed74a3e8b6e4b
+  last_updated_on: '2026-04-25'
 - path: docs/reference/workbench.md
-  sha256: 9b167c2e7441e388a54207b294fce3e3528c4ac493fe212772f7d65c4081dbe2
-  last_updated_on: '2026-04-22'
+  sha256: a2dc84aa2e3c868ddc10f2badba20b347af72c2415e6e9d98222211ac4a9ff0f
+  last_updated_on: '2026-04-25'
 - path: docs/reference/testing-truthfulness.md
-  sha256: 08593681568d20768745dc805a4033c55a5942be2b802321f657c5a8ccaf1b46
+  sha256: 7cfd1c7e0a62b4698a3420e6f43ce43a279f5b45ac123168e4e23dbfb6e924c3
   last_updated_on: '2026-04-22'
 master_plan:
   path: docs/plans/2026-04-21-euclid-enhancement-master-plan.md

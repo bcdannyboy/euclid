@@ -33,6 +33,9 @@ def test_exact_search_fixture_collapses_duplicate_candidate_encodings(
     assert _accepted_candidate_ids(result) == fixture["expected"]["exact"][
         "accepted_candidate_ids"
     ]
+    assert _descriptive_candidate_ids(result) == fixture["expected"]["exact"][
+        "descriptive_candidate_ids"
+    ]
     assert _rejected_reason_codes(result) == fixture["expected"]["exact"][
         "rejected_reason_codes"
     ]
@@ -50,6 +53,9 @@ def test_bounded_search_fixture_reports_duplicate_screening_and_omissions(
     assert _accepted_candidate_ids(result) == fixture["expected"]["bounded"][
         "accepted_candidate_ids"
     ]
+    assert _descriptive_candidate_ids(result) == fixture["expected"]["bounded"][
+        "descriptive_candidate_ids"
+    ]
     assert _rejected_reason_codes(result) == fixture["expected"]["bounded"][
         "rejected_reason_codes"
     ]
@@ -59,7 +65,7 @@ def test_bounded_search_fixture_reports_duplicate_screening_and_omissions(
     assert [
         candidate.evidence_layer.backend_origin_record.source_candidate_id
         for candidate in result.frontier.frozen_shortlist_cir_candidates
-    ] == fixture["expected"]["bounded"]["accepted_candidate_ids"]
+    ] == fixture["expected"]["bounded"]["descriptive_candidate_ids"]
 
 
 def test_exact_search_fixture_frontier_only_uses_surviving_candidates(
@@ -70,7 +76,7 @@ def test_exact_search_fixture_frontier_only_uses_surviving_candidates(
     )
 
     result = _run_fixture_search(fixture, search_class="exact_finite_enumeration")
-    accepted_ids = set(_accepted_candidate_ids(result))
+    descriptive_ids = set(_descriptive_candidate_ids(result))
     frontier_ids = {
         candidate.evidence_layer.backend_origin_record.source_candidate_id
         for candidate in result.frontier.retained_frontier_cir_candidates
@@ -86,7 +92,7 @@ def test_exact_search_fixture_frontier_only_uses_surviving_candidates(
         "inner_primary_score",
     )
     assert frontier_ids
-    assert frontier_ids.issubset(accepted_ids)
+    assert frontier_ids.issubset(descriptive_ids)
     assert shortlist_ids
     assert shortlist_ids.issubset(frontier_ids)
 
@@ -208,6 +214,13 @@ def _accepted_candidate_ids(result) -> list[str]:
     return [
         candidate.evidence_layer.backend_origin_record.source_candidate_id
         for candidate in result.accepted_candidates
+    ]
+
+
+def _descriptive_candidate_ids(result) -> list[str]:
+    return [
+        candidate.evidence_layer.backend_origin_record.source_candidate_id
+        for candidate in result.descriptive_scope
     ]
 
 

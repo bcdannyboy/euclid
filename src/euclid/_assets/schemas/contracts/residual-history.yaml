@@ -1,0 +1,71 @@
+schema_name: residual_history_manifest@1.0.0
+kind: contract_schema
+owner_ref: candidate_fitting_owner
+owning_module: candidate_fitting
+canonical_source_path: schemas/contracts/residual-history.yaml
+phase_ref: forecasting_core_phase_0
+description: >
+  Replayable residual history emitted from legal training-origin forecasts. This
+  manifest is the required upstream evidence for production stochastic support.
+required_fields:
+  - residual_history_id
+  - candidate_id
+  - fit_window_id
+  - residual_rows
+  - residual_row_count
+  - residual_history_digest
+  - residual_basis
+  - construction_policy
+  - replay_identity
+residual_row_schema:
+  required_fields:
+    - candidate_id
+    - fit_window_id
+    - origin_index
+    - origin_time
+    - origin_available_at
+    - target_index
+    - target_event_time
+    - target_available_at
+    - entity
+    - realized_value
+    - point_forecast
+    - residual
+    - split_role
+    - replay_identity
+digest:
+  algorithm: sha256
+  canonicalization: sorted_json_rows_with_declared_float_policy
+  required_fields:
+    - residual_history_digest
+    - residual_row_count
+    - residual_basis
+    - construction_policy
+    - source_row_set_digest
+validation_rules:
+  missing_split_role_metadata:
+    required_field: residual_rows[].split_role
+    effect: reject
+    reason_code: missing_split_role_metadata
+  missing_time_availability_metadata:
+    required_fields:
+      - residual_rows[].origin_available_at
+      - residual_rows[].target_available_at
+    effect: reject
+    reason_code: missing_origin_or_target_availability
+  production_eligible_split_roles:
+    allowed_values:
+      - development
+      - inner_train
+      - outer_train
+    forbidden_values:
+      - confirmatory
+    effect: reject
+    reason_code: confirmatory_residual_history_not_production_evidence
+replay:
+  required_identity_fields:
+    - residual_history_digest
+    - candidate_id
+    - fit_window_id
+    - residual_basis
+    - construction_policy

@@ -4072,6 +4072,108 @@ def test_normalize_analysis_payload_adds_lane_scope_and_evidence_warnings(
     assert distribution_evidence["sample_size"] == 2
 
 
+def test_normalize_analysis_payload_surfaces_production_probabilistic_refs_and_family_bands() -> None:
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {
+                "id": "price_close",
+                "label": "Price Close",
+                "y_axis_label": "Close",
+            },
+        },
+        "probabilistic": {
+            "distribution": {
+                "status": "completed",
+                "selected_family": "student_t",
+                "distribution_family": "student_t",
+                "lane_status": "downgraded",
+                "downgrade_reason_codes": [
+                    "heuristic_gaussian_compatibility_only",
+                ],
+                "residual_history_refs": [
+                    {
+                        "schema_name": "residual_history_manifest@1.0.0",
+                        "object_id": "spy_residual_history",
+                    }
+                ],
+                "stochastic_model_refs": [
+                    {
+                        "schema_name": "stochastic_model_manifest@1.0.0",
+                        "object_id": "spy_student_t_model",
+                    }
+                ],
+                "rows": [
+                    {
+                        "available_at": "2026-04-15T21:00:00Z",
+                        "origin_time": "2026-04-14T00:00:00Z",
+                        "horizon": 1,
+                        "location": 501.0,
+                        "scale": 50.0,
+                        "configured_interval": {
+                            "level": 0.9,
+                            "lower": 498.25,
+                            "upper": 504.75,
+                        },
+                        "quantiles": [
+                            {"level": 0.1, "value": 498.5},
+                            {"level": 0.5, "value": 501.0},
+                            {"level": 0.9, "value": 504.5},
+                        ],
+                        "realized_observation": 502.0,
+                    }
+                ],
+                "calibration": {
+                    "status": "passed",
+                    "passed": True,
+                    "gate_effect": "publishable",
+                    "diagnostics": [
+                        {
+                            "diagnostic_id": "pit_or_randomized_pit_uniformity",
+                            "sample_size": 6,
+                            "calibration_bins": [
+                                {
+                                    "bin_id": "0.0-0.5",
+                                    "expected_count": 3,
+                                    "observed_count": 2,
+                                },
+                                {
+                                    "bin_id": "0.5-1.0",
+                                    "expected_count": 3,
+                                    "observed_count": 4,
+                                },
+                            ],
+                        }
+                    ],
+                },
+            }
+        },
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    lane = normalized["probabilistic"]["distribution"]
+    evidence = lane["evidence"]
+    band = lane["chart"]["forecast_bands"][0]
+
+    assert band["center"] == pytest.approx(501.0)
+    assert band["lower"] == pytest.approx(498.25)
+    assert band["upper"] == pytest.approx(504.75)
+    assert band["source"] == "configured_interval"
+    assert evidence["family"] == "student_t"
+    assert evidence["lane_status"] == "downgraded"
+    assert evidence["downgrade_reason_codes"] == [
+        "heuristic_gaussian_compatibility_only",
+    ]
+    assert evidence["residual_history_refs"] == [
+        "residual_history_manifest@1.0.0:spy_residual_history",
+    ]
+    assert evidence["stochastic_model_refs"] == [
+        "stochastic_model_manifest@1.0.0:spy_student_t_model",
+    ]
+    assert evidence["calibration_bin_count"] == 2
+
+
 def test_normalize_analysis_payload_builds_change_atlas_from_price_space_rows(
     tmp_path: Path,
 ) -> None:

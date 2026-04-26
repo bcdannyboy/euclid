@@ -1,14 +1,21 @@
 {
   "catalog_entry": {
     "abstention_ref": null,
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_3c7b4df1dd49aa4ae736",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_f1591e8ca0061d95f669",
     "comparator_exposure_status": "satisfied",
     "forecast_object_type": "distribution",
-    "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
-    "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
+    "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_fb82b775ddd3ac8bc2ad",
+    "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_ef01747868fea4e32055",
     "publication_mode": "candidate_publication",
-    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_e555d9c3d4b801be7311",
-    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_e04d980650ba41f2debf"
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_29b2f97747953a0d0e1a",
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_support_status": "production",
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_1412de212d891766e9ce"
   },
   "claim": {
     "allowed_interpretation_codes": [
@@ -16,49 +23,57 @@
       "probabilistic_forecast_within_declared_validation_scope"
     ],
     "claim_type": "predictive_within_declared_scope",
-    "predictive_support_status": "confirmatory_supported"
+    "predictive_support_status": "confirmatory_supported",
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "stochastic_evidence_status": "production",
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_support_status": "passed"
   },
   "comparison": {
     "baseline_id": "analytic_intercept",
-    "baseline_primary_score": 234.697244153655,
+    "baseline_primary_score": 287.359481463912,
     "candidate_beats_baseline": true,
-    "candidate_primary_score": 167.419594695841,
+    "candidate_primary_score": 191.90151788569,
     "comparison_class_status": "comparable",
     "paired_comparison_records": [
       {
-        "candidate_primary_score": 167.419594695841,
+        "candidate_primary_score": 191.90151788569,
         "comparator_id": "analytic_intercept",
         "comparator_kind": "baseline",
-        "comparator_primary_score": 234.697244153655,
+        "comparator_primary_score": 287.359481463912,
         "comparison_status": "comparable",
         "failure_reason_code": null,
-        "mean_loss_differential": 67.277649457814,
+        "mean_loss_differential": 95.457963578222,
         "paired_predictive_test_result": {
           "confidence_interval": [
-            67.277649457814,
-            67.277649457814
+            95.457963578222,
+            95.457963578222
           ],
           "confidence_interval_method": "newey_west_hac_t_interval",
-          "mean_loss_differential": 67.277649457814,
+          "mean_loss_differential": 95.457963578222,
           "practical_margin": 0.0,
           "promotion_allowed": true,
           "raw_metric_comparison_role": "diagnostic_only",
           "reason_codes": [],
-          "replay_identity": "predictive-promotion:629498f8d3e578e4fcebb4ab09ba4bc794923c70398cc1dee5b1ba09e2af3c6c",
+          "replay_identity": "predictive-promotion:8568bc9f51e505419ccd3c5d991d6686ac0985f584fa4f4c185c6b20bddc5a04",
           "schema_name": "paired_predictive_test_result@1.0.0",
           "statistical_test_backend": "statsmodels_hac_mean_loss_differential",
           "status": "passed"
         },
         "practical_significance_margin": 0.0,
         "practical_significance_status": "candidate_better_than_margin",
-        "primary_score_delta": 67.277649457814,
+        "primary_score_delta": 95.457963578222,
         "score_result_ref": {
-          "object_id": "probabilistic_score_result_manifest_7dec53da89c8b53e176d",
+          "object_id": "probabilistic_score_result_manifest_5e21f127c87dbe7668ec",
           "schema_name": "probabilistic_score_result_manifest@1.0.0"
         }
       }
     ],
-    "score_delta": 67.277649457814
+    "score_delta": 95.457963578222
   },
   "forecast_object_type": "distribution",
   "publication_mode": "candidate_publication",
@@ -75,18 +90,22 @@
       "validation_scope",
       "robustness_report",
       "score_result",
-      "calibration_result"
+      "calibration_result",
+      "residual_history",
+      "stochastic_model"
     ],
     "bundle_ref": "reproducibility_bundle_manifest@1.0.0:phase06-probabilistic-distribution-demo_bundle",
     "replay_verification_status": "verified",
     "required_manifest_refs": [
-      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_dc6b121ad5f3991d986e",
-      "scorecard_manifest@1.1.0:scorecard_manifest_e555d9c3d4b801be7311",
-      "claim_card_manifest@1.1.0:claim_card_manifest_3c7b4df1dd49aa4ae736",
-      "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
-      "validation_scope_manifest@1.0.0:validation_scope_manifest_e04d980650ba41f2debf",
-      "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb",
-      "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568"
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_71c83b6d249bf13190b8",
+      "scorecard_manifest@1.1.0:scorecard_manifest_29b2f97747953a0d0e1a",
+      "claim_card_manifest@1.1.0:claim_card_manifest_f1591e8ca0061d95f669",
+      "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_a80053f12a79eb2dbefb",
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2",
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_1412de212d891766e9ce",
+      "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_ef01747868fea4e32055",
+      "calibration_result_manifest@1.0.0:calibration_result_manifest_fb82b775ddd3ac8bc2ad"
     ],
     "stage_order": [
       "dataset_snapshot_frozen",
@@ -100,20 +119,38 @@
       "publication_decision_resolved",
       "run_result_assembled"
     ],
-    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_e04d980650ba41f2debf"
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_1412de212d891766e9ce"
   },
   "request_id": "phase06-probabilistic-distribution-demo",
   "run_result_ref": "run_result_manifest@1.1.0:phase06-probabilistic-distribution-demo_run_result",
+  "run_result_stochastic_evidence": {
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_support_reason_codes": [],
+    "stochastic_support_status": "production"
+  },
   "scorecard": {
     "descriptive_status": "passed",
     "predictive_reason_codes": [],
-    "predictive_status": "passed"
+    "predictive_status": "passed",
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "stochastic_evidence_status": "production",
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_status": "passed"
   },
   "summary_refs": {
     "abstention_ref": null,
-    "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_dceb5cb1e8f819e92568",
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_3c7b4df1dd49aa4ae736",
-    "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_e22dd15eb4afd19cfdd0",
-    "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_43f9e034ee584557b5eb"
+    "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_fb82b775ddd3ac8bc2ad",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_f1591e8ca0061d95f669",
+    "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_a80053f12a79eb2dbefb",
+    "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_ef01747868fea4e32055"
   }
 }

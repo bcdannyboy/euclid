@@ -1,0 +1,34 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: student_t_calibrated_distribution
+expected_runtime_disposition: production_supported
+coverage_assertions:
+- non_gaussian_family_supported
+- calibrated_distribution_bins_present
+- family_aware_score_policy_present
+forecast_object_type: distribution
+family_id: student_t
+stochastic_model_ref:
+  schema_name: stochastic_model_manifest@1.0.0
+  object_id: stochastic_model_student_t_calibrated_demo
+score_policy:
+  scoring_law: student_t_log_score
+  family_parameters:
+  - location
+  - scale
+  - degrees_of_freedom
+calibration:
+  status: passed
+  bins:
+  - bin_id: pit_0_00_0_25
+    expected_count: 4
+    observed_count: 3
+  - bin_id: pit_0_25_0_50
+    expected_count: 4
+    observed_count: 5
+  - bin_id: pit_0_50_0_75
+    expected_count: 4
+    observed_count: 4
+  - bin_id: pit_0_75_1_00
+    expected_count: 4
+    observed_count: 4

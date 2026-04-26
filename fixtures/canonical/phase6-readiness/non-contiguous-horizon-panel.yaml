@@ -1,0 +1,30 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: non_contiguous_horizon_panel
+expected_runtime_disposition: production_supported
+coverage_assertions:
+- horizon_set_non_contiguous
+- legal_training_origin_panel_present
+- rollout_objective_geometry_present
+fit_strategy:
+  strategy_id: recursive_rollout
+  horizon_set:
+  - 1
+  - 3
+  horizon_weights:
+    '1': 0.4
+    '3': 0.6
+  point_loss: squared_error
+  entity_aggregation_mode: pooled
+training_origin_panel:
+  panel_id: legal_origins_h1_h3_demo
+  row_set_id: row_set_non_contiguous_h1_h3_demo
+  origins:
+  - origin_time: '2026-04-14T00:00:00Z'
+    legal_horizons:
+    - 1
+    - 3
+  - origin_time: '2026-04-15T00:00:00Z'
+    legal_horizons:
+    - 1
+    - 3

@@ -92,7 +92,7 @@ def test_submitters_share_one_protocol_and_preserve_ledgers_and_budget_records(
         for entry in recursive_spectral_backend.candidate_ledger
     } == {
         "recursive_level_smoother": "accepted",
-        "recursive_running_mean": "accepted",
+        "recursive_running_mean": "rejected",
         "spectral_harmonic_1": "rejected",
         "spectral_harmonic_2": "rejected",
     }

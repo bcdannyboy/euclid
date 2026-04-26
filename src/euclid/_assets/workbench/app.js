@@ -173,6 +173,7 @@ function bindForm() {
         await loadConfig();
         if (!ownsAction(actionId)) return;
         render();
+        scrollWorkbenchStart();
       });
     } catch (error) {
       const message = error.message || "Analysis failed.";
@@ -279,6 +280,7 @@ async function loadAnalysisByPath(
         : "Saved analysis loaded.",
     );
     render();
+    scrollWorkbenchStart();
   });
 }
 
@@ -478,7 +480,7 @@ function syncShellState() {
       "aria-label",
       state.railCollapsed ? "Expand analysis controls" : "Compact analysis controls",
     );
-    button.textContent = state.railCollapsed ? "Show Controls" : "Focus Canvas";
+    button.textContent = state.railCollapsed ? "Show controls" : "Compact controls";
   }
 }
 
@@ -632,6 +634,312 @@ function renderHeaderStat({ label, value, note = "" }) {
       <div class="run-stat-value">${escapeHtml(value)}</div>
       ${note ? `<div class="detail-value">${escapeHtml(note)}</div>` : ""}
     </article>
+  `;
+}
+
+function analysisRunContext(analysis) {
+  const dataset = analysis?.dataset || {};
+  const target = dataset.target || {};
+  const range = dataset.date_range || {};
+  return {
+    symbol: dataset.symbol || "n/a",
+    target: target.label || target.id || "n/a",
+    rows: dataset.rows ?? (Array.isArray(dataset.series) ? dataset.series.length : "n/a"),
+    start: String(range.start || "n/a").slice(0, 10),
+    end: String(range.end || "n/a").slice(0, 10),
+    workspace: analysis?.workspace_root || "n/a",
+    analysisPath: analysis?.analysis_path || "n/a",
+  };
+}
+
+function reasonCodeText(values, fallback = "No stronger claim gaps recorded") {
+  const items = Array.isArray(values)
+    ? values.map(humanizeGapItem).filter(Boolean)
+    : [];
+  return items.length ? items.slice(0, 3).join(", ") : fallback;
+}
+
+function claimSurfaceSummary(analysis) {
+  const claim = analysis?.evidence_studio?.claim_surface || {};
+  const point = analysis?.operator_point || {};
+  const publication = point.publication || {};
+  const publicationStatus =
+    claim.publication_status ||
+    publication.status ||
+    point.status ||
+    "unknown";
+  const rootClaimClass = analysis?.claim_class || "";
+  const strongest = strongestEquationCard(analysis);
+  const claimCeiling =
+    claim.claim_ceiling ||
+    claim.claim_lane ||
+    rootClaimClass ||
+    (publicationStatus === "abstained"
+      ? "abstention"
+      : strongest?.title || "candidate only");
+  const publishable =
+    claim.publishable ??
+    analysis?.publishable ??
+    ["publishable", "published"].includes(String(publicationStatus));
+  const reasonCodes = [
+    ...(Array.isArray(claim.abstention_reason_codes)
+      ? claim.abstention_reason_codes
+      : []),
+    ...(Array.isArray(claim.downgrade_reason_codes)
+      ? claim.downgrade_reason_codes
+      : []),
+    ...(Array.isArray(publication.reason_codes) ? publication.reason_codes : []),
+    ...(Array.isArray(point.abstention?.reason_codes)
+      ? point.abstention.reason_codes
+      : []),
+    ...(Array.isArray(analysis?.would_have_abstained_because)
+      ? analysis.would_have_abstained_because
+      : []),
+    ...(Array.isArray(analysis?.gap_report) ? analysis.gap_report : []),
+    ...(Array.isArray(analysis?.not_holistic_because)
+      ? analysis.not_holistic_because
+      : []),
+  ].filter(Boolean);
+  return {
+    claimCeiling,
+    publicationStatus,
+    publishable,
+    reason: reasonCodeText(
+      reasonCodes,
+      publishable
+        ? "Publication gates recorded no blocking reason in this payload"
+        : "No stronger claim recorded in this payload",
+    ),
+  };
+}
+
+function candidateEvidenceSummary(analysis) {
+  const strongest = strongestEquationCard(analysis);
+  const overlay = currentDeterministicOverlay(analysis);
+  const equation = strongest?.equation || overlay?.equation || {};
+  return {
+    title: strongest?.title || overlay?.label || "No candidate equation retained",
+    family:
+      equation.family_id ||
+      analysis?.descriptive_fit?.family_id ||
+      analysis?.operator_point?.selected_family ||
+      "n/a",
+    candidate:
+      analysis?.descriptive_fit?.candidate_id ||
+      analysis?.descriptive_reconstruction?.candidate_id ||
+      "n/a",
+    source:
+      analysis?.descriptive_fit?.submitter_id ||
+      analysis?.descriptive_fit?.source ||
+      overlay?.id ||
+      "n/a",
+    equationLabel:
+      equation.label ||
+      equation.structure_signature ||
+      overlay?.label ||
+      "No explicit equation renderer available",
+    note:
+      strongest?.honesty ||
+      overlay?.honesty ||
+      "Candidate identity is shown separately from the claim ceiling.",
+  };
+}
+
+function residualEvidenceSummaryFor(analysis, activeOverlay) {
+  const residualDiagnostics = analysis?.residual_diagnostics || {};
+  const residuals = buildResidualSeries(
+    analysis?.dataset?.series || [],
+    activeOverlay?.series || [],
+  );
+  const stats = residualSummary(residuals);
+  const reasonCodes = Array.isArray(residualDiagnostics.reason_codes)
+    ? residualDiagnostics.reason_codes
+    : [];
+  return {
+    status:
+      residualDiagnostics.status ||
+      residualDiagnostics.finite_dimensionality_status ||
+      (residuals.length ? "computed from active overlay" : "not available"),
+    mae: stats.mae,
+    max: stats.max,
+    min: stats.min,
+    reason: reasonCodeText(reasonCodes, "Residual law did not raise a stronger claim"),
+  };
+}
+
+function stochasticSupportSummary(analysis) {
+  const selectedLaneEntry = selectedProbabilisticLane(analysis);
+  const payload = selectedLaneEntry?.[1] || null;
+  const residualRefs = refList(payload, "residual_history_refs");
+  const stochasticRefs = refList(payload, "stochastic_model_refs");
+  const downgradeReasons =
+    payload?.evidence?.downgrade_reason_codes ||
+    payload?.downgrade_reason_codes ||
+    [];
+  return {
+    lane: selectedLaneEntry ? humanizeKey(selectedLaneEntry[0]) : "No lane",
+    status: humanizePhrase(
+      payload?.evidence?.lane_status ||
+        payload?.lane_status ||
+        payload?.status ||
+        "unavailable",
+    ),
+    family: laneFamily(payload),
+    refs:
+      stochasticRefs.length || residualRefs.length
+        ? `${stochasticRefs.length} stochastic / ${residualRefs.length} residual`
+        : "No production refs",
+    reason: shortList(downgradeReasons),
+  };
+}
+
+function calibrationReplaySummary(analysis) {
+  const selectedLaneEntry = selectedProbabilisticLane(analysis);
+  const payload = selectedLaneEntry?.[1] || null;
+  const replayLinks = Array.isArray(analysis?.evidence_studio?.replay_artifacts?.links)
+    ? analysis.evidence_studio.replay_artifacts.links
+    : [];
+  return {
+    replay:
+      analysis?.operator_point?.replay_verification ||
+      payload?.replay_verification ||
+      (replayLinks.length ? `${replayLinks.length} replay links` : "n/a"),
+    calibration: humanizePhrase(
+      payload?.calibration?.status ||
+        payload?.calibration?.gate_effect ||
+        "unavailable",
+    ),
+    bins: String(payload ? calibrationBinCount(payload) : "n/a"),
+    score: nullableNumber(
+      payload?.aggregated_primary_score ??
+        analysis?.operator_point?.confirmatory_primary_score,
+    ),
+  };
+}
+
+function buildObservationMiniSvg(analysis, activeOverlay) {
+  const actual = Array.isArray(analysis?.dataset?.series) ? analysis.dataset.series : [];
+  if (!actual.length) {
+    return `<div class="empty-state">No ordered observations are available.</div>`;
+  }
+  const overlay = Array.isArray(activeOverlay?.series) ? activeOverlay.series : [];
+  const width = 520;
+  const height = 146;
+  const padding = { top: 12, right: 18, bottom: 28, left: 38 };
+  const actualValues = actual.map((point) => Number(point.observed_value)).filter(Number.isFinite);
+  const overlayValues = overlay.map((point) => Number(point.fitted_value)).filter(Number.isFinite);
+  const values = [...actualValues, ...overlayValues];
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const xScale = (index, length) =>
+    padding.left +
+    (length <= 1 ? 0 : (index / (length - 1)) * (width - padding.left - padding.right));
+  const yScale = (value) =>
+    height -
+    padding.bottom -
+    ((value - min) / (max - min || 1)) * (height - padding.top - padding.bottom);
+  const actualPath = polylinePath(
+    actual.map((point, index) => ({
+      x: index,
+      y: Number(point.observed_value),
+    })),
+    (index) => xScale(index, actual.length),
+    (value) => yScale(value),
+    actual.length,
+  );
+  const overlayPath = overlay.length
+    ? polylinePath(
+        overlay.map((point, index) => ({
+          x: index,
+          y: Number(point.fitted_value),
+        })),
+        (index) => xScale(index, overlay.length),
+        (value) => yScale(value),
+        overlay.length,
+      )
+    : "";
+  return `
+    <svg class="observation-mini-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Ordered observation timeline">
+      <line x1="${padding.left}" y1="${height - padding.bottom}" x2="${width - padding.right}" y2="${height - padding.bottom}" />
+      <path d="${actualPath}" class="observed-path"></path>
+      ${overlayPath ? `<path d="${overlayPath}" class="candidate-path"></path>` : ""}
+      <text x="${padding.left}" y="${height - 9}">${escapeHtml(String(actual[0]?.event_time || "").slice(0, 10))}</text>
+      <text x="${width - padding.right - 78}" y="${height - 9}">${escapeHtml(String(actual.at(-1)?.event_time || "").slice(0, 10))}</text>
+    </svg>
+  `;
+}
+
+function renderEuclidFirstScreen(analysis) {
+  if (!analysis) return "";
+  const context = analysisRunContext(analysis);
+  const claim = claimSurfaceSummary(analysis);
+  const activeOverlay = currentDeterministicOverlay(analysis);
+  const candidate = candidateEvidenceSummary(analysis);
+  const residual = residualEvidenceSummaryFor(analysis, activeOverlay);
+  const stochastic = stochasticSupportSummary(analysis);
+  const calibrationReplay = calibrationReplaySummary(analysis);
+  return `
+    <section class="euclid-first-screen" data-euclid-first-screen="spine" aria-label="Euclid evidence spine">
+      <div class="run-context-strip">
+        ${detail("Target", `${context.symbol} / ${context.target}`)}
+        ${detail("Ordered rows", String(context.rows))}
+        ${detail("Date range", `${context.start} to ${context.end}`)}
+        ${detail("Analysis", truncateMiddle(context.analysisPath, 48))}
+      </div>
+      <div class="evidence-spine">
+        <article class="evidence-node node-observations">
+          <div class="detail-label">Ordered observations</div>
+          <h3>${escapeHtml(context.symbol)} path</h3>
+          ${buildObservationMiniSvg(analysis, activeOverlay)}
+          <div class="detail-grid compact-details">
+            ${detail("Rows", String(context.rows))}
+            ${detail("Range", `${context.start} to ${context.end}`)}
+          </div>
+        </article>
+        <article class="evidence-node node-candidate">
+          <div class="detail-label">Candidate equation</div>
+          <h3>${escapeHtml(candidate.title)}</h3>
+          <div class="equation-copy compact-equation">
+            ${renderEquationMarkup(candidate.equationLabel, {
+              className: "equation-formula",
+              displayMode: true,
+            })}
+          </div>
+          <div class="detail-grid compact-details">
+            ${detail("Family", candidate.family)}
+            ${detail("Candidate", candidate.candidate)}
+            ${detail("Source", candidate.source)}
+          </div>
+        </article>
+        <article class="evidence-node node-evidence">
+          <div class="detail-label">Residual evidence</div>
+          <h3>${escapeHtml(humanizePhrase(residual.status))}</h3>
+          <div class="gate-list">
+            ${detail("Residual MAE", residual.mae)}
+            ${detail("Residual max/min", `${residual.max} / ${residual.min}`)}
+            ${detail("Stochastic support", `${stochastic.status} · ${stochastic.refs}`)}
+            ${detail("Calibration", `${calibrationReplay.calibration} · ${calibrationReplay.bins} bins`)}
+            ${detail("Replay", calibrationReplay.replay)}
+            ${detail("Primary score", calibrationReplay.score)}
+          </div>
+        </article>
+        <article class="evidence-node node-claim">
+          <div class="detail-label">Claim ceiling</div>
+          <h3>${escapeHtml(humanizePhrase(claim.claimCeiling))}</h3>
+          <div class="claim-gate-strip">
+            ${pill("Publication gate", claim.publishable ? "ok" : "warn")}
+            ${pill(humanizePhrase(claim.publicationStatus), claim.publishable ? "ok" : "warn")}
+            ${pill(`Stochastic support: ${stochastic.lane}`, "sea")}
+          </div>
+          <div class="gate-list">
+            ${detail("Publication gate", humanizePhrase(claim.publicationStatus))}
+            ${detail("Abstention / downgrade", claim.reason)}
+            ${detail("Stochastic family", stochastic.family)}
+            ${detail("Stochastic reason", stochastic.reason)}
+          </div>
+        </article>
+      </div>
+    </section>
   `;
 }
 
@@ -951,6 +1259,7 @@ function adoptAnalysis(analysis) {
   const preferredLane = String(state.selectedLane || "").trim();
   state.analysis = analysis;
   state.requestedAnalysisPath = analysis.analysis_path || state.requestedAnalysisPath;
+  state.railCollapsed = true;
 
   const horizons = availableHorizons(analysis);
   const changeMetrics = availableChangeMetrics(analysis);
@@ -1057,6 +1366,27 @@ function maybeScrollAtlasSection() {
   state.pendingAtlasSection = null;
 }
 
+function scrollWorkbenchStart() {
+  const target = hero || document.querySelector(".stage");
+  if (!target || typeof target.scrollIntoView !== "function") return;
+  const schedule =
+    typeof window !== "undefined" && typeof window.requestAnimationFrame === "function"
+      ? window.requestAnimationFrame.bind(window)
+      : (callback) => callback();
+  schedule(() => {
+    if (typeof window === "undefined" || typeof window.scrollTo !== "function") {
+      target.scrollIntoView({ block: "start" });
+      return;
+    }
+    const top = target.getBoundingClientRect().top + window.scrollY - 8;
+    try {
+      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    } catch (_error) {
+      target.scrollIntoView({ block: "start" });
+    }
+  });
+}
+
 function renderHero() {
   if (!state.analysis) {
     hero.innerHTML = `
@@ -1064,9 +1394,10 @@ function renderHero() {
         <div class="run-header-main">
           <div class="run-header-copy">
             <p class="hero-kicker">No analysis loaded</p>
-            <h2>Set the target and run the workspace.</h2>
+            <h2>Choose ordered observations and run Euclid.</h2>
             <p class="hero-copy">
-              The workbench opens into a linked analytical workspace after the first run.
+              The first loaded run will show observations, candidate equation, evidence,
+              publication gate, and claim ceiling in one inspection surface.
             </p>
           </div>
         </div>
@@ -1079,16 +1410,18 @@ function renderHero() {
   const benchmarkOutcome = benchmarkOutcomeDetails(benchmark);
   const contextLine = `${dataset.rows} rows · ${dataset.date_range.start.slice(0, 10)} → ${dataset.date_range.end.slice(0, 10)}`;
   const summaryLine = buildHeroSummary(state.analysis);
+  const claim = claimSurfaceSummary(state.analysis);
 
   hero.innerHTML = `
     <div class="run-header run-header-loaded" data-analysis-header>
       <div class="run-header-main">
         <div class="run-header-copy">
-          <p class="hero-kicker">Active analytical workspace</p>
+          <p class="hero-kicker">Active evidence workbench</p>
           <h2>${escapeHtml(dataset.symbol)} · ${escapeHtml(dataset.target.label)}</h2>
           <p class="hero-copy">${escapeHtml(summaryLine)}</p>
         </div>
         <div class="run-header-pills pill-row">
+          ${pill(`Claim ceiling: ${humanizePhrase(claim.claimCeiling)}`, claim.publishable ? "ok" : "warn")}
           ${pill(humanizePhrase(point?.publication?.status || point?.status || "unknown"), point?.publication?.status === "abstained" ? "warn" : "ok")}
           ${selectedLaneEntry ? pill(humanizeKey(selectedLaneEntry[0]), "sea") : ""}
           ${pill(`h${state.selectedHorizon}`, "warn")}
@@ -1118,6 +1451,7 @@ function renderHero() {
             : benchmarkSelectionExplanation(benchmark),
         })}
       </div>
+      ${renderEuclidFirstScreen(state.analysis)}
     </div>
   `;
 }
@@ -1734,14 +2068,133 @@ function quantileValue(row, level) {
   return entry ? Number(entry.value) : null;
 }
 
+function finiteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function firstFiniteNumber(...values) {
+  for (const value of values) {
+    const number = finiteNumber(value);
+    if (number !== null) return number;
+  }
+  return null;
+}
+
+function mappedDistributionBand(row, key) {
+  const interval = row?.[key];
+  if (!interval || typeof interval !== "object") return null;
+  const lower = firstFiniteNumber(interval.lower, interval.lower_bound);
+  const upper = firstFiniteNumber(interval.upper, interval.upper_bound);
+  if (lower === null || upper === null) return null;
+  return { lower, upper, source: key };
+}
+
+function distributionBand(row) {
+  if (!row || typeof row !== "object") return null;
+  let interval =
+    mappedDistributionBand(row, "configured_interval") ||
+    mappedDistributionBand(row, "family_interval") ||
+    mappedDistributionBand(row, "prediction_interval") ||
+    mappedDistributionBand(row, "interval");
+  if (!interval) {
+    const lower = firstFiniteNumber(row.lower_bound, row.interval_lower, row.lower);
+    const upper = firstFiniteNumber(row.upper_bound, row.interval_upper, row.upper);
+    if (lower !== null && upper !== null) {
+      interval = { lower, upper, source: "row_interval" };
+    }
+  }
+  if (!interval) {
+    const lower = quantileValue(row, 0.1);
+    const upper = quantileValue(row, 0.9);
+    if (Number.isFinite(lower) && Number.isFinite(upper)) {
+      interval = { lower, upper, source: "quantiles" };
+    }
+  }
+  if (!interval) {
+    const location = finiteNumber(row.location);
+    const scale = finiteNumber(row.scale);
+    if (location === null || scale === null) return null;
+    interval = {
+      lower: location - scale,
+      upper: location + scale,
+      source: "location_scale",
+    };
+  }
+  return {
+    ...interval,
+    center:
+      firstFiniteNumber(row.location, quantileValue(row, 0.5)) ??
+      interval.lower + (interval.upper - interval.lower) / 2,
+  };
+}
+
+function laneFamily(payload, row = null) {
+  return (
+    payload?.distribution_family ||
+    payload?.family ||
+    payload?.family_id ||
+    payload?.evidence?.family ||
+    row?.distribution_family ||
+    row?.family ||
+    row?.family_id ||
+    payload?.selected_family ||
+    "n/a"
+  );
+}
+
+function refLabel(value) {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value.schema_name && value.object_id) {
+    return `${value.schema_name}:${value.object_id}`;
+  }
+  return String(value);
+}
+
+function refList(payload, key) {
+  const evidenceValues = Array.isArray(payload?.evidence?.[key])
+    ? payload.evidence[key]
+    : [];
+  const laneValues = Array.isArray(payload?.[key]) ? payload[key] : [];
+  return [...evidenceValues, ...laneValues]
+    .map(refLabel)
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index);
+}
+
+function calibrationBinCount(payload) {
+  const evidenceCount = Number(payload?.evidence?.calibration_bin_count);
+  if (Number.isFinite(evidenceCount) && evidenceCount > 0) return evidenceCount;
+  const diagnostics = Array.isArray(payload?.calibration?.diagnostics)
+    ? payload.calibration.diagnostics
+    : [];
+  return diagnostics.reduce((total, diagnostic) => {
+    const bins =
+      diagnostic?.calibration_bins ||
+      diagnostic?.bins ||
+      diagnostic?.bin_records ||
+      [];
+    return total + (Array.isArray(bins) ? bins.length : 0);
+  }, 0);
+}
+
+function shortList(values) {
+  const list = Array.isArray(values) ? values : [];
+  if (!list.length) return "none";
+  return list.map((value) => humanizeKey(value)).join(", ");
+}
+
 function normalizeLatestRow(mode, row) {
   if (!row || typeof row !== "object") return [];
   if (mode === "distribution") {
+    const band = distributionBand(row);
     return [
       ["Origin", String(row.origin_time || "n/a").slice(0, 10)],
       ["Horizon", `h${row.horizon ?? "n/a"}`],
+      ["Family", laneFamily({}, row)],
       ["Location", formatCell(row.location)],
-      ["Scale", formatCell(row.scale)],
+      band ? ["Band", `${formatCell(band.lower)} to ${formatCell(band.upper)}`] : ["Scale", formatCell(row.scale)],
       ["Realized", formatCell(row.realized_observation)],
     ];
   }
@@ -2202,6 +2655,7 @@ function buildResidualDistributionSvg(rows) {
 }
 
 function buildUncertaintyRulerSvg({ distributionRow, quantileRow, intervalRow, eventRow }) {
+  const distributionInterval = distributionBand(distributionRow);
   const quantileLow = quantileValue(quantileRow, 0.1);
   const quantileMid = quantileValue(quantileRow, 0.5);
   const quantileHigh = quantileValue(quantileRow, 0.9);
@@ -2210,9 +2664,9 @@ function buildUncertaintyRulerSvg({ distributionRow, quantileRow, intervalRow, e
   const realized =
     Number(distributionRow?.realized_observation ?? quantileRow?.realized_observation ?? intervalRow?.realized_observation);
   const values = [
-    Number(distributionRow?.location),
-    Number(distributionRow?.location) - Number(distributionRow?.scale),
-    Number(distributionRow?.location) + Number(distributionRow?.scale),
+    distributionInterval?.center,
+    distributionInterval?.lower,
+    distributionInterval?.upper,
     quantileLow,
     quantileMid,
     quantileHigh,
@@ -2235,9 +2689,9 @@ function buildUncertaintyRulerSvg({ distributionRow, quantileRow, intervalRow, e
     {
       label: "Distribution",
       y: 54,
-      lower: Number(distributionRow?.location) - Number(distributionRow?.scale),
-      upper: Number(distributionRow?.location) + Number(distributionRow?.scale),
-      center: Number(distributionRow?.location),
+      lower: distributionInterval?.lower,
+      upper: distributionInterval?.upper,
+      center: distributionInterval?.center,
       color: "#2c617b",
     },
     {
@@ -2411,7 +2865,7 @@ function renderOverview() {
 function renderAtlas() {
   const panel = tabPanels.atlas;
   if (!state.analysis) {
-    panel.innerHTML = `<div class="panel"><p class="empty-state">Atlas appears after the first analysis run.</p></div>`;
+    panel.innerHTML = `<div class="panel"><p class="empty-state">Evidence appears after the first analysis run.</p></div>`;
     return;
   }
   const {
@@ -2591,8 +3045,8 @@ function renderAtlas() {
       <section id="atlas-run-framing" class="panel atlas-major workspace-framing">
         <div class="panel-head">
           <div>
-            <p class="mini-kicker">Analytical workspace</p>
-            <h3>Inspect the active equation, path, and uncertainty as one system</h3>
+            <p class="mini-kicker">Evidence workspace</p>
+            <h3>Analytical workspace for equation, path, residuals, and uncertainty</h3>
           </div>
           <div class="pill-row">
             ${pill(point?.publication?.status || point?.status || "unknown", point?.publication?.status === "abstained" ? "warn" : "ok")}
@@ -2600,7 +3054,7 @@ function renderAtlas() {
             ${selectedLaneEntry ? pill(humanizeKey(selectedLaneEntry[0]), "sea") : ""}
           </div>
         </div>
-        <p>The workspace keeps the equation stage, observed path, and selected uncertainty context in one inspection flow instead of scattering them across unrelated cards.</p>
+        <p>Read the run as ordered observations, a candidate equation, residual evidence, stochastic support, and the claim ceiling those gates permit.</p>
         ${renderSharedControls({ analysis: state.analysis })}
         <div class="detail-grid">
           ${detail("Symbol", dataset.symbol)}
@@ -2622,10 +3076,10 @@ function renderAtlas() {
           </div>
           <section id="atlas-observed-path" class="panel atlas-major workspace-canvas" data-workspace-region="analysis-canvas">
             <div class="panel-head">
-              <div>
-                <p class="mini-kicker">Analytical canvas</p>
-                <h3>Observed path versus active deterministic overlay</h3>
-              </div>
+          <div>
+            <p class="mini-kicker">Observation timeline</p>
+            <h3>Observed path versus active deterministic overlay</h3>
+          </div>
             </div>
             <p>${escapeHtml(activeOverlay?.honesty || "Active overlay tracks the observed path; it does not explain all daily wiggles.")}</p>
             <div class="chart-shell">
@@ -2716,7 +3170,7 @@ function renderPoint() {
   const point = state.analysis?.operator_point;
   const descriptiveFit = state.analysis?.descriptive_fit;
   if (!state.analysis || !point) {
-    panel.innerHTML = `<div class="panel"><p class="empty-state">Point lane results appear here.</p></div>`;
+    panel.innerHTML = `<div class="panel"><p class="empty-state">Forecast path results appear here.</p></div>`;
     return;
   }
   if (point.status !== "completed") {
@@ -2737,8 +3191,8 @@ function renderPoint() {
       <section class="panel">
         <div class="panel-head">
           <div>
-            <p class="mini-kicker">Point lane state</p>
-            <h3>Operator equation and residual basis</h3>
+            <p class="mini-kicker">Forecast state</p>
+            <h3>Operator equation, Point lane state, and residual basis</h3>
           </div>
         </div>
         ${renderSharedControls({ analysis: state.analysis, showHorizon: false })}
@@ -2877,17 +3331,18 @@ function renderProbabilistic() {
   const panel = tabPanels.probabilistic;
   const probabilistic = state.analysis?.probabilistic;
   if (!state.analysis || !probabilistic) {
-    panel.innerHTML = `<div class="panel"><p class="empty-state">Probabilistic lanes appear here when enabled.</p></div>`;
+    panel.innerHTML = `<div class="panel"><p class="empty-state">Calibration and probabilistic lanes appear here when enabled.</p></div>`;
     return;
   }
   const selectedLaneEntry = selectedProbabilisticLane(state.analysis);
+  const selectedPayload = selectedLaneEntry?.[1] || null;
   panel.innerHTML = `
     <div class="stack">
       <section class="panel">
         <div class="panel-head">
           <div>
-            <p class="mini-kicker">Probabilistic atlas</p>
-            <h3>Lane objects under the shared horizon selector</h3>
+            <p class="mini-kicker">Calibration</p>
+            <h3>Probabilistic lane objects under the shared horizon selector</h3>
           </div>
           <div class="pill-row">
             ${pill(`Active horizon h${state.selectedHorizon}`, "warn")}
@@ -2899,20 +3354,24 @@ function renderProbabilistic() {
       <section class="panel probabilistic-summary-panel">
         <div class="panel-head">
           <div>
-            <p class="mini-kicker">Trust framing</p>
-            <h3>Read calibration passes through the evidence tier, not the badge color</h3>
+            <p class="mini-kicker">Claim discipline</p>
+            <h3>Read calibration through sample, bins, and gate effect</h3>
           </div>
           <div class="pill-row">
             ${selectedLaneEntry ? pill(humanizeKey(selectedLaneEntry[0]), "sea") : ""}
             ${selectedLaneEntry?.[1]?.calibration?.status ? pill(selectedLaneEntry[1].calibration.status, selectedLaneEntry[1].calibration?.passed ? "ok" : "warn") : ""}
           </div>
         </div>
-        <p>${escapeHtml(selectedLaneEntry?.[1]?.evidence?.headline || summarizeProbabilisticEvidence(state.analysis.probabilistic) || "Probabilistic evidence will appear here when a lane is selected.")}</p>
+        <p>${escapeHtml(selectedPayload?.evidence?.headline || summarizeProbabilisticEvidence(state.analysis.probabilistic) || "Probabilistic evidence will appear here when a lane is selected.")}</p>
         <div class="detail-grid">
-          ${detail("Sample size", String(selectedLaneEntry?.[1]?.evidence?.sample_size ?? "n/a"))}
-          ${detail("Origins", String(selectedLaneEntry?.[1]?.evidence?.origin_count ?? "n/a"))}
-          ${detail("Horizons", String(selectedLaneEntry?.[1]?.evidence?.horizon_count ?? "n/a"))}
-          ${detail("Calibration effect", humanizePhrase(selectedLaneEntry?.[1]?.calibration?.gate_effect || "n/a"))}
+          ${detail("Family", laneFamily(selectedPayload))}
+          ${detail("Lane status", humanizePhrase(selectedPayload?.evidence?.lane_status || selectedPayload?.lane_status || selectedPayload?.status || "n/a"))}
+          ${detail("Sample size", String(selectedPayload?.evidence?.sample_size ?? "n/a"))}
+          ${detail("Origins", String(selectedPayload?.evidence?.origin_count ?? "n/a"))}
+          ${detail("Horizons", String(selectedPayload?.evidence?.horizon_count ?? "n/a"))}
+          ${detail("Calibration effect", humanizePhrase(selectedPayload?.calibration?.gate_effect || "n/a"))}
+          ${detail("Calibration bins", String(selectedPayload ? calibrationBinCount(selectedPayload) : "n/a"))}
+          ${detail("Downgrade reasons", shortList(selectedPayload?.evidence?.downgrade_reason_codes || selectedPayload?.downgrade_reason_codes))}
         </div>
       </section>
       ${renderChangeAtlas(state.analysis)}
@@ -2945,6 +3404,11 @@ function renderProbabilisticLane(mode, payload) {
   const chart = renderProbabilisticChart(mode, payload.chart || {});
   const evidenceTone = toneForEvidence(payload.evidence?.strength);
   const selectedRow = rowForSelectedHorizon(payload);
+  const family = laneFamily(payload, selectedRow);
+  const residualRefs = refList(payload, "residual_history_refs");
+  const stochasticRefs = refList(payload, "stochastic_model_refs");
+  const downgradeReasons =
+    payload.evidence?.downgrade_reason_codes || payload.downgrade_reason_codes || [];
   const isSelected = state.selectedLane === mode;
   return `
     <section class="panel probabilistic-lane${isSelected ? " selected-lane" : ""}">
@@ -2975,11 +3439,17 @@ function renderProbabilisticLane(mode, payload) {
       ${chart}
       <div class="detail-grid">
         ${detail("Active horizon", `h${state.selectedHorizon}`)}
+        ${detail("Family", family)}
+        ${detail("Lane Status", humanizePhrase(payload.evidence?.lane_status || payload.lane_status || payload.status || "n/a"))}
         ${detail("Replay", payload.replay_verification)}
         ${detail("Primary Score", nullableNumber(payload.aggregated_primary_score))}
         ${detail("Sample Size", String(payload.evidence?.sample_size ?? "n/a"))}
         ${detail("Origins / Horizons", `${payload.evidence?.origin_count ?? "n/a"} / ${payload.evidence?.horizon_count ?? "n/a"}`)}
         ${detail("Calibration Gate", humanizePhrase(payload.calibration?.gate_effect || "n/a"))}
+        ${detail("Calibration Bins", String(calibrationBinCount(payload)))}
+        ${detail("Stochastic Model Refs", stochasticRefs.length ? stochasticRefs.map((value) => truncateMiddle(value, 72)).join(", ") : "none")}
+        ${detail("Residual History Refs", residualRefs.length ? residualRefs.map((value) => truncateMiddle(value, 72)).join(", ") : "none")}
+        ${detail("Downgrade Reasons", shortList(downgradeReasons))}
         ${detail("Diagnostics", formatDiagnosticSummary(diagnostics))}
       </div>
       <div class="detail-grid">
@@ -3080,7 +3550,7 @@ function renderBenchmark() {
   const panel = tabPanels.benchmark;
   const benchmark = state.analysis?.benchmark;
   if (!state.analysis || !benchmark) {
-    panel.innerHTML = `<div class="panel"><p class="empty-state">Benchmark comparison appears here when enabled.</p></div>`;
+    panel.innerHTML = `<div class="panel"><p class="empty-state">Search and codelength comparison appear here when enabled.</p></div>`;
     return;
   }
   if (benchmark.status !== "completed") {
@@ -3093,10 +3563,10 @@ function renderBenchmark() {
   const selectionField = `
     <section class="panel frontier-chart">
       <div class="panel-head">
-        <div>
-          <p class="mini-kicker">Selection field</p>
-          <h3>Backend finalists on the code-length axis</h3>
-        </div>
+          <div>
+            <p class="mini-kicker">Search field</p>
+            <h3>Backend finalists on the codelength axis</h3>
+          </div>
       </div>
       <p>${escapeHtml(
         benchmarkSelectionExplanation(benchmark) ||
@@ -3122,8 +3592,8 @@ function renderBenchmark() {
       <section class="panel benchmark-outcome-strip" data-benchmark-region="outcome-strip">
         <div class="panel-head">
           <div>
-            <p class="mini-kicker">Outcome</p>
-            <h3>Winner, runner-up, and selection rule</h3>
+            <p class="mini-kicker">Search outcome</p>
+            <h3>Winner, runner-up, codelength, and selection rule</h3>
           </div>
         </div>
         <p>The benchmark is local evidence for comparison, not a replacement for the operator publication path. Start here before reading the deeper evidence panels.</p>

@@ -3,29 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Euclid Market Workbench</title>
+    <title>Euclid Workbench</title>
     <link rel="stylesheet" href="/vendor/katex/katex.min.css" />
     <link rel="stylesheet" href="/app.css" />
   </head>
   <body>
-    <div class="orb orb-a"></div>
-    <div class="orb orb-b"></div>
     <div class="shell" data-workbench-shell="workspace">
       <aside class="control-rail" aria-labelledby="control-rail-title">
         <div class="brand-block">
-          <p class="eyebrow">Analyst Workbench</p>
-          <h1 id="control-rail-title">Euclid Market Workbench</h1>
+          <p class="eyebrow">Claim-disciplined forecasting</p>
+          <h1 id="control-rail-title">Euclid Workbench</h1>
           <p class="lede">
-            Frame the target, rerun the operator stack, and inspect benchmark
-            pressure, abstentions, and equations from one working surface.
+            Inspect ordered observations, candidate equations, residual and
+            stochastic evidence, replay, calibration, and the claim ceiling a
+            run actually earned.
           </p>
         </div>
 
         <div class="rail-intro">
           <div>
-            <p class="eyebrow rail-eyebrow">Analysis Controls</p>
+            <p class="eyebrow rail-eyebrow">Run controls</p>
             <p class="field-hint rail-intro-copy">
-              Keep reruns, target selection, and date bounds nearby.
+              Target, date bounds, rerun, and saved analysis reload.
             </p>
           </div>
           <button
@@ -35,15 +34,15 @@
             aria-controls="control-rail-body"
             aria-expanded="true"
           >
-            Collapse
+            Compact
           </button>
         </div>
 
         <div id="control-rail-body" class="rail-body">
           <section class="status-block recent-block" aria-labelledby="runtime-status-title">
             <div class="section-head">
-              <h2 id="runtime-status-title">Runtime Status</h2>
-              <p>Live execution state for the active workbench session.</p>
+              <h2 id="runtime-status-title">Runtime & keys</h2>
+              <p>Local server state and provider key availability.</p>
             </div>
             <div class="status-row">
               <span class="status-label">Runtime</span>
@@ -71,7 +70,7 @@
             aria-hidden="true"
           >
             <div class="section-head">
-              <h2 id="recent-analyses-title">Recent Analyses</h2>
+              <h2 id="recent-analyses-title">Saved analyses</h2>
               <p>Reload a saved workspace without refetching data.</p>
             </div>
             <div id="recent-list" class="recent-list"></div>
@@ -79,7 +78,7 @@
 
           <section class="recent-block" aria-labelledby="analysis-controls-title">
             <div class="section-head">
-              <h2 id="analysis-controls-title">Launch Or Rerun</h2>
+              <h2 id="analysis-controls-title">Run or reload</h2>
               <p>Define symbol, target, and date bounds for the next pass.</p>
             </div>
 
@@ -197,7 +196,7 @@
             aria-selected="false"
             tabindex="-1"
           >
-            Atlas
+            Evidence
           </button>
           <button
             id="tab-trigger-point"
@@ -209,7 +208,7 @@
             aria-selected="false"
             tabindex="-1"
           >
-            Point
+            Forecast
           </button>
           <button
             id="tab-trigger-probabilistic"
@@ -221,7 +220,7 @@
             aria-selected="false"
             tabindex="-1"
           >
-            Probabilistic
+            Calibration
           </button>
           <button
             id="tab-trigger-benchmark"
@@ -233,7 +232,7 @@
             aria-selected="false"
             tabindex="-1"
           >
-            Benchmark
+            Search
           </button>
           <button
             id="tab-trigger-artifacts"

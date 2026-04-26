@@ -4,7 +4,8 @@ import pytest
 
 from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.refs import TypedRef
-from euclid.modules.features import default_feature_spec, materialize_feature_view
+from euclid.fit.multi_horizon import resolve_fit_strategy
+from euclid.modules.features import FeatureSpec, default_feature_spec, materialize_feature_view
 from euclid.modules.search_planning import (
     build_canonicalization_policy,
     build_search_plan,
@@ -73,8 +74,8 @@ def test_exact_descriptive_search_materializes_all_retained_families_into_cir() 
     assert result.coverage.attempted_candidate_count == len(DEFAULT_PROPOSAL_IDS)
     assert result.coverage.omitted_candidate_count == 0
     assert result.coverage.accepted_candidate_count == 1
-    assert result.coverage.law_eligible_candidate_count == 4
-    assert result.coverage.rejected_candidate_count == 2
+    assert result.coverage.law_eligible_candidate_count == 3
+    assert result.coverage.rejected_candidate_count == 3
     assert (
         result.coverage.coverage_statement
         == "complete_over_declared_canonical_program_space"
@@ -110,7 +111,7 @@ def test_exact_descriptive_search_materializes_all_retained_families_into_cir() 
         for family_result in result.family_results
     } == {
         "analytic": 2,
-        "recursive": 2,
+        "recursive": 1,
         "spectral": 0,
         "algorithmic": 0,
     }
@@ -133,7 +134,11 @@ def test_exact_descriptive_search_materializes_all_retained_families_into_cir() 
         diagnostic.candidate_id
         for diagnostic in result.admissibility_diagnostics
         if not diagnostic.is_admissible
-    } == {"spectral_harmonic_1", "spectral_harmonic_2"}
+    } == {
+        "recursive_running_mean",
+        "spectral_harmonic_1",
+        "spectral_harmonic_2",
+    }
     assert result.frontier.coverage.comparable_axes == (
         "structure_code_bits",
         "description_gain_bits",
@@ -305,6 +310,152 @@ def test_bounded_heuristic_search_reports_omitted_space_honestly() -> None:
         assert search_evidence["exactness_scope"] == (
             "heuristic_prefix_over_declared_candidate_space"
         )
+
+
+def test_search_inner_primary_score_uses_rollout_objective_when_configured() -> None:
+    feature_view, audit = _feature_view(
+        values=(1.0, 1.5, 2.8, 4.9, 8.1, 12.0, 17.5, 23.0, 31.0)
+    )
+    evaluation_plan = build_evaluation_plan(
+        feature_view=feature_view,
+        audit=audit,
+        min_train_size=5,
+        horizon=3,
+    )
+    canonicalization_policy = build_canonicalization_policy()
+    rollout_strategy = resolve_fit_strategy(
+        strategy_id="joint",
+        horizon_set=(1, 3),
+        horizon_weights=((1, "0.25"), (3, "0.75")),
+    )
+    search_plan = build_search_plan(
+        evaluation_plan=evaluation_plan,
+        canonicalization_policy_ref=TypedRef(
+            "canonicalization_policy_manifest@1.0.0",
+            canonicalization_policy.canonicalization_policy_id,
+        ),
+        codelength_policy_ref=TypedRef(
+            "codelength_policy_manifest@1.1.0",
+            "mdl_policy_default",
+        ),
+        reference_description_policy_ref=TypedRef(
+            "reference_description_policy_manifest@1.1.0",
+            "reference_description_default",
+        ),
+        observation_model_ref=TypedRef(
+            "observation_model_manifest@1.1.0",
+            "observation_model_default",
+        ),
+        candidate_family_ids=("analytic_intercept", "analytic_lag1_affine"),
+        search_class="exact_finite_enumeration",
+        proposal_limit=2,
+        fit_strategy=rollout_strategy.as_dict(),
+    )
+
+    result = run_descriptive_search_backends(
+        search_plan=search_plan,
+        feature_view=feature_view,
+    )
+
+    for candidate in result.descriptive_scope:
+        diagnostics = candidate.evidence_layer.transient_diagnostics
+        rollout_objective = diagnostics["search_rollout_primary_objective"]
+        assert diagnostics["inner_primary_score"] == pytest.approx(
+            rollout_objective["aggregated_primary_score"]
+        )
+        assert rollout_objective["fit_strategy_id"] == "joint"
+        assert rollout_objective["horizon_set"] == [1, 3]
+        assert rollout_objective["horizon_weights"] == [
+            {"horizon": 1, "weight": "0.25"},
+            {"horizon": 3, "weight": "0.75"},
+        ]
+
+
+def test_search_threads_coding_policy_metadata_into_description_artifacts() -> None:
+    feature_view, audit = _feature_view(values=(10.0, 10.0, 10.5, 10.0, 10.5))
+    search_plan = _build_search_plan(
+        feature_view=feature_view,
+        audit=audit,
+        candidate_family_ids=("analytic_intercept",),
+        search_class="exact_finite_enumeration",
+        proposal_limit=1,
+        data_code_family="prequential_laplace_residual_bin_v1",
+        reference_policy={
+            "reference_family_id": "naive_last_observation",
+            "policy_id": "naive_last_observation_reference_v1",
+        },
+    )
+
+    result = run_descriptive_search_backends(
+        search_plan=search_plan,
+        feature_view=feature_view,
+    )
+
+    assert result.description_artifacts
+    artifact = result.description_artifacts[0]
+    assert artifact.data_code_family == "prequential_laplace_residual_bin_v1"
+    assert artifact.reference_policy_id == "naive_last_observation_reference_v1"
+    assert artifact.reference_family_id == "naive_last_observation"
+    assert artifact.coding_row_set_id.startswith("sha256:")
+    assert artifact.codelength_comparison_key["data_code_family"] == (
+        "prequential_laplace_residual_bin_v1"
+    )
+
+
+def test_retained_family_expansion_emits_selected_lag_and_harmonic_group_proposals() -> None:
+    feature_view, audit = _feature_view(
+        values=(1.0, 2.0, 4.0, 7.0, 11.0, 16.0, 22.0, 29.0),
+        feature_names=("lag_1", "lag_2"),
+    )
+    search_plan = _build_search_plan(
+        feature_view=feature_view,
+        audit=audit,
+        candidate_family_ids=(
+            "analytic_selected_lag_1_2_affine",
+            "spectral_harmonic_group_1_2",
+        ),
+        search_class="exact_finite_enumeration",
+        proposal_limit=2,
+        seasonal_period=6,
+    )
+
+    result = run_descriptive_search_backends(
+        search_plan=search_plan,
+        feature_view=feature_view,
+    )
+
+    proposal_ids = {
+        diagnostic.candidate_id for diagnostic in result.admissibility_diagnostics
+    }
+    assert proposal_ids == {
+        "analytic_selected_lag_1_2_affine",
+        "spectral_harmonic_group_1_2",
+    }
+    analytic = next(
+        candidate
+        for candidate in result.descriptive_scope
+        if candidate.evidence_layer.backend_origin_record.source_candidate_id
+        == "analytic_selected_lag_1_2_affine"
+    )
+    spectral = next(
+        candidate
+        for candidate in result.descriptive_scope
+        if candidate.evidence_layer.backend_origin_record.source_candidate_id
+        == "spectral_harmonic_group_1_2"
+    )
+    assert analytic.execution_layer.history_access_contract.max_lag == 2
+    assert analytic.execution_layer.history_access_contract.allowed_side_information == (
+        "lag_1",
+        "lag_2",
+    )
+    assert {
+        parameter.name
+        for parameter in analytic.structural_layer.parameter_block.parameters
+    } >= {"lag_1__coefficient", "lag_2__coefficient"}
+    assert {
+        literal.name: literal.value
+        for literal in spectral.structural_layer.literal_block.literals
+    }["harmonic_group"] == "1,2"
 
 
 def test_equality_saturation_search_no_longer_uses_sort_only_extractor() -> None:
@@ -555,6 +706,39 @@ def test_rejected_diagnostics_capture_realization_failures() -> None:
         )
 
     assert exc_info.value.code == "descriptive_fallback_bank_unavailable"
+
+
+def test_glm_style_observation_aware_reducer_fails_closed_without_bound_observation_model() -> None:
+    feature_view, audit = _feature_view()
+    search_plan = _build_search_plan(
+        feature_view=feature_view,
+        audit=audit,
+        candidate_family_ids=("analytic_poisson_glm_reducer",),
+        search_class="exact_finite_enumeration",
+        proposal_limit=1,
+    )
+
+    result = run_descriptive_search_backends(
+        search_plan=search_plan,
+        feature_view=feature_view,
+        include_default_grammar=False,
+        proposal_specs=(
+            DescriptiveSearchProposal(
+                candidate_id="analytic_poisson_glm_reducer",
+                primitive_family="analytic",
+                form_class="glm_link_reducer",
+                feature_dependencies=("lag_1",),
+                parameter_values={"intercept": 0.0, "lag_1__coefficient": 0.0},
+                literal_values={"link": "log"},
+                history_access_mode="bounded_lag_window",
+                max_lag=1,
+                required_observation_model_family="poisson_rate",
+            ),
+        ),
+    )
+
+    assert result.accepted_candidates == ()
+    assert result.rejected_diagnostics[0].reason_code == "observation_model_incompatible"
 
 
 def test_descriptive_scope_keeps_ranked_candidate_when_gain_floor_blocks_acceptance(
@@ -1039,55 +1223,94 @@ def test_exact_fallback_candidates_count_against_budget_guard() -> None:
     }
 
 
-def _feature_view():
+def test_inner_frontier_scoring_uses_common_entity_local_training_span_for_ragged_panels() -> None:
+    feature_view, audit = _ragged_panel_feature_view()
+    search_plan = _build_search_plan(
+        feature_view=feature_view,
+        audit=audit,
+        candidate_family_ids=("analytic_intercept",),
+        search_class="exact_finite_enumeration",
+        proposal_limit=1,
+    )
+
+    result = run_descriptive_search_backends(
+        search_plan=search_plan,
+        feature_view=feature_view,
+    )
+
+    candidate = result.descriptive_scope[0]
+    assert (
+        candidate.evidence_layer.backend_origin_record.source_candidate_id
+        == "analytic_intercept"
+    )
+    assert "inner_primary_score" in candidate.evidence_layer.transient_diagnostics
+    assert result.frontier.coverage.comparable_axes == (
+        "structure_code_bits",
+        "description_gain_bits",
+        "inner_primary_score",
+    )
+
+
+def _feature_view(
+    values: tuple[float, ...] | None = None,
+    *,
+    feature_names: tuple[str, ...] = ("lag_1",),
+):
+    values = values or (10.0, 12.0, 13.0, 15.0, 16.0, 18.0)
     snapshot = FrozenDatasetSnapshot(
         series_id="demo-series",
+        cutoff_available_at=f"2026-01-{len(values):02d}T00:00:00Z",
+        revision_policy="latest_available_revision_per_event_time",
+        rows=tuple(
+            SnapshotRow(
+                event_time=f"2026-01-{index + 1:02d}T00:00:00Z",
+                available_at=f"2026-01-{index + 1:02d}T00:00:00Z",
+                observed_value=value,
+                revision_id=0,
+                payload_hash=f"sha256:{index}",
+            )
+            for index, value in enumerate(values)
+        ),
+    )
+    audit = audit_snapshot_time_safety(snapshot)
+    feature_spec = FeatureSpec(
+        feature_spec_id="test_feature_spec_v1",
+        features=tuple(
+            {"feature_id": feature_name, "kind": "lag", "lag_steps": index + 1}
+            for index, feature_name in enumerate(feature_names)
+        ),
+    )
+    return materialize_feature_view(
+        snapshot=snapshot,
+        audit=audit,
+        feature_spec=feature_spec if feature_names != ("lag_1",) else default_feature_spec(),
+    ), audit
+
+
+def _ragged_panel_feature_view():
+    rows = []
+    values_by_entity = {
+        "entity-a": (10.0, 11.0, 12.0, 13.0, 14.0, 15.0),
+        "entity-b": (20.0, 21.0, 22.0, 23.0, 24.0),
+    }
+    for entity, values in values_by_entity.items():
+        for index, value in enumerate(values):
+            rows.append(
+                SnapshotRow(
+                    entity=entity,
+                    event_time=f"2026-01-{index + 1:02d}T00:00:00Z",
+                    available_at=f"2026-01-{index + 1:02d}T00:00:00Z",
+                    observed_value=value,
+                    revision_id=0,
+                    payload_hash=f"sha256:{entity}:{index}",
+                )
+            )
+    snapshot = FrozenDatasetSnapshot(
+        series_id="ragged-panel-demo",
         cutoff_available_at="2026-01-06T00:00:00Z",
         revision_policy="latest_available_revision_per_event_time",
-        rows=(
-            SnapshotRow(
-                event_time="2026-01-01T00:00:00Z",
-                available_at="2026-01-01T00:00:00Z",
-                observed_value=10.0,
-                revision_id=0,
-                payload_hash="sha256:a",
-            ),
-            SnapshotRow(
-                event_time="2026-01-02T00:00:00Z",
-                available_at="2026-01-02T00:00:00Z",
-                observed_value=12.0,
-                revision_id=0,
-                payload_hash="sha256:b",
-            ),
-            SnapshotRow(
-                event_time="2026-01-03T00:00:00Z",
-                available_at="2026-01-03T00:00:00Z",
-                observed_value=13.0,
-                revision_id=0,
-                payload_hash="sha256:c",
-            ),
-            SnapshotRow(
-                event_time="2026-01-04T00:00:00Z",
-                available_at="2026-01-04T00:00:00Z",
-                observed_value=15.0,
-                revision_id=0,
-                payload_hash="sha256:d",
-            ),
-            SnapshotRow(
-                event_time="2026-01-05T00:00:00Z",
-                available_at="2026-01-05T00:00:00Z",
-                observed_value=16.0,
-                revision_id=0,
-                payload_hash="sha256:e",
-            ),
-            SnapshotRow(
-                event_time="2026-01-06T00:00:00Z",
-                available_at="2026-01-06T00:00:00Z",
-                observed_value=18.0,
-                revision_id=0,
-                payload_hash="sha256:f",
-            ),
-        ),
+        rows=tuple(rows),
+        entity_panel=("entity-a", "entity-b"),
     )
     audit = audit_snapshot_time_safety(snapshot)
     return materialize_feature_view(
@@ -1107,6 +1330,9 @@ def _build_search_plan(
     random_seed: str = "0",
     candidate_batch_size: int = 1,
     minimum_description_gain_bits: float | None = None,
+    data_code_family: str | None = None,
+    reference_policy: dict[str, object] | None = None,
+    seasonal_period: int = 4,
 ):
     evaluation_plan = build_evaluation_plan(
         feature_view=feature_view,
@@ -1139,5 +1365,7 @@ def _build_search_plan(
         candidate_batch_size=candidate_batch_size,
         random_seed=random_seed,
         minimum_description_gain_bits=minimum_description_gain_bits,
-        seasonal_period=4,
+        seasonal_period=seasonal_period,
+        data_code_family=data_code_family,
+        reference_policy=reference_policy,
     )

@@ -325,6 +325,61 @@ def test_distribution_scoring_accepts_non_gaussian_stochastic_model() -> None:
     assert score_result.body["aggregated_primary_score"] > 0
 
 
+def test_regime_mixture_distribution_fails_closed_until_scoring_and_calibration_are_complete() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="distribution",
+        primary_score="log_score",
+    )
+    prediction_artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="regime_mixture_candidate",
+        score_policy=score_policy,
+        forecast_object_type="distribution",
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="regime_conditioned_mixture",
+                location=10.0,
+                scale=1.0,
+                support_kind="all_real",
+                distribution_parameters={
+                    "component_1_weight": 0.6,
+                    "component_1_location": 10.0,
+                    "component_1_scale": 1.0,
+                    "component_2_weight": 0.4,
+                    "component_2_location": 12.0,
+                    "component_2_scale": 2.0,
+                },
+                realized_observation=10.5,
+            ),
+        ),
+    )
+    calibration_contract = build_calibration_contract(
+        catalog=catalog,
+        forecast_object_type="distribution",
+    )
+
+    score_result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=prediction_artifact,
+    )
+    calibration_result = evaluate_prediction_calibration(
+        catalog=catalog,
+        calibration_contract_manifest=calibration_contract,
+        prediction_artifact_manifest=prediction_artifact,
+    )
+
+    assert score_result.body["comparison_status"] == "not_comparable"
+    assert score_result.body["failure_reason_code"] == "unsupported_forecast_object_type"
+    assert calibration_result.body["status"] == "failed"
+    assert calibration_result.body["failure_reason_code"] == "unsupported_observation_family"
+
+
 def _probabilistic_score_policy_manifest(
     *,
     catalog,

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import base64
+import io
 import json
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from euclid.workbench.explainer import (
     DEFAULT_WORKBENCH_EXPLAINER_COMPACT_RETRY_TIMEOUT_SECONDS,
@@ -422,6 +425,13 @@ def test_generate_workbench_explanations_parses_structured_responses_payload() -
         str(item["image_url"]).startswith("data:image/png;base64,")
         for item in image_items
     )
+    first_image = str(image_items[0]["image_url"]).removeprefix(
+        "data:image/png;base64,"
+    )
+    with Image.open(io.BytesIO(base64.b64decode(first_image))) as preview:
+        assert preview.format == "PNG"
+        assert preview.width >= 900
+        assert preview.height >= 300
     assert bundle["status"] == "completed"
     assert bundle["pages"]["overview"]["summary"].startswith("This page summarizes")
     assert bundle["pages"]["overview"]["narrative"].startswith("SPY rose materially")

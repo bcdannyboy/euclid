@@ -13,7 +13,13 @@ from euclid.cir.models import (
     CIRReplayHooks,
 )
 from euclid.cir.normalize import build_cir_candidate_from_reducer
+from euclid.math.codelength import CodelengthComparisonKey
 from euclid.math.observation_models import PointObservationModel
+from euclid.math.reference_descriptions import (
+    ReferenceDescriptionPolicy,
+    build_reference_description,
+)
+from euclid.math.quantization import FixedStepMidTreadQuantizer
 from euclid.modules.features import default_feature_spec, materialize_feature_view
 from euclid.modules.snapshotting import FrozenDatasetSnapshot, SnapshotRow
 from euclid.modules.timeguard import audit_snapshot_time_safety
@@ -49,8 +55,8 @@ def test_evaluate_descriptive_candidates_emits_exact_codelength_artifact() -> No
     assert artifact.L_params_bits == 1.0
     assert artifact.L_data_bits == 8.0
     assert artifact.L_total_bits == 11.0
-    assert artifact.reference_bits == 35.0
-    assert artifact.description_gain_bits == 24.0
+    assert artifact.reference_bits == 40.0
+    assert artifact.description_gain_bits == 29.0
     assert diagnostic.is_admissible is True
     assert diagnostic.reason_codes == ()
     assert result.accepted_candidates == (candidate,)
@@ -130,6 +136,156 @@ def test_evaluate_descriptive_candidates_rejects_mixed_comparison_classes() -> N
         "analytic_intercept": ("codelength_comparability_failed",),
         "analytic_b": ("codelength_comparability_failed",),
     }
+
+
+def test_reference_family_bank_supports_raw_naive_seasonal_and_local_linear() -> None:
+    quantizer = FixedStepMidTreadQuantizer.from_string("0.5")
+    values = (10.0, 11.0, 10.0, 11.0, 10.0, 11.0)
+
+    raw = build_reference_description(
+        values,
+        quantizer=quantizer,
+        policy=ReferenceDescriptionPolicy(
+            reference_family_id="raw_quantized_transformed_sequence"
+        ),
+    )
+    naive = build_reference_description(
+        values,
+        quantizer=quantizer,
+        policy=ReferenceDescriptionPolicy(reference_family_id="naive_last_observation"),
+    )
+    seasonal = build_reference_description(
+        values,
+        quantizer=quantizer,
+        policy=ReferenceDescriptionPolicy(reference_family_id="seasonal_naive"),
+        seasonal_period=2,
+    )
+    local_linear = build_reference_description(
+        values,
+        quantizer=quantizer,
+        policy=ReferenceDescriptionPolicy(
+            reference_family_id="differenced_local_linear"
+        ),
+    )
+
+    assert raw.reference_family_id == "raw_quantized_transformed_sequence"
+    assert naive.reference_family_id == "naive_last_observation"
+    assert seasonal.reference_family_id == "seasonal_naive"
+    assert local_linear.reference_family_id == "differenced_local_linear"
+    assert seasonal.reference_bits < raw.reference_bits
+    assert all(item.family_selection_bits > 0 for item in (raw, naive, seasonal))
+
+
+def test_reference_family_selection_cost_is_included_in_reference_bits() -> None:
+    quantizer = FixedStepMidTreadQuantizer.from_string("0.5")
+    description = build_reference_description(
+        (1.0, 1.0, 1.0, 1.0),
+        quantizer=quantizer,
+        policy=ReferenceDescriptionPolicy(reference_family_id="naive_last_observation"),
+    )
+
+    assert description.reference_bits == (
+        description.family_selection_bits + description.data_bits
+    )
+    assert description.family_selection_bits > 0
+
+
+def test_descriptive_coding_strict_comparability_uses_comparison_key() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.0, 10.0))
+    left = _analytic_intercept_candidate(intercept=10.0)
+    right = _analytic_intercept_candidate(
+        intercept=10.0,
+        candidate_id="analytic_intercept_other_quantizer",
+    )
+    base_key = CodelengthComparisonKey(
+        quantization_mode="fixed_step_mid_tread",
+        quantization_step="0.5",
+        reference_policy_id="raw_quantized_transformed_sequence_v1",
+        data_code_family="residual_signed_integer_elias_delta_v1",
+        support_kind="all_real",
+        horizon_geometry=(1,),
+        coding_row_set_id="rows:a",
+        residual_history_construction="none",
+        parameter_lattice_step="0.5",
+        state_lattice_step="0.5",
+    )
+
+    result = evaluate_descriptive_candidates(
+        (left, right),
+        feature_view=feature_view,
+        comparison_key_overrides={
+            left.canonical_hash(): base_key,
+            right.canonical_hash(): base_key.with_update(quantization_step="0.25"),
+        },
+    )
+
+    assert result.accepted_candidates == ()
+    assert {
+        diagnostic.details["comparison_failure_reason_code"]
+        for diagnostic in result.admissibility_diagnostics
+    } == {"quantization_step_mismatch"}
+
+
+def test_descriptive_coding_strict_comparability_rejects_runtime_signature_mismatch() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.0, 10.0))
+    left = _analytic_intercept_candidate(intercept=10.0)
+    right = _analytic_intercept_candidate(
+        intercept=10.0,
+        candidate_id="analytic_intercept_other_runtime",
+    )
+    base_key = CodelengthComparisonKey(
+        quantization_mode="fixed_step_mid_tread",
+        quantization_step="0.5",
+        reference_policy_id="raw_quantized_transformed_sequence_v1",
+        data_code_family="residual_signed_integer_elias_delta_v1",
+        support_kind="all_real",
+        horizon_geometry=(1,),
+        coding_row_set_id="rows:a",
+        residual_history_construction="none",
+        parameter_lattice_step="0.5",
+        state_lattice_step="0.5",
+        runtime_signature="none",
+    )
+
+    result = evaluate_descriptive_candidates(
+        (left, right),
+        feature_view=feature_view,
+        comparison_key_overrides={
+            left.canonical_hash(): base_key,
+            right.canonical_hash(): base_key.with_update(
+                runtime_signature="sha256:other_runtime"
+            ),
+        },
+    )
+
+    assert result.accepted_candidates == ()
+    assert {
+        diagnostic.details["comparison_failure_reason_code"]
+        for diagnostic in result.admissibility_diagnostics
+    } == {"runtime_signature_mismatch"}
+
+
+def test_prequential_data_code_records_prefix_only_evidence() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.5, 10.0))
+    candidate = _analytic_intercept_candidate(intercept=10.0)
+
+    result = evaluate_descriptive_candidates(
+        (candidate,),
+        feature_view=feature_view,
+        data_code_family="prequential_laplace_residual_bin_v1",
+    )
+
+    artifact = result.description_artifacts[0]
+    assert artifact.data_code_family == "prequential_laplace_residual_bin_v1"
+    assert artifact.data_code_diagnostics["rows"]
+    assert {
+        row["future_count_used"] for row in artifact.data_code_diagnostics["rows"]
+    } == {0}
+    assert [row["prefix_count"] for row in artifact.data_code_diagnostics["rows"]] == [
+        0,
+        1,
+        2,
+    ]
 
 
 def _feature_view(values: tuple[float, ...]):

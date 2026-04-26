@@ -87,7 +87,11 @@ def test_different_seed_runs_only_change_declared_stochastic_surfaces(
 
     assert zero_snapshot.seed_records["search"] == "0"
     assert one_snapshot.seed_records["search"] == "1"
-    assert zero_snapshot.selected_family == one_snapshot.selected_family == "constant"
+    assert (
+        zero_snapshot.selected_family
+        == one_snapshot.selected_family
+        == "seasonal_naive"
+    )
     assert zero_snapshot.run_result_ref == one_snapshot.run_result_ref
     assert "search_plan" in comparison.changed_artifact_roles
     assert set(comparison.changed_artifact_roles) <= set(

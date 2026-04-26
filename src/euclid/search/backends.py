@@ -26,7 +26,15 @@ from euclid.cir.normalize import (
 )
 from euclid.contracts.errors import ContractValidationError
 from euclid.manifests.runtime_models import SearchPlanManifest
+from euclid.math.codelength import (
+    literal_code_length,
+    natural_integer_code_length,
+    parameter_code_length,
+    state_code_length,
+)
 from euclid.math.observation_models import PointObservationModel
+from euclid.math.quantization import FixedStepMidTreadQuantizer, QuantizationPolicy
+from euclid.math.reference_descriptions import ReferenceDescriptionPolicy
 from euclid.modules.candidate_fitting import fit_candidate_window
 from euclid.modules.features import FeatureView
 from euclid.modules.split_planning import EvaluationSegment
@@ -150,6 +158,16 @@ def _history_access_contract_id(proposal: "DescriptiveSearchProposal") -> str:
         f"history_access__{proposal.history_access_mode}"
         f"__{lag_component}__{dependency_component}"
     )
+
+
+def _proposal_harmonics(proposal: "DescriptiveSearchProposal") -> tuple[int, ...]:
+    raw_group = proposal.literal_values.get("harmonic_group")
+    if isinstance(raw_group, str) and raw_group.strip():
+        return tuple(int(token) for token in raw_group.split(",") if token.strip())
+    raw_harmonics = proposal.literal_values.get("harmonics")
+    if isinstance(raw_harmonics, str) and raw_harmonics.strip():
+        return tuple(int(token) for token in raw_harmonics.split(",") if token.strip())
+    return (int(proposal.literal_values.get("harmonic", 0)),)
 
 
 @dataclass(frozen=True)
@@ -335,6 +353,12 @@ class _AttemptSelection:
     rewrite_space_candidate_ids: tuple[str, ...] = ()
     restart_records: tuple[Mapping[str, Any], ...] = ()
     declared_stochastic_surfaces: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class _SearchInnerScore:
+    primary_score: float
+    rollout_primary_objective: Mapping[str, Any] | None = None
 
 
 def _candidate_source_id(candidate: CandidateIntermediateRepresentation) -> str:
@@ -751,6 +775,43 @@ class AnalyticSearchBackendAdapter(DescriptiveSearchBackendAdapter):
                     max_lag=1,
                 )
             )
+        if {"lag_1", "lag_2"} <= set(feature_view.feature_names):
+            proposals.append(
+                DescriptiveSearchProposal(
+                    candidate_id="analytic_selected_lag_1_2_affine",
+                    primitive_family=self.family_id,
+                    form_class="closed_form_expression",
+                    feature_dependencies=("lag_1", "lag_2"),
+                    parameter_values={
+                        "intercept": 1.0,
+                        "lag_1__coefficient": 1.0,
+                        "lag_2__coefficient": 0.0,
+                    },
+                    literal_values={"selected_lags": "1,2"},
+                    history_access_mode="bounded_lag_window",
+                    max_lag=2,
+                )
+            )
+        if {"seasonal_lag", "trend_anchor"} <= set(feature_view.feature_names):
+            proposals.append(
+                DescriptiveSearchProposal(
+                    candidate_id="analytic_seasonal_lag_trend",
+                    primitive_family=self.family_id,
+                    form_class="closed_form_expression",
+                    feature_dependencies=("seasonal_lag", "trend_anchor"),
+                    parameter_values={
+                        "intercept": 1.0,
+                        "seasonal_lag__coefficient": 1.0,
+                        "trend_anchor__coefficient": 0.0,
+                    },
+                    literal_values={
+                        "seasonal_period": search_plan.seasonal_period or 1,
+                        "trend_feature": "trend_anchor",
+                    },
+                    history_access_mode="bounded_lag_window",
+                    max_lag=search_plan.seasonal_period or 1,
+                )
+            )
         return tuple(proposals)
 
     def _update_rule(
@@ -904,6 +965,24 @@ class SpectralSearchBackendAdapter(DescriptiveSearchBackendAdapter):
                     persistent_state={"last_basis_value": 0.0, "phase_index": 0},
                 )
             )
+            proposals.append(
+                DescriptiveSearchProposal(
+                    candidate_id="spectral_harmonic_group_1_2",
+                    primitive_family=self.family_id,
+                    form_class="spectral_basis_expansion",
+                    literal_values={
+                        "harmonic_group": "1,2",
+                        "season_length": season_length,
+                    },
+                    parameter_values={
+                        "cosine_1_coefficient": amplitude,
+                        "sine_1_coefficient": 0.0,
+                        "cosine_2_coefficient": _stable_float(amplitude / 2.0),
+                        "sine_2_coefficient": 0.0,
+                    },
+                    persistent_state={"last_basis_value": 0.0, "phase_index": 0},
+                )
+            )
         return tuple(proposals)
 
     def _validate_bounds(
@@ -919,7 +998,7 @@ class SpectralSearchBackendAdapter(DescriptiveSearchBackendAdapter):
             feature_view=feature_view,
         )
         season_length = int(proposal.literal_values.get("season_length", 0))
-        harmonic = int(proposal.literal_values.get("harmonic", 0))
+        harmonics = _proposal_harmonics(proposal)
         if season_length < 2:
             raise _SearchRealizationError(
                 "bounds_invalid",
@@ -937,12 +1016,15 @@ class SpectralSearchBackendAdapter(DescriptiveSearchBackendAdapter):
                     "feature_row_count": len(feature_view.rows),
                 },
             )
-        if harmonic < 1 or harmonic > max(season_length // 2, 1):
+        if not harmonics or any(
+            harmonic < 1 or harmonic > max(season_length // 2, 1)
+            for harmonic in harmonics
+        ):
             raise _SearchRealizationError(
                 "bounds_invalid",
                 {
                     "candidate_id": proposal.candidate_id,
-                    "harmonic": harmonic,
+                    "harmonics": list(harmonics),
                     "season_length": season_length,
                 },
             )
@@ -953,7 +1035,7 @@ class SpectralSearchBackendAdapter(DescriptiveSearchBackendAdapter):
         search_plan: SearchPlanManifest,
     ) -> ReducerStateUpdateRule:
         season_length = int(proposal.literal_values["season_length"])
-        harmonic = int(proposal.literal_values["harmonic"])
+        harmonic = _proposal_harmonics(proposal)[0]
 
         def update(
             state: ReducerStateObject,
@@ -1323,6 +1405,7 @@ def run_descriptive_search_backends(
         tuple(descriptive_scope_candidates),
         feature_view=legal_feature_view,
         minimum_description_gain_bits=search_plan.minimum_description_gain_bits,
+        **_descriptive_coding_options(search_plan),
     )
     candidate_by_hash = {
         candidate.canonical_hash(): candidate
@@ -1479,6 +1562,7 @@ def run_descriptive_search_backends(
             tuple(fallback_descriptive_scope_candidates),
             feature_view=legal_feature_view,
             minimum_description_gain_bits=search_plan.minimum_description_gain_bits,
+            **_descriptive_coding_options(search_plan),
         )
         all_description_artifacts.extend(fallback_result.description_artifacts)
         all_admissibility_diagnostics.extend(
@@ -1970,7 +2054,7 @@ def _decorate_search_candidates(
             search_plan=search_plan,
             coverage_disclosures=coverage_disclosures,
             attempt_selection=attempt_selection,
-            inner_primary_score=inner_primary_scores.get(candidate.canonical_hash()),
+            inner_score=inner_primary_scores.get(candidate.canonical_hash()),
         )
         for candidate in scope_candidates
     )
@@ -1987,12 +2071,13 @@ def _search_inner_primary_scores(
     accepted_candidates: Sequence[CandidateIntermediateRepresentation],
     search_plan: SearchPlanManifest,
     feature_view: FeatureView,
-) -> Mapping[str, float]:
+) -> Mapping[str, _SearchInnerScore]:
     if "inner_primary_score" not in search_plan.frontier_axes:
         return {}
     legal_feature_view = feature_view.require_stage_reuse("candidate_fitting")
     fit_window = _search_fit_window(legal_feature_view)
-    scores: dict[str, float] = {}
+    fit_strategy = _search_fit_strategy(search_plan)
+    scores: dict[str, _SearchInnerScore] = {}
     for candidate in accepted_candidates:
         fit_result = fit_candidate_window(
             candidate=candidate,
@@ -2000,12 +2085,51 @@ def _search_inner_primary_scores(
             fit_window=fit_window,
             search_plan=search_plan,
             stage_id="inner_search",
+            fit_strategy=fit_strategy,
         )
+        rollout_objective = fit_result.optimizer_diagnostics.get(
+            "rollout_primary_objective"
+        )
+        if isinstance(rollout_objective, Mapping):
+            scores[candidate.canonical_hash()] = _SearchInnerScore(
+                primary_score=_stable_float(
+                    float(rollout_objective["aggregated_primary_score"])
+                ),
+                rollout_primary_objective=dict(rollout_objective),
+            )
+            continue
         training_row_count = max(int(fit_result.training_row_count), 1)
-        scores[candidate.canonical_hash()] = _stable_float(
-            float(fit_result.optimizer_diagnostics["final_loss"]) / training_row_count
+        scores[candidate.canonical_hash()] = _SearchInnerScore(
+            primary_score=_stable_float(
+                float(fit_result.optimizer_diagnostics["final_loss"])
+                / training_row_count
+            )
         )
     return scores
+
+
+def _search_fit_strategy(search_plan: SearchPlanManifest):
+    from euclid.fit.multi_horizon import resolve_fit_strategy
+
+    raw_strategy = getattr(search_plan, "fit_strategy", None)
+    if not isinstance(raw_strategy, Mapping):
+        return None
+    return resolve_fit_strategy(
+        strategy_id=str(raw_strategy.get("strategy_id", "legacy_one_step")),
+        horizon_set=tuple(int(horizon) for horizon in raw_strategy.get("horizon_set", (1,))),
+        horizon_weights=tuple(
+            (int(item["horizon"]), str(item["weight"]))
+            for item in raw_strategy.get("horizon_weights", ())
+        )
+        or None,
+        point_loss_id=str(raw_strategy.get("point_loss_id", "squared_error")),
+        entity_aggregation_mode=str(
+            raw_strategy.get(
+                "entity_aggregation_mode",
+                "single_entity_only_no_cross_entity_aggregation",
+            )
+        ),
+    )
 
 
 def _search_fit_window(feature_view: FeatureView) -> EvaluationSegment:
@@ -2017,8 +2141,20 @@ def _search_fit_window(feature_view: FeatureView) -> EvaluationSegment:
             ),
             field_path="feature_view.rows",
         )
-    last_row = feature_view.rows[-1]
-    row_count = len(feature_view.rows)
+    rows_by_entity = _search_rows_by_entity(feature_view)
+    entity_panel = tuple(feature_view.entity_panel) or tuple(rows_by_entity)
+    row_count = min(len(rows_by_entity.get(entity, ())) for entity in entity_panel)
+    if row_count < 1:
+        raise ContractValidationError(
+            code="empty_search_feature_view",
+            message=(
+                "search-time frontier scoring requires each declared entity to "
+                "have at least one feature row"
+            ),
+            field_path="feature_view.entity_panel",
+        )
+    primary_entity = entity_panel[0]
+    last_row = rows_by_entity[primary_entity][row_count - 1]
     last_event_time = str(last_row["event_time"])
     return EvaluationSegment(
         segment_id="search_frontier_fold_local",
@@ -2036,8 +2172,18 @@ def _search_fit_window(feature_view: FeatureView) -> EvaluationSegment:
         test_end_event_time=last_event_time,
         horizon_set=(1,),
         scored_origin_ids=(),
-        entity_panel=feature_view.entity_panel,
+        entity_panel=entity_panel,
     )
+
+
+def _search_rows_by_entity(
+    feature_view: FeatureView,
+) -> dict[str, tuple[Mapping[str, Any], ...]]:
+    grouped: dict[str, list[Mapping[str, Any]]] = {}
+    for row in feature_view.rows:
+        entity = str(row.get("entity", feature_view.series_id))
+        grouped.setdefault(entity, []).append(row)
+    return {entity: tuple(rows) for entity, rows in grouped.items()}
 
 
 def _with_search_honesty_evidence(
@@ -2046,7 +2192,7 @@ def _with_search_honesty_evidence(
     search_plan: SearchPlanManifest,
     coverage_disclosures: Mapping[str, Any],
     attempt_selection: _AttemptSelection,
-    inner_primary_score: float | None,
+    inner_score: _SearchInnerScore | None,
 ) -> CandidateIntermediateRepresentation:
     backend_origin = candidate.evidence_layer.backend_origin_record
     private_fields = tuple(
@@ -2060,10 +2206,14 @@ def _with_search_honesty_evidence(
             attempt_selection=attempt_selection,
         )
     }
-    if inner_primary_score is not None:
+    if inner_score is not None:
         transient_diagnostics["inner_primary_score"] = _stable_float(
-            inner_primary_score
+            inner_score.primary_score
         )
+        if inner_score.rollout_primary_objective is not None:
+            transient_diagnostics["search_rollout_primary_objective"] = dict(
+                inner_score.rollout_primary_objective
+            )
     return rebind_cir_backend_origin(
         candidate,
         backend_origin_record=CIRBackendOriginRecord(
@@ -2439,13 +2589,95 @@ def _build_descriptive_frontier(
 def _model_code_decomposition(
     proposal: DescriptiveSearchProposal,
 ) -> CIRModelCodeDecomposition:
+    quantizer = FixedStepMidTreadQuantizer.from_string("0.5")
     return CIRModelCodeDecomposition(
-        L_family_bits=2.0,
+        L_family_bits=float(natural_integer_code_length(len(RETAINED_PRIMITIVE_FAMILIES))),
         L_structure_bits=1.0 + float(bool(proposal.feature_dependencies)),
-        L_literals_bits=float(len(proposal.literal_values)),
-        L_params_bits=float(len(proposal.parameter_values)),
-        L_state_bits=float(len(proposal.persistent_state)),
+        L_literals_bits=float(
+            sum(
+                literal_code_length(
+                    value,
+                    quantizer=quantizer,
+                    literal_kind=("program" if "program" in name else "scalar"),
+                )
+                for name, value in proposal.literal_values.items()
+            )
+        ),
+        L_params_bits=float(
+            sum(
+                parameter_code_length(value, quantizer=quantizer)
+                for value in proposal.parameter_values.values()
+                if isinstance(value, (int, float))
+            )
+        ),
+        L_state_bits=float(
+            sum(
+                state_code_length(value, quantizer=quantizer)
+                for value in proposal.persistent_state.values()
+                if isinstance(value, (int, float))
+            )
+        ),
     )
+
+
+def _descriptive_coding_options(search_plan: SearchPlanManifest) -> dict[str, Any]:
+    raw_quantization_policy = getattr(search_plan, "quantization_policy", None)
+    quantization_policy = None
+    if isinstance(raw_quantization_policy, Mapping):
+        quantization_policy = QuantizationPolicy(
+            quantization_mode=str(
+                raw_quantization_policy.get(
+                    "quantization_mode",
+                    "fixed_step_mid_tread",
+                )
+            ),
+            quantization_step=(
+                str(raw_quantization_policy["quantization_step"])
+                if raw_quantization_policy.get("quantization_step") is not None
+                else None
+            ),
+            measurement_resolution=(
+                str(raw_quantization_policy["measurement_resolution"])
+                if raw_quantization_policy.get("measurement_resolution") is not None
+                else None
+            ),
+            scale_fraction=(
+                str(raw_quantization_policy["scale_fraction"])
+                if raw_quantization_policy.get("scale_fraction") is not None
+                else None
+            ),
+            scale_statistic=str(
+                raw_quantization_policy.get("scale_statistic", "max_abs")
+            ),
+            zero_scale_fallback_step=str(
+                raw_quantization_policy.get("zero_scale_fallback_step", "0.5")
+            ),
+        )
+    raw_reference_policy = getattr(search_plan, "reference_policy", None)
+    reference_policy = None
+    if isinstance(raw_reference_policy, Mapping):
+        reference_policy = ReferenceDescriptionPolicy(
+            reference_family_id=str(
+                raw_reference_policy.get(
+                    "reference_family_id",
+                    "raw_quantized_transformed_sequence",
+                )
+            ),
+            policy_id=(
+                str(raw_reference_policy["policy_id"])
+                if raw_reference_policy.get("policy_id") is not None
+                else None
+            ),
+        )
+    return {
+        "quantization_policy": quantization_policy,
+        "reference_policy": reference_policy,
+        "data_code_family": (
+            getattr(search_plan, "data_code_family", None)
+            or "residual_signed_integer_elias_delta_v1"
+        ),
+        "seasonal_period": search_plan.seasonal_period,
+    }
 
 
 def _identity_update(

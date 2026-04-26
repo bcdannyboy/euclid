@@ -6,9 +6,15 @@ from euclid.contracts.loader import load_contract_catalog
 from euclid.contracts.refs import TypedRef
 from euclid.manifests.runtime_models import (
     ArtifactHashRecord,
+    CalibrationContractManifest,
+    CalibrationResultManifest,
+    DistributionPredictionRow,
+    IntervalPredictionRow,
     NullResultManifest,
     PerturbationFamilyResultManifest,
     PublicationRecordManifest,
+    PredictionArtifactManifest,
+    ProbabilisticScoreResultManifest,
     ReplayStageRecord,
     ReproducibilityBundleManifest,
     RobustnessReportManifest,
@@ -126,6 +132,136 @@ def test_run_result_manifest_abstention_roundtrip_preserves_support_refs() -> No
     }
     assert "primary_reducer_artifact_ref" not in manifest.body
     assert restored == model
+
+
+def test_probabilistic_rows_and_effective_config_roundtrip() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy_ref = _ref(
+        "probabilistic_score_policy_manifest@1.0.0",
+        "distribution_policy",
+    )
+    artifact = PredictionArtifactManifest(
+        prediction_artifact_id="family_aware_prediction",
+        candidate_id="candidate",
+        stage_id="confirmatory_holdout",
+        fit_window_id="fit",
+        test_window_id="test",
+        model_freeze_status="global_finalist_frozen",
+        refit_rule_applied="pre_holdout_development_refit",
+        score_policy_ref=score_policy_ref,
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="student_t_location_scale",
+                location=0.0,
+                scale=1.0,
+                support_kind="all_real",
+                realized_observation=0.5,
+                distribution_parameters={
+                    "location": 0.0,
+                    "scale": 1.0,
+                    "df": 7.0,
+                },
+            ),
+            IntervalPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                nominal_coverage=0.8,
+                lower_bound=-1.0,
+                upper_bound=1.0,
+                realized_observation=0.5,
+                intervals=(
+                    {"nominal_coverage": 0.8, "lower_bound": -1.0, "upper_bound": 1.0},
+                    {"nominal_coverage": 0.9, "lower_bound": -2.0, "upper_bound": 2.0},
+                ),
+            ),
+        ),
+        forecast_object_type="distribution",
+        effective_probabilistic_config={
+            "distribution_family": "student_t_location_scale",
+            "interval_levels": [0.8, 0.9],
+            "pit": {"method": "cdf"},
+        },
+    ).to_manifest(catalog)
+
+    assert artifact.body["rows"][0]["distribution_parameters"]["df"] == 7.0
+    assert [item["nominal_coverage"] for item in artifact.body["rows"][1]["intervals"]] == [
+        0.8,
+        0.9,
+    ]
+    assert artifact.body["effective_probabilistic_config"]["pit"] == {"method": "cdf"}
+
+
+def test_score_result_roundtrip_preserves_effective_probabilistic_config() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_result = ProbabilisticScoreResultManifest(
+        score_result_id="score_result",
+        score_policy_ref=_ref(
+            "probabilistic_score_policy_manifest@1.0.0",
+            "policy",
+        ),
+        prediction_artifact_ref=_ref(
+            "prediction_artifact_manifest@1.1.0",
+            "prediction",
+        ),
+        per_horizon=(),
+        aggregated_primary_score=0.0,
+        comparison_status="not_comparable",
+        failure_reason_code="unsupported_crps_family",
+        forecast_object_type="distribution",
+        effective_probabilistic_config={
+            "distribution_family": "student_t_location_scale",
+            "primary_score": "continuous_ranked_probability_score",
+        },
+    ).to_manifest(catalog)
+
+    assert score_result.body["effective_probabilistic_config"] == {
+        "distribution_family": "student_t_location_scale",
+        "primary_score": "continuous_ranked_probability_score",
+    }
+
+
+def test_calibration_manifests_preserve_effective_config_and_lane() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    contract = CalibrationContractManifest(
+        calibration_contract_id="distribution_calibration",
+        forecast_object_type="distribution",
+        calibration_mode="required",
+        required_diagnostic_ids=("pit_or_randomized_pit_uniformity",),
+        optional_diagnostic_ids=(),
+        pass_rule="declared_distributional_calibration_suite_passes",
+        gate_effect="required_for_probabilistic_publication",
+        thresholds={"minimum_sample_count": 10},
+        pit_config={"method": "randomized_pit", "seed": "abc"},
+        calibration_lane="recalibration_fit",
+    ).to_manifest(catalog)
+    result = CalibrationResultManifest(
+        calibration_result_id="calibration_result",
+        calibration_contract_ref=contract.ref,
+        prediction_artifact_ref=_ref(
+            "prediction_artifact_manifest@1.1.0",
+            "prediction",
+        ),
+        forecast_object_type="distribution",
+        status="failed",
+        gate_effect="required_for_probabilistic_publication",
+        diagnostics=(),
+        failure_reason_code="confirmatory_rows_forbidden_for_recalibration",
+        pass_value=False,
+        effective_calibration_config={
+            "calibration_lane": "recalibration_fit",
+            "pit": {"method": "randomized_pit", "seed": "abc"},
+        },
+        calibration_identity={"calibration_lane": "recalibration_fit"},
+        lane_status="blocked",
+    ).to_manifest(catalog)
+
+    assert contract.body["pit"] == {"method": "randomized_pit", "seed": "abc"}
+    assert result.body["effective_calibration_config"]["pit"]["seed"] == "abc"
+    assert result.body["lane_status"] == "blocked"
 
 
 def test_bundle_and_publication_record_roundtrip_keep_required_refs() -> None:

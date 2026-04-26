@@ -24,7 +24,7 @@ def test_demo_workflow_rerun_and_replay_are_deterministic(tmp_path: Path) -> Non
     )
 
     assert first_run.request.dataset_csv == second_run.request.dataset_csv
-    assert first_run.summary.selected_family == "constant"
+    assert first_run.summary.selected_family == "seasonal_naive"
     assert replay.summary.replay_verification_status == "verified"
     assert replay.summary.bundle_ref == first_run.summary.bundle_ref
     assert replay.summary.run_result_ref == first_run.summary.run_result_ref

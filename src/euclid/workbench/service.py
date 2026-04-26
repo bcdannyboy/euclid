@@ -3097,6 +3097,11 @@ def _run_probabilistic_analysis(
         graph=graph,
         schema_prefix="reducer_artifact_manifest@",
     )
+    run_result_body = _artifact_body(
+        graph=graph,
+        schema_prefix="run_result_manifest@",
+        default={},
+    )
     structure_body = _artifact_body(
         graph=graph,
         schema_prefix="canonical_structure_code_manifest@",
@@ -3142,6 +3147,25 @@ def _run_probabilistic_analysis(
         ),
         "validation_scope_ref": _jsonable(
             run_summary.get("primary_validation_scope_ref")
+        ),
+        "residual_history_refs": _jsonable(
+            run_result_body.get("residual_history_refs")
+            or run_summary.get("residual_history_refs")
+            or []
+        ),
+        "stochastic_model_refs": _jsonable(
+            run_result_body.get("stochastic_model_refs")
+            or run_summary.get("stochastic_model_refs")
+            or []
+        ),
+        "lane_status": _string_or_none(
+            run_summary.get("lane_status")
+            or run_summary.get("stochastic_support_status")
+            or "completed"
+        ),
+        "downgrade_reason_codes": _string_list(
+            run_summary.get("downgrade_reason_codes")
+            or run_summary.get("reason_codes")
         ),
         "replay_verification": replay_result.summary.replay_verification_status,
         "aggregated_primary_score": prediction.aggregated_primary_score,
@@ -3792,15 +3816,9 @@ def _build_probabilistic_chart(
     chart: dict[str, Any] = {"actual_series": _actual_series(dataset_rows)}
     if forecast_object_type == "distribution":
         chart["forecast_bands"] = [
-            {
-                "available_at": row["available_at"],
-                "origin_time": row["origin_time"],
-                "center": row["location"],
-                "lower": row["location"] - row["scale"],
-                "upper": row["location"] + row["scale"],
-                "realized_observation": row.get("realized_observation"),
-            }
+            band
             for row in prediction_rows
+            if (band := _distribution_forecast_band(row)) is not None
         ]
     elif forecast_object_type == "interval":
         chart["forecast_bands"] = [
@@ -3827,6 +3845,106 @@ def _build_probabilistic_chart(
             for row in prediction_rows
         ]
     return chart
+
+
+def _safe_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return None
+    return result if math.isfinite(result) else None
+
+
+def _first_float(*values: Any) -> float | None:
+    for value in values:
+        result = _safe_float(value)
+        if result is not None:
+            return result
+    return None
+
+
+def _quantile_row_value(row: Mapping[str, Any], level: float) -> float | None:
+    quantiles = row.get("quantiles")
+    if not isinstance(quantiles, Sequence) or isinstance(quantiles, (str, bytes)):
+        return None
+    for entry in quantiles:
+        if not isinstance(entry, Mapping):
+            continue
+        observed_level = _safe_float(entry.get("level"))
+        if observed_level is not None and abs(observed_level - level) <= 1e-9:
+            return _safe_float(entry.get("value"))
+    return None
+
+
+def _mapped_interval_band(
+    row: Mapping[str, Any],
+    key: str,
+) -> tuple[float, float, str] | None:
+    payload = row.get(key)
+    if not isinstance(payload, Mapping):
+        return None
+    lower = _first_float(payload.get("lower"), payload.get("lower_bound"))
+    upper = _first_float(payload.get("upper"), payload.get("upper_bound"))
+    if lower is None or upper is None:
+        return None
+    return lower, upper, key
+
+
+def _distribution_forecast_band(row: Mapping[str, Any]) -> dict[str, Any] | None:
+    center = _first_float(row.get("location"), _quantile_row_value(row, 0.5))
+    interval: tuple[float, float, str] | None = None
+    for key in (
+        "configured_interval",
+        "family_interval",
+        "prediction_interval",
+        "interval",
+    ):
+        interval = _mapped_interval_band(row, key)
+        if interval is not None:
+            break
+
+    if interval is None:
+        lower = _first_float(
+            row.get("lower_bound"),
+            row.get("interval_lower"),
+            row.get("lower"),
+        )
+        upper = _first_float(
+            row.get("upper_bound"),
+            row.get("interval_upper"),
+            row.get("upper"),
+        )
+        if lower is not None and upper is not None:
+            interval = (lower, upper, "row_interval")
+
+    if interval is None:
+        quantile_lower = _quantile_row_value(row, 0.1)
+        quantile_upper = _quantile_row_value(row, 0.9)
+        if quantile_lower is not None and quantile_upper is not None:
+            interval = (quantile_lower, quantile_upper, "quantiles")
+
+    if interval is None:
+        location = _safe_float(row.get("location"))
+        scale = _safe_float(row.get("scale"))
+        if location is None or scale is None:
+            return None
+        interval = (location - scale, location + scale, "location_scale")
+        center = location
+
+    lower, upper, source = interval
+    if center is None:
+        center = lower + ((upper - lower) / 2.0)
+    return {
+        "available_at": row.get("available_at"),
+        "origin_time": row.get("origin_time"),
+        "center": center,
+        "lower": lower,
+        "upper": upper,
+        "source": source,
+        "realized_observation": row.get("realized_observation"),
+    }
 
 
 def _failure_payload(exc: Exception) -> dict[str, Any]:
@@ -4241,6 +4359,28 @@ def _normalize_probabilistic_lane(
             equation_payload,
             family_id=_string_or_none(lane.get("selected_family")),
         )
+    rows_payload = lane.get("rows")
+    row_items = (
+        [row for row in rows_payload if isinstance(row, Mapping)]
+        if isinstance(rows_payload, Sequence)
+        and not isinstance(rows_payload, (str, bytes))
+        else []
+    )
+    chart_payload = lane.get("chart")
+    should_build_chart = bool(row_items) and not isinstance(chart_payload, Mapping)
+    if isinstance(chart_payload, Mapping):
+        if forecast_object_type in {"distribution", "interval"}:
+            should_build_chart = not bool(chart_payload.get("forecast_bands"))
+        elif forecast_object_type == "quantile":
+            should_build_chart = not bool(chart_payload.get("forecast_quantiles"))
+        elif forecast_object_type == "event_probability":
+            should_build_chart = not bool(chart_payload.get("forecast_probabilities"))
+    if should_build_chart:
+        lane["chart"] = _build_probabilistic_chart(
+            forecast_object_type=forecast_object_type,
+            dataset_rows=dataset_rows,
+            prediction_rows=row_items,
+        )
     if lane.get("status") != "failed":
         return _enrich_probabilistic_lane(
             forecast_object_type=forecast_object_type,
@@ -4281,6 +4421,11 @@ def _normalize_probabilistic_lane(
         reducer_body = _artifact_body(
             graph=graph,
             schema_prefix="reducer_artifact_manifest@",
+        )
+        run_result_body = _artifact_body(
+            graph=graph,
+            schema_prefix="run_result_manifest@",
+            default={},
         )
         structure_body = _artifact_body(
             graph=graph,
@@ -4328,6 +4473,25 @@ def _normalize_probabilistic_lane(
         "selected_family": selected_family,
         "forecast_object_type": forecast_object_type,
         "replay_verification": lane.get("replay_verification"),
+        "residual_history_refs": _jsonable(
+            run_result_body.get("residual_history_refs")
+            or run_summary.get("residual_history_refs")
+            or []
+        ),
+        "stochastic_model_refs": _jsonable(
+            run_result_body.get("stochastic_model_refs")
+            or run_summary.get("stochastic_model_refs")
+            or []
+        ),
+        "lane_status": _string_or_none(
+            run_summary.get("lane_status")
+            or run_summary.get("stochastic_support_status")
+            or "completed"
+        ),
+        "downgrade_reason_codes": _string_list(
+            run_summary.get("downgrade_reason_codes")
+            or run_summary.get("reason_codes")
+        ),
         "aggregated_primary_score": prediction.aggregated_primary_score,
         "equation": equation,
         "rows": _jsonable(prediction.rows),
@@ -5029,20 +5193,85 @@ def _equation_rhs(label: str | None) -> str | None:
     return rhs.strip()
 
 
+def _probabilistic_ref_labels(value: Any) -> list[str]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return []
+    labels: list[str] = []
+    for item in value:
+        if isinstance(item, Mapping):
+            schema_name = _string_or_none(item.get("schema_name"))
+            object_id = _string_or_none(item.get("object_id"))
+            if schema_name and object_id:
+                labels.append(f"{schema_name}:{object_id}")
+                continue
+        if item:
+            labels.append(str(item))
+    return labels
+
+
+def _probabilistic_family(lane: Mapping[str, Any]) -> str | None:
+    for key in ("distribution_family", "family", "family_id", "selected_family"):
+        value = _string_or_none(lane.get(key))
+        if value:
+            return value
+    latest_row = lane.get("latest_row")
+    if isinstance(latest_row, Mapping):
+        for key in ("distribution_family", "family", "family_id"):
+            value = _string_or_none(latest_row.get(key))
+            if value:
+                return value
+    rows = lane.get("rows")
+    if isinstance(rows, Sequence) and not isinstance(rows, (str, bytes)):
+        for row in rows:
+            if not isinstance(row, Mapping):
+                continue
+            for key in ("distribution_family", "family", "family_id"):
+                value = _string_or_none(row.get(key))
+                if value:
+                    return value
+    return None
+
+
+def _calibration_diagnostics(lane: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    calibration = lane.get("calibration")
+    diagnostics_payload = (
+        calibration.get("diagnostics", [])
+        if isinstance(calibration, Mapping)
+        else []
+    )
+    if (
+        isinstance(diagnostics_payload, Sequence)
+        and not isinstance(diagnostics_payload, (str, bytes))
+    ):
+        return [
+            diagnostic
+            for diagnostic in diagnostics_payload
+            if isinstance(diagnostic, Mapping)
+        ]
+    if isinstance(diagnostics_payload, Mapping):
+        return [diagnostics_payload]
+    return []
+
+
+def _calibration_bin_count(diagnostics: Sequence[Mapping[str, Any]]) -> int:
+    count = 0
+    for diagnostic in diagnostics:
+        for key in ("calibration_bins", "bins", "bin_records"):
+            bins = diagnostic.get(key)
+            if (
+                isinstance(bins, Sequence)
+                and not isinstance(bins, (str, bytes))
+            ):
+                count += len([item for item in bins if isinstance(item, Mapping)])
+    return count
+
+
 def _build_probabilistic_evidence_summary(
     lane: Mapping[str, Any],
 ) -> dict[str, Any]:
     rows = lane.get("rows")
     row_items = list(rows) if isinstance(rows, Sequence) else []
-    diagnostics_payload = lane.get("calibration", {}).get("diagnostics", [])
-    diagnostics = (
-        list(diagnostics_payload)
-        if isinstance(diagnostics_payload, Sequence)
-        and not isinstance(diagnostics_payload, (str, bytes))
-        else [diagnostics_payload]
-        if diagnostics_payload
-        else []
-    )
+    diagnostics = _calibration_diagnostics(lane)
 
     sample_sizes = [
         int(diagnostic.get("sample_size"))
@@ -5089,6 +5318,20 @@ def _build_probabilistic_evidence_summary(
         "sample_size": sample_size,
         "origin_count": origin_count,
         "horizon_count": horizon_count,
+        "family": _probabilistic_family(lane),
+        "lane_status": _string_or_none(lane.get("lane_status") or lane.get("status")),
+        "downgrade_reason_codes": _string_list(
+            lane.get("downgrade_reason_codes")
+            or lane.get("downgrade_reasons")
+            or lane.get("reason_codes")
+        ),
+        "residual_history_refs": _probabilistic_ref_labels(
+            lane.get("residual_history_refs")
+        ),
+        "stochastic_model_refs": _probabilistic_ref_labels(
+            lane.get("stochastic_model_refs")
+        ),
+        "calibration_bin_count": _calibration_bin_count(diagnostics),
     }
 
 

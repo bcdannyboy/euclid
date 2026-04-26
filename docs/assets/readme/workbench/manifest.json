@@ -1,0 +1,153 @@
+{
+  "generated_at": "2026-04-26T04:27:25.123Z",
+  "source": "Fresh live SPY/daily_return workbench run captured through Chrome DevTools Protocol against http://127.0.0.1:8765/",
+  "screenshots": [
+    {
+      "filename": "workbench-first-screen.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=overview&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "caption": "Fresh live SPY daily-return first screen with target, descriptive reconstruction equation, residual/stochastic evidence, calibration/replay, and the claim ceiling."
+    },
+    {
+      "filename": "workbench-evidence.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=atlas&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "caption": "Evidence workspace tying ordered observations to the fresh live SPY daily-return reconstruction, residual evidence, stochastic support, and gate language."
+    },
+    {
+      "filename": "workbench-calibration.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=probabilistic&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "caption": "Calibration and scoring diagnostics from the fresh live SPY daily-return run, with sample size, bins, gate effect, and downgrade limits visible."
+    },
+    {
+      "filename": "workbench-probabilistic.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=probabilistic&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "caption": "Distribution lane view for the fresh live SPY daily-return run showing uncertainty bands, active horizon, calibration state, and thin-evidence caveats."
+    },
+    {
+      "filename": "workbench-artifacts.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=artifacts&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "caption": "Fresh live run artifact roles, replay/reload lineage, and path trail grouped by analytical responsibility."
+    },
+    {
+      "filename": "workbench-abstention.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=benchmark&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "mobile": false
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 1440,
+        "height": 900
+      },
+      "caption": "Fresh live SPY daily-return no-winner benchmark state shown as intentional abstention, with local evidence kept below operator publication claims."
+    },
+    {
+      "filename": "workbench-mobile.png",
+      "url": "http://127.0.0.1:8765/?analysis_path=build%2Fworkbench%2Freadme-live%2F20260426T042305Z-spy-daily-return%2Fanalysis.json&tab=overview&rail=compact&horizon=21&overlay=descriptive_reconstruction&lane=distribution",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "mobile": true
+      },
+      "analysis_fixture_path": "build/workbench/readme-live/20260426T042305Z-spy-daily-return/analysis.json",
+      "source_analysis_path": "build/workbench/20260426T042305Z-spy-daily-return/analysis.json",
+      "analysis_fixture_note": "Redacted browser-load copy of the fresh live run; only local paths were replaced with /tmp/euclid/live-readme paths for screenshots.",
+      "console_error_count": 0,
+      "console_errors": [],
+      "horizontal_overflow": false,
+      "private_path_visible": false,
+      "image_size": {
+        "width": 390,
+        "height": 844
+      },
+      "caption": "Mobile view of the fresh live SPY daily-return first screen preserving Euclid identity, claim ceiling, and evidence framing without horizontal overflow."
+    }
+  ]
+}

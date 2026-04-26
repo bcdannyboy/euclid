@@ -63,6 +63,88 @@ class ScoredOrigin:
 
 
 @dataclass(frozen=True)
+class TrainingOriginPanelRow:
+    training_origin_id: str
+    segment_id: str
+    outer_fold_id: str
+    split_role: str
+    entity: str
+    origin_index: int
+    origin_time: str
+    origin_available_at: str
+    horizon: int
+    target_index: int
+    target_event_time: str
+    target_available_at: str
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "entity": self.entity,
+            "horizon": self.horizon,
+            "origin_available_at": self.origin_available_at,
+            "origin_index": self.origin_index,
+            "origin_time": self.origin_time,
+            "outer_fold_id": self.outer_fold_id,
+            "segment_id": self.segment_id,
+            "split_role": self.split_role,
+            "target_available_at": self.target_available_at,
+            "target_event_time": self.target_event_time,
+            "target_index": self.target_index,
+            "training_origin_id": self.training_origin_id,
+        }
+
+
+@dataclass(frozen=True)
+class TrainingOriginPanelDiagnostic:
+    code: str
+    message: str
+    entity: str | None = None
+    origin_index: int | None = None
+    horizon: int | None = None
+    target_index: int | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "code": self.code,
+            "message": self.message,
+        }
+        if self.entity is not None:
+            body["entity"] = self.entity
+        if self.origin_index is not None:
+            body["origin_index"] = self.origin_index
+        if self.horizon is not None:
+            body["horizon"] = self.horizon
+        if self.target_index is not None:
+            body["target_index"] = self.target_index
+        return body
+
+
+@dataclass(frozen=True)
+class TrainingOriginPanel:
+    segment_id: str
+    split_role: str
+    horizon_set: tuple[int, ...]
+    entity_panel: tuple[str, ...]
+    records: tuple[TrainingOriginPanelRow, ...]
+    diagnostics: tuple[TrainingOriginPanelDiagnostic, ...] = ()
+
+    @property
+    def status(self) -> str:
+        return "failed" if self.diagnostics else "passed"
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "diagnostics": [diagnostic.as_dict() for diagnostic in self.diagnostics],
+            "entity_panel": list(self.entity_panel),
+            "horizon_set": list(self.horizon_set),
+            "records": [record.as_dict() for record in self.records],
+            "segment_id": self.segment_id,
+            "split_role": self.split_role,
+            "status": self.status,
+        }
+
+
+@dataclass(frozen=True)
 class EvaluationSegment:
     segment_id: str
     outer_fold_id: str
@@ -357,6 +439,147 @@ def resolve_scored_origin_target_row(
     return dict(entity_rows[scored_origin.target_index])
 
 
+def build_legal_training_origin_panel(
+    *,
+    feature_view: FeatureView,
+    evaluation_segment: EvaluationSegment,
+    horizon_set: tuple[int, ...] | None = None,
+) -> TrainingOriginPanel:
+    feature_view.require_stage_reuse("candidate_fitting")
+    resolved_horizon_set = _resolve_training_panel_horizon_set(
+        evaluation_segment.horizon_set if horizon_set is None else horizon_set
+    )
+    entity_panel = _segment_entity_panel(feature_view, evaluation_segment)
+    rows_by_entity = _rows_by_entity(feature_view)[1]
+    diagnostics: list[TrainingOriginPanelDiagnostic] = []
+    records: list[TrainingOriginPanelRow] = []
+    max_origin_index = evaluation_segment.train_end_index - max(resolved_horizon_set)
+    if max_origin_index < evaluation_segment.train_start_index:
+        target_index = evaluation_segment.train_start_index + max(resolved_horizon_set)
+        diagnostics.extend(
+            (
+                TrainingOriginPanelDiagnostic(
+                    code="missing_horizon_target",
+                    message=(
+                        "no complete training-origin panel exists for the declared "
+                        "horizon set inside the training slice"
+                    ),
+                    origin_index=evaluation_segment.train_start_index,
+                    horizon=max(resolved_horizon_set),
+                    target_index=target_index,
+                ),
+                TrainingOriginPanelDiagnostic(
+                    code="target_outside_training_slice",
+                    message="target row falls outside the training slice",
+                    origin_index=evaluation_segment.train_start_index,
+                    horizon=max(resolved_horizon_set),
+                    target_index=target_index,
+                ),
+            )
+        )
+        return TrainingOriginPanel(
+            segment_id=evaluation_segment.segment_id,
+            split_role=evaluation_segment.role,
+            horizon_set=resolved_horizon_set,
+            entity_panel=entity_panel,
+            records=(),
+            diagnostics=tuple(diagnostics),
+        )
+
+    for origin_index in range(
+        evaluation_segment.train_start_index,
+        max_origin_index + 1,
+    ):
+        origin_records: list[TrainingOriginPanelRow] = []
+        complete_origin = True
+        for entity in entity_panel:
+            entity_rows = rows_by_entity.get(entity, ())
+            if origin_index >= len(entity_rows):
+                diagnostics.append(
+                    TrainingOriginPanelDiagnostic(
+                        code="missing_entity_origin",
+                        message="entity is missing the requested origin row",
+                        entity=entity,
+                        origin_index=origin_index,
+                    )
+                )
+                complete_origin = False
+                continue
+            origin_row = entity_rows[origin_index]
+            for horizon in resolved_horizon_set:
+                target_index = origin_index + horizon
+                if target_index > evaluation_segment.train_end_index:
+                    diagnostics.append(
+                        TrainingOriginPanelDiagnostic(
+                            code="target_outside_training_slice",
+                            message="target row falls outside the training slice",
+                            entity=entity,
+                            origin_index=origin_index,
+                            horizon=horizon,
+                            target_index=target_index,
+                        )
+                    )
+                    complete_origin = False
+                    continue
+                if target_index >= len(entity_rows):
+                    diagnostics.append(
+                        TrainingOriginPanelDiagnostic(
+                            code="missing_entity_target",
+                            message="entity is missing the requested horizon target",
+                            entity=entity,
+                            origin_index=origin_index,
+                            horizon=horizon,
+                            target_index=target_index,
+                        )
+                    )
+                    complete_origin = False
+                    continue
+                target_row = entity_rows[target_index]
+                row_diagnostic = _training_panel_row_diagnostic(
+                    entity=entity,
+                    origin_index=origin_index,
+                    horizon=horizon,
+                    origin_row=origin_row,
+                    target_row=target_row,
+                )
+                if row_diagnostic is not None:
+                    diagnostics.append(row_diagnostic)
+                    complete_origin = False
+                    continue
+                origin_records.append(
+                    TrainingOriginPanelRow(
+                        training_origin_id=(
+                            f"{evaluation_segment.segment_id}__{entity}"
+                            f"__o{origin_index}__h{horizon}"
+                        ),
+                        segment_id=evaluation_segment.segment_id,
+                        outer_fold_id=evaluation_segment.outer_fold_id,
+                        split_role=evaluation_segment.role,
+                        entity=entity,
+                        origin_index=origin_index,
+                        origin_time=str(origin_row["event_time"]),
+                        origin_available_at=str(origin_row["available_at"]),
+                        horizon=horizon,
+                        target_index=target_index,
+                        target_event_time=str(target_row["event_time"]),
+                        target_available_at=str(target_row["available_at"]),
+                    )
+                )
+        if complete_origin:
+            records.extend(origin_records)
+
+    if diagnostics:
+        records = []
+    return TrainingOriginPanel(
+        segment_id=evaluation_segment.segment_id,
+        split_role=evaluation_segment.role,
+        horizon_set=resolved_horizon_set,
+        entity_panel=entity_panel,
+        records=tuple(records),
+        diagnostics=tuple(diagnostics),
+    )
+
+
 def _segment_entity_panel(
     feature_view: FeatureView,
     evaluation_segment: EvaluationSegment,
@@ -380,6 +603,62 @@ def _rows_by_entity(
     return entity_panel, {
         entity: tuple(grouped.get(entity, ())) for entity in entity_panel
     }
+
+
+def _resolve_training_panel_horizon_set(
+    horizon_set: tuple[int, ...],
+) -> tuple[int, ...]:
+    normalized: list[int] = []
+    for horizon in horizon_set:
+        resolved = int(horizon)
+        if resolved < 1:
+            raise ContractValidationError(
+                code="invalid_training_origin_panel",
+                message="training-origin horizon values must be positive integers",
+                field_path="horizon_set",
+            )
+        if resolved not in normalized:
+            normalized.append(resolved)
+    if not normalized:
+        raise ContractValidationError(
+            code="invalid_training_origin_panel",
+            message="training-origin panels require at least one horizon",
+            field_path="horizon_set",
+        )
+    return tuple(normalized)
+
+
+def _training_panel_row_diagnostic(
+    *,
+    entity: str,
+    origin_index: int,
+    horizon: int,
+    origin_row: dict[str, Any],
+    target_row: dict[str, Any],
+) -> TrainingOriginPanelDiagnostic | None:
+    for field_name, row in (
+        ("origin_available_at", origin_row),
+        ("target_available_at", target_row),
+    ):
+        source_field = "available_at"
+        if source_field not in row:
+            return TrainingOriginPanelDiagnostic(
+                code="missing_origin_or_target_availability",
+                message=f"{field_name} cannot be derived from the feature row",
+                entity=entity,
+                origin_index=origin_index,
+                horizon=horizon,
+            )
+    if "target" not in target_row or target_row["target"] is None:
+        return TrainingOriginPanelDiagnostic(
+            code="missing_entity_target",
+            message="target row is missing an observed target value",
+            entity=entity,
+            origin_index=origin_index,
+            horizon=horizon,
+            target_index=origin_index + horizon,
+        )
+    return None
 
 
 def _resolve_horizon_weights(

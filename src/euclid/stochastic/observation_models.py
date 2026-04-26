@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import hashlib
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
@@ -28,6 +29,14 @@ class BoundObservationModel:
     @property
     def distribution_backend(self) -> str:
         return "scipy.stats"
+
+    @property
+    def parameter_names(self) -> tuple[str, ...]:
+        return _REQUIRED_PARAMETERS[self.family_id]
+
+    @property
+    def distribution_family_id(self) -> str:
+        return _DISTRIBUTION_FAMILY_IDS[self.family_id]
 
     def support_contains(self, value: float) -> bool:
         try:
@@ -86,6 +95,75 @@ class BoundObservationModel:
         probability = float(self._scipy_distribution().cdf(observed))
         return max(0.0, min(1.0, probability))
 
+    def ppf(self, probability: float) -> float:
+        self._validate_parameters()
+        quantile_probability = float(probability)
+        if not 0.0 < quantile_probability < 1.0:
+            raise ContractValidationError(
+                code="invalid_probability_level",
+                message="probability levels must be strictly between 0 and 1",
+                field_path="probability",
+                details={"probability": probability},
+            )
+        value = float(self._scipy_distribution().ppf(quantile_probability))
+        if not math.isfinite(value):
+            raise ContractValidationError(
+                code="nonfinite_stochastic_quantile",
+                message="stochastic quantile helper produced a nonfinite value",
+                field_path="probability",
+                details={"probability": probability},
+            )
+        return value
+
+    def interval(self, nominal_coverage: float) -> tuple[float, float]:
+        coverage = float(nominal_coverage)
+        if not 0.0 < coverage < 1.0:
+            raise ContractValidationError(
+                code="invalid_interval_coverage",
+                message="interval coverage must be strictly between 0 and 1",
+                field_path="nominal_coverage",
+                details={"nominal_coverage": nominal_coverage},
+            )
+        tail = (1.0 - coverage) / 2.0
+        return self.ppf(tail), self.ppf(1.0 - tail)
+
+    def pit(
+        self,
+        value: float,
+        *,
+        randomized: bool = False,
+        row_key: str | None = None,
+        randomization_seed: str = "0",
+    ) -> float:
+        self._validate_parameters()
+        observed = float(value)
+        if self.family_id not in _DISCRETE_FAMILIES:
+            return self.cdf(observed)
+        if not randomized:
+            raise ContractValidationError(
+                code="unsupported_pit_family",
+                message=(
+                    "discrete observation families require deterministic "
+                    "randomized PIT"
+                ),
+                field_path="pit.randomized",
+                details={"family_id": self.family_id},
+            )
+        if row_key is None or not str(row_key):
+            raise ContractValidationError(
+                code="missing_pit_randomization_key",
+                message="randomized PIT requires a stable row key",
+                field_path="pit.row_key",
+            )
+        distribution = self._scipy_distribution()
+        lower = float(distribution.cdf(observed - 1.0))
+        upper = float(distribution.cdf(observed))
+        draw = _deterministic_unit_interval(
+            f"{randomization_seed}:{row_key}:{self.family_id}:{observed}"
+        )
+        probability = lower + (draw * max(upper - lower, 0.0))
+        return max(0.0, min(1.0, probability))
+
     def survival(self, value: float) -> float:
         self._validate_parameters()
         probability = float(self._scipy_distribution().sf(float(value)))
@@ -134,17 +212,7 @@ class BoundObservationModel:
         )
 
     def _validate_parameters(self) -> None:
-        validators = {
-            "gaussian": ("location", "scale"),
-            "student_t": ("location", "scale", "df"),
-            "laplace": ("location", "scale"),
-            "poisson": ("rate",),
-            "negative_binomial": ("mean", "dispersion"),
-            "bernoulli": ("probability",),
-            "beta": ("alpha", "beta"),
-            "lognormal": ("log_location", "log_scale"),
-        }
-        required = validators.get(self.family_id)
+        required = _REQUIRED_PARAMETERS.get(self.family_id)
         if required is None:
             raise ContractValidationError(
                 code="unsupported_observation_family",
@@ -216,6 +284,15 @@ class MixtureObservationModel:
             )
         return total
 
+    def pit(self, value: float) -> float:
+        del value
+        raise ContractValidationError(
+            code="unsupported_pit_family",
+            message="mixture PIT is not admitted without an explicit tested policy",
+            field_path="pit.family_id",
+            details={"family_id": self.family_id},
+        )
+
     def _validate(self) -> None:
         if not self.components or len(self.components) != len(self.weights):
             raise ContractValidationError(
@@ -239,6 +316,28 @@ class MixtureObservationModel:
 
 
 _DISCRETE_FAMILIES = frozenset({"poisson", "negative_binomial", "bernoulli"})
+
+_REQUIRED_PARAMETERS = {
+    "gaussian": ("location", "scale"),
+    "student_t": ("location", "scale", "df"),
+    "laplace": ("location", "scale"),
+    "poisson": ("rate",),
+    "negative_binomial": ("mean", "dispersion"),
+    "bernoulli": ("probability",),
+    "beta": ("alpha", "beta"),
+    "lognormal": ("log_location", "log_scale"),
+}
+
+_DISTRIBUTION_FAMILY_IDS = {
+    "gaussian": "gaussian_location_scale",
+    "student_t": "student_t_location_scale",
+    "laplace": "laplace_location_scale",
+    "poisson": "poisson_rate",
+    "negative_binomial": "negative_binomial_mean_dispersion",
+    "bernoulli": "bernoulli_probability",
+    "beta": "beta_alpha_beta",
+    "lognormal": "lognormal_location_scale",
+}
 
 
 def get_observation_model(family_id: str) -> ObservationModelSpec:
@@ -269,6 +368,11 @@ def _raise_invalid(name: str, value: float) -> None:
         field_path=f"parameters.{name}",
         details={"value": value},
     )
+
+
+def _deterministic_unit_interval(key: str) -> float:
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
+    return int(digest[:16], 16) / float(16**16)
 
 
 __all__ = [

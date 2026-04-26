@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+from packaging.requirements import Requirement
+from packaging.version import Version
 from typer.testing import CliRunner
 
 import euclid
@@ -328,6 +330,35 @@ def test_runtime_dependency_closure_preserves_selected_extras(
 
     assert {"parent", "child", "base-dep", "format-dep"} <= names
     assert "ignored-extra" not in names
+
+
+def test_declared_runtime_requirements_match_certified_wheelhouse_versions() -> None:
+    mismatches = []
+    declared_requirements = release._declared_runtime_requirements(  # noqa: SLF001
+        PROJECT_ROOT
+    )
+    for raw_requirement in declared_requirements:
+        requirement = Requirement(raw_requirement)
+        if not release._requirement_marker_applies(  # noqa: SLF001
+            requirement,
+            extra_context="",
+        ):
+            continue
+        distribution = release.importlib_metadata.distribution(requirement.name)
+        installed_version = Version(distribution.version)
+        if installed_version not in requirement.specifier:
+            mismatches.append(
+                (
+                    requirement.name,
+                    str(requirement.specifier),
+                    str(installed_version),
+                )
+            )
+
+    assert not mismatches, (
+        "declared runtime requirements must be satisfiable from the certified "
+        f"local wheelhouse; mismatches: {mismatches}"
+    )
 
 
 def test_release_status_command_prints_current_and_target_versions() -> None:

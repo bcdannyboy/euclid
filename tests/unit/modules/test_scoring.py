@@ -445,6 +445,247 @@ def test_score_probabilistic_prediction_artifact_marks_policy_object_mismatch() 
     assert result.body["failure_reason_code"] == "unsupported_forecast_object_type"
 
 
+def test_distribution_scoring_prefers_distribution_parameter_map() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="distribution",
+        primary_score="log_score",
+        horizon_weights=((1, "1.0"),),
+    )
+    artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="parameter_map_candidate",
+        score_policy=score_policy,
+        forecast_object_type="distribution",
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="student_t_location_scale",
+                location=999.0,
+                scale=999.0,
+                support_kind="all_real",
+                realized_observation=10.0,
+                distribution_parameters={
+                    "location": 10.0,
+                    "scale": 1.0,
+                    "df": 7.0,
+                },
+            ),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="parameter_map_panel",
+    )
+
+    result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=artifact,
+    )
+
+    assert result.body["comparison_status"] == "comparable"
+    assert result.body["aggregated_primary_score"] < 2.0
+    assert result.body["effective_probabilistic_config"]["distribution_family"] == (
+        "student_t_location_scale"
+    )
+
+
+def test_distribution_scoring_preserves_legacy_scalar_fallback() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="distribution",
+        primary_score="log_score",
+        horizon_weights=((1, "1.0"),),
+    )
+    artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="legacy_scalar_candidate",
+        score_policy=score_policy,
+        forecast_object_type="distribution",
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="gaussian_location_scale",
+                location=10.0,
+                scale=1.0,
+                support_kind="all_real",
+                realized_observation=10.0,
+            ),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="legacy_scalar_panel",
+    )
+
+    result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=artifact,
+    )
+
+    assert result.body["comparison_status"] == "comparable"
+    assert result.body["failure_reason_code"] is None
+
+
+def test_non_gaussian_crps_fails_before_aggregation() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="distribution",
+        primary_score="continuous_ranked_probability_score",
+        horizon_weights=((1, "1.0"),),
+    )
+    artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="student_t_crps_candidate",
+        score_policy=score_policy,
+        forecast_object_type="distribution",
+        rows=(
+            DistributionPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                distribution_family="student_t_location_scale",
+                location=10.0,
+                scale=1.0,
+                support_kind="all_real",
+                realized_observation=10.0,
+                distribution_parameters={
+                    "location": 10.0,
+                    "scale": 1.0,
+                    "df": 7.0,
+                },
+            ),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="student_t_crps_panel",
+    )
+
+    result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=artifact,
+    )
+
+    assert result.body["comparison_status"] == "not_comparable"
+    assert result.body["failure_reason_code"] == "unsupported_crps_family"
+
+
+def test_interval_required_levels_must_be_present_once() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="interval",
+        primary_score="interval_score",
+        horizon_weights=((1, "1.0"),),
+        interval_levels=(0.8, 0.9),
+    )
+    artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="interval_levels_candidate",
+        score_policy=score_policy,
+        forecast_object_type="interval",
+        rows=(
+            IntervalPredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                nominal_coverage=0.8,
+                lower_bound=9.0,
+                upper_bound=11.0,
+                realized_observation=10.0,
+            ),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="interval_levels_panel",
+    )
+
+    result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=artifact,
+    )
+
+    assert result.body["comparison_status"] == "not_comparable"
+    assert result.body["failure_reason_code"] == "missing_required_interval_level"
+
+
+def test_quantile_required_levels_must_be_present_once_and_not_crossed() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _probabilistic_score_policy_manifest(
+        catalog=catalog,
+        forecast_object_type="quantile",
+        primary_score="pinball_loss",
+        horizon_weights=((1, "1.0"),),
+        quantile_levels=(0.1, 0.5, 0.9),
+    )
+    duplicate_artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="duplicate_quantile_candidate",
+        score_policy=score_policy,
+        forecast_object_type="quantile",
+        rows=(
+            QuantilePredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                quantiles=(
+                    QuantileValue(level=0.1, value=8.0),
+                    QuantileValue(level=0.5, value=10.0),
+                    QuantileValue(level=0.5, value=10.5),
+                    QuantileValue(level=0.9, value=12.0),
+                ),
+                realized_observation=11.0,
+            ),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="duplicate_quantile_panel",
+    )
+    crossed_artifact = _probabilistic_prediction_artifact(
+        catalog=catalog,
+        candidate_id="crossed_quantile_candidate",
+        score_policy=score_policy,
+        forecast_object_type="quantile",
+        rows=(
+            QuantilePredictionRow(
+                origin_time="2026-01-01T00:00:00Z",
+                available_at="2026-01-02T00:00:00Z",
+                horizon=1,
+                quantiles=(
+                    QuantileValue(level=0.1, value=12.0),
+                    QuantileValue(level=0.5, value=10.0),
+                    QuantileValue(level=0.9, value=8.0),
+                ),
+                realized_observation=11.0,
+            ),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="crossed_quantile_panel",
+    )
+
+    duplicate_result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=duplicate_artifact,
+    )
+    crossed_result = score_probabilistic_prediction_artifact(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        prediction_artifact_manifest=crossed_artifact,
+    )
+
+    assert duplicate_result.body["comparison_status"] == "not_comparable"
+    assert duplicate_result.body["failure_reason_code"] == (
+        "duplicate_required_quantile_level"
+    )
+    assert crossed_result.body["comparison_status"] == "not_comparable"
+    assert crossed_result.body["failure_reason_code"] == "crossed_quantiles"
+
+
 def _score_policy_manifest(
     *,
     catalog,
@@ -597,27 +838,34 @@ def _probabilistic_score_policy_manifest(
     forecast_object_type: str,
     primary_score: str,
     horizon_weights: tuple[tuple[int, str], ...],
+    interval_levels: tuple[float, ...] = (),
+    quantile_levels: tuple[float, ...] = (),
 ) -> ManifestEnvelope:
+    body = {
+        "score_policy_id": f"{forecast_object_type}_{primary_score}_policy_v1",
+        "owner_prompt_id": "prompt.scoring-calibration-v1",
+        "scope_id": "euclid_v1_binding_scope@1.0.0",
+        "forecast_object_type": forecast_object_type,
+        "primary_score": primary_score,
+        "aggregation_mode": "per_horizon_mean_then_simplex_weighted_mean",
+        "horizon_weights": [
+            {"horizon": horizon, "weight": weight}
+            for horizon, weight in horizon_weights
+        ],
+        "entity_aggregation_mode": "single_entity_only_no_cross_entity_aggregation",
+        "secondary_diagnostic_ids": [],
+        "forbidden_primary_metric_ids": [],
+        "lower_is_better": True,
+        "comparison_class_rule": "identical_score_policy_required",
+    }
+    if interval_levels:
+        body["interval_levels"] = list(interval_levels)
+    if quantile_levels:
+        body["quantile_levels"] = list(quantile_levels)
     return ManifestEnvelope.build(
         schema_name=_PROBABILISTIC_SCORE_POLICY_SCHEMAS[forecast_object_type],
         module_id="scoring",
-        body={
-            "score_policy_id": f"{forecast_object_type}_{primary_score}_policy_v1",
-            "owner_prompt_id": "prompt.scoring-calibration-v1",
-            "scope_id": "euclid_v1_binding_scope@1.0.0",
-            "forecast_object_type": forecast_object_type,
-            "primary_score": primary_score,
-            "aggregation_mode": "per_horizon_mean_then_simplex_weighted_mean",
-            "horizon_weights": [
-                {"horizon": horizon, "weight": weight}
-                for horizon, weight in horizon_weights
-            ],
-            "entity_aggregation_mode": "single_entity_only_no_cross_entity_aggregation",
-            "secondary_diagnostic_ids": [],
-            "forbidden_primary_metric_ids": [],
-            "lower_is_better": True,
-            "comparison_class_rule": "identical_score_policy_required",
-        },
+        body=body,
         catalog=catalog,
     )
 

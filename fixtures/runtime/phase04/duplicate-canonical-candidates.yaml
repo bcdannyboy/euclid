@@ -96,14 +96,19 @@ proposals:
           reducer_id: tail
 expected:
   exact:
-    accepted_candidate_ids:
-      - dup_a
+    accepted_candidate_ids: []
+    descriptive_candidate_ids:
       - analytic_anchor
-    rejected_reason_codes:
-      dup_b: duplicate_canonical_candidate
-  bounded:
-    accepted_candidate_ids:
       - dup_a
     rejected_reason_codes:
       dup_b: duplicate_canonical_candidate
+      analytic_anchor: descriptive_admissibility_failed
+      dup_a: descriptive_admissibility_failed
+  bounded:
+    accepted_candidate_ids: []
+    descriptive_candidate_ids:
+      - dup_a
+    rejected_reason_codes:
+      dup_b: duplicate_canonical_candidate
+      dup_a: descriptive_admissibility_failed
     omitted_candidate_count: 1

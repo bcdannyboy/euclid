@@ -58,6 +58,30 @@ def _probabilistic_publication_snapshot(
         "run_result_ref": _ref_string(run_result.ref),
         "forecast_object_type": str(run_result.body["forecast_object_type"]),
         "publication_mode": str(run_result.body["result_mode"]),
+        "run_result_stochastic_evidence": {
+            "stochastic_support_status": run_result.body.get(
+                "stochastic_support_status"
+            ),
+            "stochastic_support_reason_codes": list(
+                run_result.body.get("stochastic_support_reason_codes", ())
+            ),
+            "residual_history_refs": [
+                ref
+                for ref in (
+                    _ref_string(item)
+                    for item in run_result.body.get("residual_history_refs", ())
+                )
+                if ref is not None
+            ],
+            "stochastic_model_refs": [
+                ref
+                for ref in (
+                    _ref_string(item)
+                    for item in run_result.body.get("stochastic_model_refs", ())
+                )
+                if ref is not None
+            ],
+        },
         "summary_refs": {
             "prediction_artifact_ref": _ref_string(
                 result.summary.prediction_artifact_ref
@@ -75,10 +99,52 @@ def _probabilistic_publication_snapshot(
             "predictive_reason_codes": list(
                 scorecard_body.get("predictive_reason_codes", ())
             ),
+            "stochastic_status": scorecard_body.get("stochastic_status"),
+            "stochastic_evidence_status": scorecard_body.get(
+                "stochastic_evidence_status"
+            ),
+            "residual_history_refs": [
+                ref
+                for ref in (
+                    _ref_string(item)
+                    for item in scorecard_body.get("residual_history_refs", ())
+                )
+                if ref is not None
+            ],
+            "stochastic_model_refs": [
+                ref
+                for ref in (
+                    _ref_string(item)
+                    for item in scorecard_body.get("stochastic_model_refs", ())
+                )
+                if ref is not None
+            ],
         },
         "claim": {
             "claim_type": claim_body.get("claim_type"),
             "predictive_support_status": claim_body.get("predictive_support_status"),
+            "stochastic_support_status": claim_body.get(
+                "stochastic_support_status"
+            ),
+            "stochastic_evidence_status": claim_body.get(
+                "stochastic_evidence_status"
+            ),
+            "residual_history_refs": [
+                ref
+                for ref in (
+                    _ref_string(item)
+                    for item in claim_body.get("residual_history_refs", ())
+                )
+                if ref is not None
+            ],
+            "stochastic_model_refs": [
+                ref
+                for ref in (
+                    _ref_string(item)
+                    for item in claim_body.get("stochastic_model_refs", ())
+                )
+                if ref is not None
+            ],
             "allowed_interpretation_codes": list(
                 claim_body.get("allowed_interpretation_codes", ())
             ),
@@ -95,6 +161,15 @@ def _probabilistic_publication_snapshot(
             "primary_calibration_result_ref": _ref_string(
                 published.primary_calibration_result_ref
             ),
+            "stochastic_support_status": published.stochastic_support_status,
+            "residual_history_refs": [
+                f"{ref.schema_name}:{ref.object_id}"
+                for ref in published.residual_history_refs
+            ],
+            "stochastic_model_refs": [
+                f"{ref.schema_name}:{ref.object_id}"
+                for ref in published.stochastic_model_refs
+            ],
         },
         "comparison": {
             "baseline_id": comparison.baseline_id,

@@ -22,7 +22,7 @@ def test_run_demo_returns_typed_result_and_writes_local_bundle(tmp_path: Path) -
     )
 
     assert result.request.request_id == "prototype-demo"
-    assert result.summary.selected_family == "constant"
+    assert result.summary.selected_family == "seasonal_naive"
     assert result.summary.result_mode == "abstention_only_publication"
     assert result.summary.bundle_ref.schema_name == (
         "reproducibility_bundle_manifest@1.0.0"
@@ -117,7 +117,7 @@ def test_profile_demo_run_returns_telemetry_artifact(tmp_path: Path) -> None:
         output_root=tmp_path / "demo-output",
     )
 
-    assert result.run.summary.selected_family == "constant"
+    assert result.run.summary.selected_family == "seasonal_naive"
     assert result.telemetry_path.is_file()
 
     payload = json.loads(result.telemetry_path.read_text(encoding="utf-8"))

@@ -85,9 +85,15 @@ Total code bits include:
 - state bits
 - quantized residual data bits
 
-Cross-candidate codelength comparison is only allowed when the observation-model family, forecast type, support, quantization step, and composition runtime signature are comparable.
+Cross-candidate codelength comparison is only allowed inside a single `CodelengthComparisonKey`. The `strict_single_class` law requires matching quantizer, reference policy, data-code family, support, horizon geometry, `row_set_id`, residual-history construction, parameter/state lattice, and runtime signature. The opt-in `prequential_laplace_residual_bin_v1` data-code family is legal only when each row is encoded from prefix-only evidence.
 
-These comparability constraints are normative, not cosmetic. Euclid does not allow code-length rankings between candidates whose observation models or runtime signatures make the accounting incommensurate.
+These comparability constraints are normative, not cosmetic. Euclid does not allow code-length rankings between candidates whose observation models, row sets, quantizers, reference descriptions, or runtime signatures make the accounting incommensurate.
+
+## Multi-horizon fitting strategies
+
+`FitStrategySpec` is the explicit identity for fitting geometry. The default remains `legacy_one_step`; it preserves the historical one-step objective when no rollout fitting is configured. Staged strategies include `recursive_rollout`, `direct_analytic`, `joint_analytic`, and `rectify_analytic`. Each strategy identity includes the strategy id, horizon set, horizon weights, point loss, and entity aggregation mode.
+
+Horizon sets do not have to be contiguous. A non-contiguous set such as `(1, 3)` is valid when the legal training-origin panel declares rows for those horizons. Rollout objective rows are computed over that legal origin/horizon panel and mirror scoring aggregation over the same panel.
 
 ## Adapters
 

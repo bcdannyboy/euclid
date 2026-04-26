@@ -83,7 +83,7 @@ def test_portfolio_selects_best_family_finalist_and_records_machine_readable_dec
         "canonical_program_count": 2,
         "attempted_candidate_count": 2,
         "accepted_candidate_count": 1,
-        "rejected_candidate_count": 0,
+        "rejected_candidate_count": 1,
         "omitted_candidate_count": 0,
     }
     assert (

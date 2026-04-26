@@ -96,6 +96,10 @@ schemas:
   owner_ref: evaluation_governance_owner
   owning_module: evaluation_governance
   canonical_source_path: docs/reference/contracts-manifests.md
+- schema_name: residual_history_manifest@1.0.0
+  owner_ref: candidate_fitting_owner
+  owning_module: candidate_fitting
+  canonical_source_path: docs/reference/contracts-manifests.md
 - schema_name: stochastic_model_manifest@1.0.0
   owner_ref: probabilistic_evaluation_owner
   owning_module: probabilistic_evaluation

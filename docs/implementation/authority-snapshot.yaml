@@ -11,20 +11,20 @@ scope_authority_docs:
   sha256: e3bf9ae44ebef3fc90a504c6fde261fc5b7bea7603f45c186b7110d95d6a98f3
   last_updated_on: '2026-04-22'
 - path: docs/reference/contracts-manifests.md
-  sha256: bd532f526ae1bc022aeec8528620ff42e840e56ee154ffa1c32e76f5c6c8df2d
-  last_updated_on: '2026-04-22'
+  sha256: 249608c0b2dc73907f0ef028945d4b556e713e8a9b6cd6d111f971202fd76f0e
+  last_updated_on: '2026-04-25'
 - path: docs/reference/benchmarks-readiness.md
   sha256: dc09f108836aae756cc04151c05c062a10f5382471f6f5cdb9c2f8adb78c1903
   last_updated_on: '2026-04-22'
 - path: docs/reference/modeling-pipeline.md
-  sha256: 7bb887352a35c9aa40a918d2d32990dcee9653c0dd4d539d449e7e623414f696
-  last_updated_on: '2026-04-22'
+  sha256: fdf54a12e5aa23d2b0f03b79e0a37042511cb91ec4a9cef041fdcd4da8e7ca99
+  last_updated_on: '2026-04-25'
 - path: docs/reference/search-core.md
-  sha256: 7318918318520cefde41f81076b330514f48548a8eb845a20fc9d6d7d1d51474
-  last_updated_on: '2026-04-22'
+  sha256: 934a9b38393e9ed024e2b35473ceeea00b5ffdf6e6a7f326e27ed74a3e8b6e4b
+  last_updated_on: '2026-04-25'
 - path: docs/reference/workbench.md
-  sha256: 94e1a25434c02cbad71e8cbc411392df37b34bfc46c54999384bf89426901703
-  last_updated_on: '2026-04-22'
+  sha256: a2dc84aa2e3c868ddc10f2badba20b347af72c2415e6e9d98222211ac4a9ff0f
+  last_updated_on: '2026-04-25'
 - path: docs/reference/testing-truthfulness.md
   sha256: 7cfd1c7e0a62b4698a3420e6f43ce43a279f5b45ac123168e4e23dbfb6e924c3
   last_updated_on: '2026-04-22'

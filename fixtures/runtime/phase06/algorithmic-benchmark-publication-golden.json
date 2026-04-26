@@ -5,7 +5,7 @@
     "submitter_id": "algorithmic_search_backend"
   },
   "submitter": {
-    "accepted_candidate_count": 24,
+    "accepted_candidate_count": 26,
     "attempted_candidate_count": 155,
     "canonical_program_count": 155,
     "replay_hook_names": [
@@ -21,13 +21,13 @@
   },
   "submitter_result": {
     "budget_consumption": {
-      "accepted_candidate_count": 24,
+      "accepted_candidate_count": 26,
       "attempted_candidate_count": 155,
       "canonical_program_count": 155,
       "declared_candidate_limit": 256,
       "declared_wall_clock_seconds": 300,
       "omitted_candidate_count": 0,
-      "rejected_candidate_count": 131
+      "rejected_candidate_count": 129
     },
     "selected_candidate_id": "algorithmic_efe315a71097",
     "status": "selected"

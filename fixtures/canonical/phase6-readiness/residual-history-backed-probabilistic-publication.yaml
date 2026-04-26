@@ -1,0 +1,31 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: residual_history_backed_probabilistic_publication
+expected_runtime_disposition: production_supported
+coverage_assertions:
+- residual_history_refs_present
+- stochastic_model_refs_present
+- family_aware_distribution_scoring
+- publication_and_replay_refs_closed
+forecast_object_type: distribution
+family_id: laplace
+publication_refs:
+  residual_history_refs:
+  - schema_name: residual_history_manifest@1.0.0
+    object_id: residual_history_laplace_publication_demo
+  stochastic_model_refs:
+  - schema_name: stochastic_model_manifest@1.0.0
+    object_id: stochastic_model_laplace_publication_demo
+  replay_hash_records:
+  - ref:
+      schema_name: residual_history_manifest@1.0.0
+      object_id: residual_history_laplace_publication_demo
+    hash_algorithm: sha256
+  - ref:
+      schema_name: stochastic_model_manifest@1.0.0
+      object_id: stochastic_model_laplace_publication_demo
+    hash_algorithm: sha256
+scorecard_requirements:
+  scoring_law: family_aware_log_score
+  calibration_law: family_aware_distribution_calibration
+  production_evidence_required: true

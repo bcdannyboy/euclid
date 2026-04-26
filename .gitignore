@@ -94,5 +94,6 @@ build/
 # Misc caches
 # ------------------------------
 .cache/
+.playwright-mcp/
 tmp/
 temp/

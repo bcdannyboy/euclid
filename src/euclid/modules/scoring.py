@@ -284,6 +284,10 @@ def score_probabilistic_prediction_artifact(
         f"{prediction_artifact_manifest.body['prediction_artifact_id']}"
         "__probabilistic_score"
     )
+    effective_config = _effective_probabilistic_config(
+        score_policy_manifest=score_policy_manifest,
+        prediction_artifact_manifest=prediction_artifact_manifest,
+    )
 
     failure_reason = _probabilistic_score_failure_reason(
         score_policy_manifest=score_policy_manifest,
@@ -304,6 +308,7 @@ def score_probabilistic_prediction_artifact(
             aggregated_primary_score=0.0,
             comparison_status="not_comparable",
             failure_reason_code=failure_reason,
+            effective_probabilistic_config=effective_config,
         )
 
     primary_score_id = str(score_policy_manifest.body["primary_score"])
@@ -323,6 +328,7 @@ def score_probabilistic_prediction_artifact(
             forecast_object_type=forecast_object_type,
             primary_score_id=primary_score_id,
             row=row,
+            effective_config=effective_config,
         ),
     )
     per_horizon = tuple(
@@ -345,6 +351,7 @@ def score_probabilistic_prediction_artifact(
             aggregated_primary_score=0.0,
             comparison_status="not_comparable",
             failure_reason_code="nonfinite_score_value",
+            effective_probabilistic_config=effective_config,
         )
 
     return _probabilistic_score_result_manifest(
@@ -357,6 +364,7 @@ def score_probabilistic_prediction_artifact(
         aggregated_primary_score=_stable_float(aggregated_primary_score),
         comparison_status="comparable",
         failure_reason_code=None,
+        effective_probabilistic_config=effective_config,
     )
 
 
@@ -418,6 +426,7 @@ def _probabilistic_score_result_manifest(
     aggregated_primary_score: float,
     comparison_status: str,
     failure_reason_code: str | None,
+    effective_probabilistic_config: Mapping[str, Any] | None = None,
 ) -> ManifestEnvelope:
     return ProbabilisticScoreResultManifest(
         score_result_id=score_result_id,
@@ -428,6 +437,7 @@ def _probabilistic_score_result_manifest(
         aggregated_primary_score=_stable_float(aggregated_primary_score),
         comparison_status=comparison_status,
         failure_reason_code=failure_reason_code,
+        effective_probabilistic_config=effective_probabilistic_config,
     ).to_manifest(catalog)
 
 
@@ -571,6 +581,11 @@ def _probabilistic_score_failure_reason(
         != score_policy_manifest.ref
     ):
         return "mixed_score_policy_within_comparison_class"
+    primary_score_id = str(score_policy_manifest.body.get("primary_score", ""))
+    effective_config = _effective_probabilistic_config(
+        score_policy_manifest=score_policy_manifest,
+        prediction_artifact_manifest=prediction_artifact_manifest,
+    )
 
     if prediction_artifact_manifest.body.get("missing_scored_origins"):
         reason_codes = {
@@ -601,7 +616,9 @@ def _probabilistic_score_failure_reason(
     for row in rows:
         row_failure = _probabilistic_row_failure_reason(
             forecast_object_type=forecast_object_type,
+            primary_score_id=primary_score_id,
             row=row,
+            effective_config=effective_config,
         )
         if row_failure is not None:
             return row_failure
@@ -639,7 +656,9 @@ def _probabilistic_score_failure_reason(
 def _probabilistic_row_failure_reason(
     *,
     forecast_object_type: str,
+    primary_score_id: str,
     row: Mapping[str, Any],
+    effective_config: Mapping[str, Any],
 ) -> str | None:
     realized_observation = float(row["realized_observation"])
     if not math.isfinite(realized_observation):
@@ -650,6 +669,11 @@ def _probabilistic_row_failure_reason(
         )
         if family_id is None:
             return "unsupported_forecast_object_type"
+        if (
+            primary_score_id == "continuous_ranked_probability_score"
+            and family_id != "gaussian"
+        ):
+            return "unsupported_crps_family"
         parameters = _distribution_row_parameters(row=row, family_id=family_id)
         try:
             model = get_observation_model(family_id).bind(parameters)
@@ -658,21 +682,51 @@ def _probabilistic_row_failure_reason(
             return "nonfinite_score_value"
         return None
     if forecast_object_type == "interval":
-        nominal_coverage = float(row["nominal_coverage"])
-        lower_bound = float(row["lower_bound"])
-        upper_bound = float(row["upper_bound"])
-        if not (0 < nominal_coverage < 1):
-            return "nonfinite_score_value"
-        if not all(math.isfinite(value) for value in (lower_bound, upper_bound)):
-            return "nonfinite_score_value"
-        if lower_bound > upper_bound:
-            return "nonfinite_score_value"
+        interval_entries = _interval_entries(row)
+        required_levels = tuple(
+            float(level) for level in effective_config.get("interval_levels", ())
+        )
+        if required_levels:
+            level_counts = {
+                level: sum(
+                    1
+                    for entry in interval_entries
+                    if float(entry["nominal_coverage"]) == level
+                )
+                for level in required_levels
+            }
+            if any(count == 0 for count in level_counts.values()):
+                return "missing_required_interval_level"
+            if any(count > 1 for count in level_counts.values()):
+                return "duplicate_required_interval_level"
+        for entry in interval_entries:
+            nominal_coverage = float(entry["nominal_coverage"])
+            lower_bound = float(entry["lower_bound"])
+            upper_bound = float(entry["upper_bound"])
+            if not (0 < nominal_coverage < 1):
+                return "nonfinite_score_value"
+            if not all(math.isfinite(value) for value in (lower_bound, upper_bound)):
+                return "nonfinite_score_value"
+            if lower_bound > upper_bound:
+                return "nonfinite_score_value"
         return None
     if forecast_object_type == "quantile":
         quantiles = row.get("quantiles", [])
         if not isinstance(quantiles, list) or not quantiles:
             return "nonfinite_score_value"
+        required_levels = tuple(
+            float(level) for level in effective_config.get("quantile_levels", ())
+        )
+        level_counts = {
+            level: sum(1 for item in quantiles if float(item["level"]) == level)
+            for level in required_levels
+        }
+        if any(count == 0 for count in level_counts.values()):
+            return "missing_required_quantile_level"
+        if any(count > 1 for count in level_counts.values()):
+            return "duplicate_required_quantile_level"
         seen_levels: set[float] = set()
+        ordered_quantiles: list[tuple[float, float]] = []
         for item in quantiles:
             level = float(item["level"])
             value = float(item["value"])
@@ -681,6 +735,15 @@ def _probabilistic_row_failure_reason(
             if level in seen_levels or not math.isfinite(value):
                 return "nonfinite_score_value"
             seen_levels.add(level)
+            ordered_quantiles.append((level, value))
+        sorted_quantiles = sorted(ordered_quantiles, key=lambda item: item[0])
+        for (_, previous_value), (_, value) in zip(
+            sorted_quantiles,
+            sorted_quantiles[1:],
+            strict=False,
+        ):
+            if value < previous_value:
+                return "crossed_quantiles"
         return None
     if forecast_object_type == "event_probability":
         probability = float(row["event_probability"])
@@ -1167,6 +1230,7 @@ def _probabilistic_primary_score(
     forecast_object_type: str,
     primary_score_id: str,
     row: Mapping[str, Any],
+    effective_config: Mapping[str, Any],
 ) -> float:
     realized_observation = float(row["realized_observation"])
     if forecast_object_type == "distribution":
@@ -1180,26 +1244,44 @@ def _probabilistic_primary_score(
                 field_path="row.distribution_family",
                 details={"distribution_family": row["distribution_family"]},
             )
-        model = get_observation_model(family_id).bind(
-            _distribution_row_parameters(row=row, family_id=family_id)
-        )
+        model = bind_distribution_row_observation_model(row)
         if primary_score_id == "continuous_ranked_probability_score":
             return _stable_float(continuous_ranked_probability_score(model, realized_observation))
         if primary_score_id == "log_score":
             return _stable_float(log_score(model, realized_observation))
     if forecast_object_type == "interval" and primary_score_id == "interval_score":
+        required_levels = tuple(
+            float(level) for level in effective_config.get("interval_levels", ())
+        )
+        entries = tuple(
+            entry
+            for entry in _interval_entries(row)
+            if not required_levels
+            or float(entry["nominal_coverage"]) in set(required_levels)
+        )
         return _stable_float(
-            interval_score(
-                nominal_coverage=float(row["nominal_coverage"]),
-                lower_bound=float(row["lower_bound"]),
-                upper_bound=float(row["upper_bound"]),
-                observed=realized_observation,
+            fmean(
+                interval_score(
+                    nominal_coverage=float(entry["nominal_coverage"]),
+                    lower_bound=float(entry["lower_bound"]),
+                    upper_bound=float(entry["upper_bound"]),
+                    observed=realized_observation,
+                )
+                for entry in entries
             )
         )
     if forecast_object_type == "quantile" and primary_score_id == "pinball_loss":
+        required_levels = tuple(
+            float(level) for level in effective_config.get("quantile_levels", ())
+        )
+        quantiles = tuple(
+            item
+            for item in row["quantiles"]
+            if not required_levels or float(item["level"]) in set(required_levels)
+        )
         return _stable_float(
             _quantile_pinball_loss(
-                quantiles=tuple(row["quantiles"]),
+                quantiles=quantiles,
                 realized_observation=realized_observation,
             )
         )
@@ -1253,13 +1335,21 @@ def _quantile_pinball_loss(
 
 def _observation_family_from_distribution(distribution_family: str) -> str | None:
     return {
+        "gaussian": "gaussian",
         "gaussian_location_scale": "gaussian",
+        "student_t": "student_t",
         "student_t_location_scale": "student_t",
+        "laplace": "laplace",
         "laplace_location_scale": "laplace",
+        "poisson": "poisson",
         "poisson_rate": "poisson",
+        "negative_binomial": "negative_binomial",
         "negative_binomial_mean_dispersion": "negative_binomial",
+        "bernoulli": "bernoulli",
         "bernoulli_probability": "bernoulli",
+        "beta": "beta",
         "beta_alpha_beta": "beta",
+        "lognormal": "lognormal",
         "lognormal_location_scale": "lognormal",
     }.get(distribution_family)
 
@@ -1269,6 +1359,19 @@ def _distribution_row_parameters(
     row: Mapping[str, Any],
     family_id: str,
 ) -> dict[str, float]:
+    parameter_map = row.get("distribution_parameters")
+    if isinstance(parameter_map, Mapping) and parameter_map:
+        return {
+            name: float(parameter_map[name])
+            for name in get_observation_model(family_id).bind(
+                {
+                    key: float(value)
+                    for key, value in parameter_map.items()
+                    if isinstance(value, int | float)
+                }
+            ).parameter_names
+            if name in parameter_map
+        }
     if family_id in {"gaussian", "laplace"}:
         return {"location": float(row["location"]), "scale": float(row["scale"])}
     if family_id == "student_t":
@@ -1294,6 +1397,57 @@ def _distribution_row_parameters(
             "log_scale": float(row["log_scale"]),
         }
     raise AssertionError("unreachable")
+
+
+def bind_distribution_row_observation_model(
+    row: Mapping[str, Any],
+):
+    family_id = _observation_family_from_distribution(str(row["distribution_family"]))
+    if family_id is None:
+        raise ContractValidationError(
+            code="unsupported_observation_family",
+            message="distribution row declares an unsupported family",
+            field_path="row.distribution_family",
+            details={"distribution_family": row["distribution_family"]},
+        )
+    parameters = _distribution_row_parameters(row=row, family_id=family_id)
+    return get_observation_model(family_id).bind(parameters)
+
+
+def _interval_entries(row: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
+    raw_intervals = row.get("intervals")
+    if isinstance(raw_intervals, list) and raw_intervals:
+        return tuple(dict(item) for item in raw_intervals)
+    return (
+        {
+            "nominal_coverage": float(row["nominal_coverage"]),
+            "lower_bound": float(row["lower_bound"]),
+            "upper_bound": float(row["upper_bound"]),
+        },
+    )
+
+
+def _effective_probabilistic_config(
+    *,
+    score_policy_manifest: ManifestEnvelope,
+    prediction_artifact_manifest: ManifestEnvelope,
+) -> dict[str, Any]:
+    config = dict(
+        prediction_artifact_manifest.body.get("effective_probabilistic_config", {})
+    )
+    config["primary_score"] = str(score_policy_manifest.body.get("primary_score", ""))
+    rows = prediction_artifact_manifest.body.get("rows", [])
+    if rows and "distribution_family" in rows[0]:
+        config.setdefault("distribution_family", str(rows[0]["distribution_family"]))
+    if "interval_levels" in score_policy_manifest.body:
+        config["interval_levels"] = [
+            float(level) for level in score_policy_manifest.body["interval_levels"]
+        ]
+    if "quantile_levels" in score_policy_manifest.body:
+        config["quantile_levels"] = [
+            float(level) for level in score_policy_manifest.body["quantile_levels"]
+        ]
+    return config
 
 
 def _event_log_score(*, probability: float, realized_event: bool) -> float:
@@ -1352,6 +1506,7 @@ def _stable_float(value: float) -> float:
 
 
 __all__ = [
+    "bind_distribution_row_observation_model",
     "PointComparatorEvaluationResult",
     "score_prediction_artifact",
     "score_probabilistic_prediction_artifact",

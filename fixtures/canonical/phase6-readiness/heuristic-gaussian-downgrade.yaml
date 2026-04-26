@@ -1,0 +1,21 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: heuristic_gaussian_downgrade
+expected_runtime_disposition: legacy_compatibility_downgrade
+coverage_assertions:
+- heuristic_gaussian_marked_compatibility_only
+- production_stochastic_evidence_not_satisfied
+- downgrade_reason_codes_present
+forecast_object_type: distribution
+compatibility_artifact:
+  family_id: gaussian
+  horizon_scale_law: sqrt_horizon
+  support_status: compatibility_only
+production_stochastic_evidence:
+  residual_history_refs: []
+  stochastic_model_refs: []
+  satisfies_production_evidence: false
+downgrade_reason_codes:
+- heuristic_gaussian_compatibility_only
+- missing_residual_history_refs
+- missing_stochastic_model_refs

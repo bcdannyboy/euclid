@@ -3,10 +3,12 @@ from __future__ import annotations
 import math
 import platform
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from euclid.adapters.portfolio import ComparableBackendFinalist
+from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.refs import TypedRef
 from euclid.manifest_registry import ManifestRegistry, RegisteredManifest
 from euclid.manifests.base import ManifestEnvelope
@@ -234,6 +236,8 @@ def build_artifact_hash_records(
     calibration_result: RegisteredManifest | None = None,
     external_evidence: RegisteredManifest | None = None,
     mechanistic_evidence: RegisteredManifest | None = None,
+    residual_histories: Sequence[RegisteredManifest] = (),
+    stochastic_models: Sequence[RegisteredManifest] = (),
 ) -> tuple[ArtifactHashRecord, ...]:
     records = [
         ArtifactHashRecord(
@@ -309,6 +313,20 @@ def build_artifact_hash_records(
             ArtifactHashRecord(
                 artifact_role="mechanistic_evidence",
                 sha256=mechanistic_evidence.manifest.content_hash,
+            )
+        )
+    for residual_history in residual_histories:
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="residual_history",
+                sha256=residual_history.manifest.content_hash,
+            )
+        )
+    for stochastic_model in stochastic_models:
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="stochastic_model",
+                sha256=stochastic_model.manifest.content_hash,
             )
         )
     return tuple(records)
@@ -430,19 +448,17 @@ def verify_replayed_outcome(
         registry,
     )
     selected_candidate = registry.resolve(resolved_selected_candidate_ref)
-    actual_hashes = actual_artifact_hashes(
+    actual_hash_records = _actual_artifact_hash_records(
         bundle=bundle,
         run_result=run_result,
         registry=registry,
     )
+    actual_hashes: dict[str, str] = {}
+    for record in actual_hash_records:
+        actual_hashes.setdefault(record.artifact_role, record.sha256)
     actual_required_refs = required_manifest_refs_from_run_result(
         run_result.manifest.body
     )
-    recorded_hashes = {
-        record.artifact_role: record.sha256
-        for record in inspection.artifact_hash_records
-    }
-
     failure_codes: list[str] = []
 
     if inspection.bundle_mode != str(run_result.manifest.body["result_mode"]):
@@ -450,13 +466,12 @@ def verify_replayed_outcome(
     if inspection.required_manifest_refs != actual_required_refs:
         failure_codes.append("missing_required_ref")
 
-    required_hash_roles = tuple(actual_hashes)
-    if any(role not in recorded_hashes for role in required_hash_roles):
-        failure_codes.append("missing_required_hash")
-    elif any(
-        recorded_hashes[role] != actual_hashes[role] for role in required_hash_roles
-    ):
-        failure_codes.append("artifact_hash_mismatch")
+    failure_codes.extend(
+        _hash_record_failure_codes(
+            recorded=inspection.artifact_hash_records,
+            expected=actual_hash_records,
+        )
+    )
 
     recorded_seed_scopes = {record.seed_scope for record in inspection.seed_records}
     if any(
@@ -600,6 +615,7 @@ def selected_candidate_ref(
 def required_manifest_refs_from_run_result(
     run_result_body: Mapping[str, Any],
 ) -> tuple[TypedRef, ...]:
+    _require_production_probabilistic_evidence(run_result_body)
     probabilistic_support_refs_enabled = (
         str(run_result_body.get("forecast_object_type", "point")) != "point"
         or isinstance(run_result_body.get("primary_score_result_ref"), Mapping)
@@ -611,6 +627,19 @@ def required_manifest_refs_from_run_result(
             _typed_ref(ref_payload)
             for ref_payload in run_result_body.get("prediction_artifact_refs", ())
             if isinstance(ref_payload, Mapping)
+        )
+        supporting_refs = (
+            *supporting_refs,
+            *(
+                _typed_ref(ref_payload)
+                for ref_payload in run_result_body.get("residual_history_refs", ())
+                if isinstance(ref_payload, Mapping)
+            ),
+            *(
+                _typed_ref(ref_payload)
+                for ref_payload in run_result_body.get("stochastic_model_refs", ())
+                if isinstance(ref_payload, Mapping)
+            ),
         )
     if isinstance(run_result_body.get("primary_validation_scope_ref"), Mapping):
         supporting_refs = (
@@ -651,13 +680,78 @@ def required_manifest_refs_from_run_result(
     return (_typed_ref(run_result_body["primary_abstention_ref"]), *supporting_refs)
 
 
+def _require_production_probabilistic_evidence(
+    run_result_body: Mapping[str, Any],
+) -> None:
+    if str(run_result_body.get("forecast_object_type", "point")) == "point":
+        return
+    if str(run_result_body.get("stochastic_support_status", "")) != "production":
+        return
+    reason_codes = {
+        str(code)
+        for code in run_result_body.get("stochastic_support_reason_codes", ())
+    }
+    if "heuristic_gaussian_support_not_production" in reason_codes:
+        raise ContractValidationError(
+            code="heuristic_gaussian_support_not_production",
+            message=(
+                "heuristic Gaussian compatibility artifacts cannot satisfy "
+                "production stochastic evidence"
+            ),
+            field_path="stochastic_support_reason_codes",
+        )
+    residual_history_refs = tuple(
+        ref
+        for ref in run_result_body.get("residual_history_refs", ())
+        if isinstance(ref, Mapping)
+    )
+    stochastic_model_refs = tuple(
+        ref
+        for ref in run_result_body.get("stochastic_model_refs", ())
+        if isinstance(ref, Mapping)
+    )
+    if not residual_history_refs:
+        raise ContractValidationError(
+            code="missing_residual_history_evidence",
+            message=(
+                "production probabilistic replay requires residual-history evidence"
+            ),
+            field_path="residual_history_refs",
+        )
+    if not stochastic_model_refs:
+        raise ContractValidationError(
+            code="missing_stochastic_model_evidence",
+            message=(
+                "production probabilistic replay requires stochastic-model evidence"
+            ),
+            field_path="stochastic_model_refs",
+        )
+
+
 def actual_artifact_hashes(
     *,
     bundle: RegisteredManifest,
     run_result: RegisteredManifest,
     registry: ManifestRegistry,
 ) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for record in _actual_artifact_hash_records(
+        bundle=bundle,
+        run_result=run_result,
+        registry=registry,
+    ):
+        hashes.setdefault(record.artifact_role, record.sha256)
+    return hashes
+
+
+def _actual_artifact_hash_records(
+    *,
+    bundle: RegisteredManifest,
+    run_result: RegisteredManifest,
+    registry: ManifestRegistry,
+) -> tuple[ArtifactHashRecord, ...]:
     run_result_body = run_result.manifest.body
+    _require_production_probabilistic_evidence(run_result_body)
     bundle_model = ReproducibilityBundleManifest.from_manifest(bundle.manifest)
     snapshot = registry.resolve(bundle_model.dataset_snapshot_ref)
     feature_view = registry.resolve(bundle_model.feature_view_ref)
@@ -700,34 +794,134 @@ def actual_artifact_hashes(
         or isinstance(run_result_body.get("primary_score_result_ref"), Mapping)
         or isinstance(run_result_body.get("primary_calibration_result_ref"), Mapping)
     )
-    hashes = {
-        "dataset_snapshot": snapshot.manifest.content_hash,
-        "feature_view": feature_view.manifest.content_hash,
-        "search_plan": search_plan.manifest.content_hash,
-        "evaluation_plan": evaluation_plan.manifest.content_hash,
-        "run_result": run_result.manifest.content_hash,
-        "candidate_or_abstention": candidate_or_abstention.manifest.content_hash,
-        "scorecard": scorecard.manifest.content_hash,
-        "prediction_artifact": prediction_artifact.manifest.content_hash,
-        "robustness_report": robustness_report.manifest.content_hash,
-    }
+    records = [
+        ArtifactHashRecord(
+            artifact_role="dataset_snapshot",
+            sha256=snapshot.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="feature_view",
+            sha256=feature_view.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="search_plan",
+            sha256=search_plan.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="evaluation_plan",
+            sha256=evaluation_plan.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="run_result",
+            sha256=run_result.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="candidate_or_abstention",
+            sha256=candidate_or_abstention.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="scorecard",
+            sha256=scorecard.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="prediction_artifact",
+            sha256=prediction_artifact.manifest.content_hash,
+        ),
+        ArtifactHashRecord(
+            artifact_role="robustness_report",
+            sha256=robustness_report.manifest.content_hash,
+        ),
+    ]
     if primary_validation_scope is not None:
-        hashes["validation_scope"] = primary_validation_scope.manifest.content_hash
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="validation_scope",
+                sha256=primary_validation_scope.manifest.content_hash,
+            )
+        )
     if (
         probabilistic_support_hashes_enabled
         and primary_score_result.manifest.schema_name
         != "point_score_result_manifest@1.0.0"
     ):
-        hashes["score_result"] = primary_score_result.manifest.content_hash
-    if probabilistic_support_hashes_enabled and primary_calibration_result is not None:
-        hashes["calibration_result"] = primary_calibration_result.manifest.content_hash
-    if primary_external_evidence is not None:
-        hashes["external_evidence"] = primary_external_evidence.manifest.content_hash
-    if primary_mechanistic_evidence is not None:
-        hashes["mechanistic_evidence"] = (
-            primary_mechanistic_evidence.manifest.content_hash
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="score_result",
+                sha256=primary_score_result.manifest.content_hash,
+            )
         )
-    return hashes
+    if probabilistic_support_hashes_enabled and primary_calibration_result is not None:
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="calibration_result",
+                sha256=primary_calibration_result.manifest.content_hash,
+            )
+        )
+    if primary_external_evidence is not None:
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="external_evidence",
+                sha256=primary_external_evidence.manifest.content_hash,
+            )
+        )
+    if primary_mechanistic_evidence is not None:
+        records.append(
+            ArtifactHashRecord(
+                artifact_role="mechanistic_evidence",
+                sha256=primary_mechanistic_evidence.manifest.content_hash,
+            )
+        )
+    if probabilistic_support_hashes_enabled:
+        residual_history_refs = tuple(
+            _typed_ref(ref_payload)
+            for ref_payload in run_result_body.get("residual_history_refs", ())
+            if isinstance(ref_payload, Mapping)
+        )
+        stochastic_model_refs = tuple(
+            _typed_ref(ref_payload)
+            for ref_payload in run_result_body.get("stochastic_model_refs", ())
+            if isinstance(ref_payload, Mapping)
+        )
+        if residual_history_refs:
+            for ref in residual_history_refs:
+                records.append(
+                    ArtifactHashRecord(
+                        artifact_role="residual_history",
+                        sha256=registry.resolve(ref).manifest.content_hash,
+                    )
+                )
+        if stochastic_model_refs:
+            for ref in stochastic_model_refs:
+                records.append(
+                    ArtifactHashRecord(
+                        artifact_role="stochastic_model",
+                        sha256=registry.resolve(ref).manifest.content_hash,
+                    )
+                )
+    return tuple(records)
+
+
+def _hash_record_failure_codes(
+    *,
+    recorded: Sequence[ArtifactHashRecord],
+    expected: Sequence[ArtifactHashRecord],
+) -> tuple[str, ...]:
+    recorded_role_counts = Counter(record.artifact_role for record in recorded)
+    expected_role_counts = Counter(record.artifact_role for record in expected)
+    if any(
+        recorded_role_counts[role] < expected_count
+        for role, expected_count in expected_role_counts.items()
+    ):
+        return ("missing_required_hash",)
+    recorded_records = Counter(
+        (record.artifact_role, record.sha256) for record in recorded
+    )
+    expected_records = Counter(
+        (record.artifact_role, record.sha256) for record in expected
+    )
+    if expected_records - recorded_records:
+        return ("artifact_hash_mismatch",)
+    return ()
 
 
 def _typed_ref(payload: Mapping[str, Any]) -> TypedRef:

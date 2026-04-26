@@ -18,6 +18,7 @@ from euclid.manifests.base import ManifestEnvelope
 from euclid.manifests.runtime_models import PredictionArtifactManifest, PredictionRow
 from euclid.modules.candidate_fitting import CandidateWindowFitResult
 from euclid.modules.features import FeatureView
+from euclid.modules.forecast_paths import forecast_path as build_forecast_path
 from euclid.modules.split_planning import (
     EvaluationPlan,
     EvaluationSegment,
@@ -132,7 +133,7 @@ def emit_point_prediction_artifact(
         )
         forecast_path = prediction_cache.get(prediction_key)
         if forecast_path is None:
-            forecast_path = _forecast_path(
+            forecast_path = build_forecast_path(
                 candidate=closed_candidate,
                 fit_result=fit_result,
                 origin_row=origin_row,
@@ -409,6 +410,31 @@ def _rows_by_entity(
 
 
 def _forecast_path(
+    *,
+    candidate: CandidateIntermediateRepresentation,
+    fit_result: CandidateWindowFitResult,
+    origin_row: Mapping[str, Any],
+    max_horizon: int,
+    entity: str | None = None,
+) -> _ForecastPath:
+    shared_path = build_forecast_path(
+        candidate=candidate,
+        fit_result=fit_result,
+        origin_row=origin_row,
+        max_horizon=max_horizon,
+        entity=entity,
+    )
+    return _ForecastPath(
+        predictions=dict(shared_path.predictions),
+        runtime_evidence=(
+            dict(shared_path.runtime_evidence)
+            if shared_path.runtime_evidence is not None
+            else None
+        ),
+    )
+
+
+def _legacy_forecast_path(
     *,
     candidate: CandidateIntermediateRepresentation,
     fit_result: CandidateWindowFitResult,
@@ -739,6 +765,18 @@ def _analytic_forecast_path(
     origin_row: Mapping[str, Any],
     max_horizon: int,
 ) -> dict[int, float]:
+    if any(key.startswith("horizon_") for key in parameters):
+        return _direct_analytic_forecast_path(
+            parameters=parameters,
+            origin_row=origin_row,
+            max_horizon=max_horizon,
+        )
+    if "rectify_base__intercept" in parameters:
+        return _rectify_analytic_forecast_path(
+            parameters=parameters,
+            origin_row=origin_row,
+            max_horizon=max_horizon,
+        )
     intercept = float(parameters.get("intercept", 0.0))
     if "lag_coefficient" not in parameters:
         return {
@@ -752,6 +790,50 @@ def _analytic_forecast_path(
         predictions[horizon] = _stable_float(forecast)
         previous_value = forecast
     return predictions
+
+
+def _direct_analytic_forecast_path(
+    *,
+    parameters: Mapping[str, float | int],
+    origin_row: Mapping[str, Any],
+    max_horizon: int,
+) -> dict[int, float]:
+    origin_value = float(origin_row["target"])
+    predictions: dict[int, float] = {}
+    for horizon in range(1, max_horizon + 1):
+        intercept_key = f"horizon_{horizon}__intercept"
+        if intercept_key not in parameters:
+            continue
+        intercept = float(parameters[intercept_key])
+        slope = float(parameters.get(f"horizon_{horizon}__lag_coefficient", 0.0))
+        predictions[horizon] = _stable_float(intercept + (slope * origin_value))
+    return predictions
+
+
+def _rectify_analytic_forecast_path(
+    *,
+    parameters: Mapping[str, float | int],
+    origin_row: Mapping[str, Any],
+    max_horizon: int,
+) -> dict[int, float]:
+    base_parameters = {
+        key.removeprefix("rectify_base__"): value
+        for key, value in parameters.items()
+        if key.startswith("rectify_base__")
+    }
+    base_predictions = _analytic_forecast_path(
+        parameters=base_parameters,
+        origin_row=origin_row,
+        max_horizon=max_horizon,
+    )
+    return {
+        horizon: _stable_float(
+            base_predictions[horizon]
+            + float(parameters.get(f"rectify_horizon_{horizon}__intercept", 0.0))
+        )
+        for horizon in range(1, max_horizon + 1)
+        if horizon in base_predictions
+    }
 
 
 def _recursive_forecast_path(
@@ -780,19 +862,35 @@ def _spectral_forecast_path(
     state: Mapping[str, Any],
     max_horizon: int,
 ) -> dict[int, float]:
-    harmonic = int(literals["harmonic"])
+    harmonics = _spectral_harmonics(literals)
     season_length = int(literals["season_length"])
     phase_index = int(state.get("phase_index", 0))
-    cosine = float(parameters.get("cosine_coefficient", 0.0))
-    sine = float(parameters.get("sine_coefficient", 0.0))
+    harmonic_group = len(harmonics) > 1 or "harmonic_group" in literals
     predictions: dict[int, float] = {}
     for horizon in range(1, max_horizon + 1):
-        angle = (2.0 * math.pi * harmonic * phase_index) / season_length
-        predictions[horizon] = _stable_float(
-            (cosine * math.cos(angle)) + (sine * math.sin(angle))
-        )
+        forecast = 0.0
+        for harmonic in harmonics:
+            angle = (2.0 * math.pi * harmonic * phase_index) / season_length
+            if harmonic_group:
+                cosine = float(parameters.get(f"cosine_{harmonic}_coefficient", 0.0))
+                sine = float(parameters.get(f"sine_{harmonic}_coefficient", 0.0))
+            else:
+                cosine = float(parameters.get("cosine_coefficient", 0.0))
+                sine = float(parameters.get("sine_coefficient", 0.0))
+            forecast += (cosine * math.cos(angle)) + (sine * math.sin(angle))
+        predictions[horizon] = _stable_float(forecast)
         phase_index = (phase_index + 1) % season_length
     return predictions
+
+
+def _spectral_harmonics(literals: Mapping[str, Any]) -> tuple[int, ...]:
+    raw_group = literals.get("harmonic_group")
+    if isinstance(raw_group, str) and raw_group.strip():
+        return tuple(int(token) for token in raw_group.split(",") if token.strip())
+    raw_harmonics = literals.get("harmonics")
+    if isinstance(raw_harmonics, str) and raw_harmonics.strip():
+        return tuple(int(token) for token in raw_harmonics.split(",") if token.strip())
+    return (int(literals["harmonic"]),)
 
 
 def _algorithmic_forecast_path(

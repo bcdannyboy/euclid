@@ -175,6 +175,9 @@ def test_score_result_roundtrip_for_all_object_types(
             ),
             comparison_status=str(score_result.body["comparison_status"]),
             failure_reason_code=score_result.body["failure_reason_code"],
+            effective_probabilistic_config=score_result.body[
+                "effective_probabilistic_config"
+            ],
         )
 
     roundtripped = model.to_manifest(catalog)

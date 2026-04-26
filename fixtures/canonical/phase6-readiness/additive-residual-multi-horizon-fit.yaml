@@ -1,0 +1,26 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: additive_residual_multi_horizon_fit
+expected_runtime_disposition: production_supported
+coverage_assertions:
+- fit_strategy_rectify_analytic
+- additive_residual_corrections_present
+- legal_origin_panel_only
+fit_strategy:
+  strategy_id: rectify_analytic
+  horizon_set:
+  - 1
+  - 2
+  - 3
+  horizon_weights:
+    '1': 0.2
+    '2': 0.3
+    '3': 0.5
+composition:
+  composition_operator: additive_residual
+  base_candidate_id: analytic_lag1_affine
+  correction_candidate_id: residual_rectifier_linear
+training_geometry:
+  training_origin_set_id: legal_rectify_origins_demo
+  correction_residual_source: prefix_only_rollout_residuals
+  excludes_future_residuals: true

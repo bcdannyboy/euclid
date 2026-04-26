@@ -116,6 +116,10 @@ The app synchronizes URL state for:
 
 It also has explicit busy, failure, no-winner, and explainer-fallback states.
 
+## Probabilistic evidence display
+
+The probabilistic tab shows production stochastic evidence instead of assuming every distribution is location plus scale. When family-derived intervals or configured quantiles are present, the band display uses those values before falling back to Gaussian location-scale compatibility. The lane details surface stochastic model manifest refs, residual history refs, family, calibration bins, lane status, and downgrade reasons so a passed calibration badge cannot hide thin evidence or a heuristic Gaussian compatibility downgrade.
+
 ## Explainer flow
 
 `src/euclid/workbench/explainer.py` builds page-scoped snapshots and uses the OpenAI Responses API to create structured explanation bundles when `OPENAI_API_KEY` is available. Without that key, it records `status="unavailable"` with `reason_code="missing_openai_api_key"` and leaves the rest of the workbench usable. It retries with a more compact request when the first pass times out or truncates.

@@ -16,10 +16,10 @@ def test_load_demo_run_artifact_graph_returns_notebook_friendly_graph(
 ) -> None:
     graph = euclid.load_demo_run_artifact_graph(output_root=phase01_demo_output_root)
 
-    assert graph.run_id == "prototype_constant_candidate_run_result_v1"
+    assert graph.run_id == "prototype_seasonal_naive_candidate_run_result_v1"
     assert graph.root_ref == euclid.TypedRef(
         "run_result_manifest@1.1.0",
-        "prototype_constant_candidate_run_result_v1",
+        "prototype_seasonal_naive_candidate_run_result_v1",
     )
     assert graph.manifest_count > 5
     assert graph.inspect(graph.root_ref).manifest.body["result_mode"] == (
@@ -39,14 +39,19 @@ def test_resolve_demo_artifact_returns_relationships_for_typed_ref(
 ) -> None:
     record = euclid.resolve_demo_artifact(
         output_root=phase01_demo_output_root,
-        ref="run_result_manifest@1.1.0:prototype_constant_candidate_run_result_v1",
+        ref=(
+            "run_result_manifest@1.1.0:"
+            "prototype_seasonal_naive_candidate_run_result_v1"
+        ),
     )
 
     assert record.ref == euclid.TypedRef(
         "run_result_manifest@1.1.0",
-        "prototype_constant_candidate_run_result_v1",
+        "prototype_seasonal_naive_candidate_run_result_v1",
     )
-    assert record.metadata.run_id == "prototype_constant_candidate_run_result_v1"
+    assert record.metadata.run_id == (
+        "prototype_seasonal_naive_candidate_run_result_v1"
+    )
     assert record.children
     assert any(
         child.schema_name == "publication_record_manifest@1.1.0"
@@ -71,7 +76,7 @@ def test_inspect_demo_point_prediction_returns_artifact_backed_summary(
         output_root=phase01_demo_output_root
     )
 
-    assert inspection.run_id == "prototype_constant_candidate_run_result_v1"
+    assert inspection.run_id == "prototype_seasonal_naive_candidate_run_result_v1"
     assert inspection.prediction_artifact_ref.schema_name == (
         "prediction_artifact_manifest@1.1.0"
     )
@@ -91,7 +96,7 @@ def test_compare_demo_baseline_returns_artifact_backed_delta_summary(
 ) -> None:
     comparison = euclid.compare_demo_baseline(output_root=phase01_demo_output_root)
 
-    assert comparison.run_id == "prototype_constant_candidate_run_result_v1"
+    assert comparison.run_id == "prototype_seasonal_naive_candidate_run_result_v1"
     assert comparison.comparison_universe_ref.schema_name == (
         "comparison_universe_manifest@1.0.0"
     )

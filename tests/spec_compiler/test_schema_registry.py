@@ -125,6 +125,8 @@ def test_reference_types_capture_required_optional_and_discriminated_refs() -> N
         "scorecard_manifest@1.1.0",
         "claim_card_manifest@1.1.0",
         "abstention_manifest@1.1.0",
+        "residual_history_manifest@1.0.0",
+        "stochastic_model_manifest@1.0.0",
     }
 
     prediction_artifact = profiles["prediction_artifact_manifest@1.1.0"]

@@ -37,6 +37,50 @@ global_invariants:
   validator or lifecycle outcome rather than a prose-only note
 - walkthrough markdown may explain scenarios but may not introduce ids, enums, or
   refs missing from the machine-readable fixture bundle
+phase6_readiness_fixtures:
+- fixture_id: residual_history_backed_probabilistic_publication
+  path: fixtures/canonical/phase6-readiness/residual-history-backed-probabilistic-publication.yaml
+  coverage_assertions:
+  - residual_history_refs_present
+  - stochastic_model_refs_present
+  - family_aware_distribution_scoring
+  - publication_and_replay_refs_closed
+- fixture_id: heuristic_gaussian_downgrade
+  path: fixtures/canonical/phase6-readiness/heuristic-gaussian-downgrade.yaml
+  coverage_assertions:
+  - heuristic_gaussian_marked_compatibility_only
+  - production_stochastic_evidence_not_satisfied
+  - downgrade_reason_codes_present
+- fixture_id: student_t_calibrated_distribution
+  path: fixtures/canonical/phase6-readiness/student-t-calibrated-distribution.yaml
+  coverage_assertions:
+  - non_gaussian_family_supported
+  - calibrated_distribution_bins_present
+  - family_aware_score_policy_present
+- fixture_id: non_contiguous_horizon_panel
+  path: fixtures/canonical/phase6-readiness/non-contiguous-horizon-panel.yaml
+  coverage_assertions:
+  - horizon_set_non_contiguous
+  - legal_training_origin_panel_present
+  - rollout_objective_geometry_present
+- fixture_id: additive_residual_multi_horizon_fit
+  path: fixtures/canonical/phase6-readiness/additive-residual-multi-horizon-fit.yaml
+  coverage_assertions:
+  - fit_strategy_rectify_analytic
+  - additive_residual_corrections_present
+  - legal_origin_panel_only
+- fixture_id: mdl_comparability_failure
+  path: fixtures/canonical/phase6-readiness/mdl-comparability-failure.yaml
+  coverage_assertions:
+  - strict_single_class_rejected
+  - codelength_comparison_key_mismatch
+  - row_set_identity_present
+- fixture_id: conformal_recalibration_no_leak_failure
+  path: fixtures/canonical/phase6-readiness/conformal-recalibration-no-leak-failure.yaml
+  coverage_assertions:
+  - prefix_only_evidence_required
+  - future_residual_leak_detected
+  - recalibration_blocked
 scenarios:
 - scenario_id: descriptive-publication
   scenario_class: positive_publication

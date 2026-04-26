@@ -48,7 +48,9 @@ describe("workbench holistic contract regressions worker4 2026-04-18", () => {
     expect(
       document.querySelector('#tab-overview [data-equation-hero="overview"]'),
     ).toBeNull();
-    expect(textContent("#tab-overview")).toMatch(/operator abstained/i);
+    expect(textContent("#tab-overview")).toMatch(
+      /operator (?:lane abstained|abstention)/i,
+    );
     expect(textContent("#tab-overview")).not.toContain("sample exact closure");
     expect(textContent("#tab-overview")).not.toContain("Holistic equation");
     expect(textContent("#tab-overview")).not.toContain("Holistic law");

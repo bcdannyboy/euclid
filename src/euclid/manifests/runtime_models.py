@@ -303,6 +303,7 @@ class DistributionPredictionRow:
     support_kind: str
     realized_observation: float
     entity: str | None = None
+    distribution_parameters: Mapping[str, float] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         body = {
@@ -313,11 +314,29 @@ class DistributionPredictionRow:
             "location": self.location,
             "scale": self.scale,
             "support_kind": self.support_kind,
+            "distribution_parameters": {
+                str(key): float(value)
+                for key, value in self.distribution_parameters.items()
+            },
             "realized_observation": self.realized_observation,
         }
         if self.entity is not None:
             body["entity"] = self.entity
         return body
+
+
+@dataclass(frozen=True)
+class IntervalValue:
+    nominal_coverage: float
+    lower_bound: float
+    upper_bound: float
+
+    def as_dict(self) -> dict[str, float]:
+        return {
+            "nominal_coverage": float(self.nominal_coverage),
+            "lower_bound": float(self.lower_bound),
+            "upper_bound": float(self.upper_bound),
+        }
 
 
 @dataclass(frozen=True)
@@ -330,6 +349,9 @@ class IntervalPredictionRow:
     upper_bound: float
     realized_observation: float
     entity: str | None = None
+    distribution_family: str | None = None
+    distribution_parameters: Mapping[str, float] = field(default_factory=dict)
+    intervals: tuple[IntervalValue | Mapping[str, float], ...] = ()
 
     def as_dict(self) -> dict[str, Any]:
         body = {
@@ -341,6 +363,17 @@ class IntervalPredictionRow:
             "upper_bound": self.upper_bound,
             "realized_observation": self.realized_observation,
         }
+        if self.distribution_family is not None:
+            body["distribution_family"] = self.distribution_family
+            body["distribution_parameters"] = {
+                str(key): float(value)
+                for key, value in self.distribution_parameters.items()
+            }
+        if self.intervals:
+            body["intervals"] = [
+                item.as_dict() if isinstance(item, IntervalValue) else dict(item)
+                for item in self.intervals
+            ]
         if self.entity is not None:
             body["entity"] = self.entity
         return body
@@ -363,6 +396,8 @@ class QuantilePredictionRow:
     quantiles: tuple[QuantileValue, ...]
     realized_observation: float
     entity: str | None = None
+    distribution_family: str | None = None
+    distribution_parameters: Mapping[str, float] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         body = {
@@ -372,6 +407,12 @@ class QuantilePredictionRow:
             "quantiles": [item.as_dict() for item in self.quantiles],
             "realized_observation": self.realized_observation,
         }
+        if self.distribution_family is not None:
+            body["distribution_family"] = self.distribution_family
+            body["distribution_parameters"] = {
+                str(key): float(value)
+                for key, value in self.distribution_parameters.items()
+            }
         if self.entity is not None:
             body["entity"] = self.entity
         return body
@@ -387,6 +428,8 @@ class EventProbabilityPredictionRow:
     realized_observation: float
     realized_event: bool
     entity: str | None = None
+    distribution_family: str | None = None
+    distribution_parameters: Mapping[str, float] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         body = {
@@ -398,6 +441,12 @@ class EventProbabilityPredictionRow:
             "realized_observation": self.realized_observation,
             "realized_event": self.realized_event,
         }
+        if self.distribution_family is not None:
+            body["distribution_family"] = self.distribution_family
+            body["distribution_parameters"] = {
+                str(key): float(value)
+                for key, value in self.distribution_parameters.items()
+            }
         if self.entity is not None:
             body["entity"] = self.entity
         return body
@@ -745,6 +794,10 @@ class SearchPlanManifest(RuntimeManifestModel):
         "robustness_results",
     )
     search_time_predictive_policy: str = "fold_local_only"
+    fit_strategy: Mapping[str, Any] | None = None
+    quantization_policy: Mapping[str, Any] | None = None
+    reference_policy: Mapping[str, Any] | None = None
+    data_code_family: str | None = None
     owner_id: str = "module.search-planning-v1"
     scope_id: str = _DEFAULT_SCOPE_ID
     seasonal_period: int | None = None
@@ -809,6 +862,14 @@ class SearchPlanManifest(RuntimeManifestModel):
             body["seasonal_period"] = self.seasonal_period
         if self.minimum_description_gain_bits is not None:
             body["minimum_description_gain_bits"] = self.minimum_description_gain_bits
+        if self.fit_strategy is not None:
+            body["fit_strategy"] = dict(self.fit_strategy)
+        if self.quantization_policy is not None:
+            body["quantization_policy"] = dict(self.quantization_policy)
+        if self.reference_policy is not None:
+            body["reference_policy"] = dict(self.reference_policy)
+        if self.data_code_family is not None:
+            body["data_code_family"] = self.data_code_family
         return body
 
 
@@ -1049,6 +1110,255 @@ class CandidateStateManifest(RuntimeManifestModel):
 
 
 @dataclass(frozen=True, kw_only=True)
+class ResidualHistoryManifest(RuntimeManifestModel):
+    schema_name: ClassVar[str] = "residual_history_manifest@1.0.0"
+    module_id: ClassVar[str] = "candidate_fitting"
+
+    residual_history_id: str
+    candidate_id: str
+    fit_window_id: str
+    residual_rows: tuple[Mapping[str, Any], ...]
+    residual_history_digest: str
+    residual_basis: str
+    construction_policy: str
+    replay_identity: str
+    source_row_set_digest: str | None = None
+    owner_id: str = "module.candidate-fitting-v1"
+    scope_id: str = _DEFAULT_SCOPE_ID
+
+    def body(self) -> dict[str, Any]:
+        rows = tuple(dict(row) for row in self.residual_rows)
+        for index, row in enumerate(rows):
+            if "split_role" not in row:
+                raise ContractValidationError(
+                    code="missing_split_role_metadata",
+                    message="residual history rows require split_role metadata",
+                    field_path=f"residual_rows[{index}].split_role",
+                )
+            for field_name in ("origin_available_at", "target_available_at"):
+                if field_name not in row:
+                    raise ContractValidationError(
+                        code="missing_origin_or_target_availability",
+                        message=(
+                            "residual history rows require origin and target "
+                            "availability metadata"
+                        ),
+                        field_path=f"residual_rows[{index}].{field_name}",
+                    )
+        payload: dict[str, Any] = {
+            "residual_history_id": self.residual_history_id,
+            "owner_id": self.owner_id,
+            "scope_id": self.scope_id,
+            "candidate_id": self.candidate_id,
+            "fit_window_id": self.fit_window_id,
+            "residual_rows": rows,
+            "residual_row_count": len(rows),
+            "residual_history_digest": self.residual_history_digest,
+            "residual_basis": self.residual_basis,
+            "construction_policy": self.construction_policy,
+            "replay_identity": self.replay_identity,
+        }
+        if self.source_row_set_digest is not None:
+            payload["source_row_set_digest"] = self.source_row_set_digest
+        return payload
+
+    @classmethod
+    def from_manifest(cls, manifest: ManifestEnvelope) -> "ResidualHistoryManifest":
+        cls._validate_manifest(manifest)
+        return cls(
+            object_id=manifest.object_id,
+            residual_history_id=str(manifest.body["residual_history_id"]),
+            candidate_id=str(manifest.body["candidate_id"]),
+            fit_window_id=str(manifest.body["fit_window_id"]),
+            residual_rows=tuple(
+                dict(item) for item in manifest.body.get("residual_rows", [])
+            ),
+            residual_history_digest=str(manifest.body["residual_history_digest"]),
+            residual_basis=str(manifest.body["residual_basis"]),
+            construction_policy=str(manifest.body["construction_policy"]),
+            replay_identity=str(manifest.body["replay_identity"]),
+            source_row_set_digest=(
+                str(manifest.body["source_row_set_digest"])
+                if manifest.body.get("source_row_set_digest") is not None
+                else None
+            ),
+            owner_id=str(
+                manifest.body.get("owner_id", "module.candidate-fitting-v1")
+            ),
+            scope_id=str(manifest.body.get("scope_id", _DEFAULT_SCOPE_ID)),
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
+class StochasticModelManifest(RuntimeManifestModel):
+    schema_name: ClassVar[str] = "stochastic_model_manifest@1.0.0"
+    module_id: ClassVar[str] = "probabilistic_evaluation"
+
+    stochastic_model_id: str
+    candidate_id: str
+    observation_family: str
+    residual_family: str
+    support_kind: str
+    horizon_scale_law: str
+    fitted_parameters: Mapping[str, float | int]
+    residual_count: int
+    min_count_policy: Mapping[str, Any]
+    evidence_status: str
+    heuristic_gaussian_support: bool
+    replay_identity: str
+    residual_history_ref: TypedRef | None = None
+    residual_location: float | None = None
+    residual_scale: float | None = None
+    owner_id: str = "module.probabilistic-evaluation-v1"
+    scope_id: str = _DEFAULT_SCOPE_ID
+
+    @property
+    def body_refs(self) -> tuple[TypedRef, ...]:
+        if self.residual_history_ref is None:
+            return ()
+        return (self.residual_history_ref,)
+
+    def body(self) -> dict[str, Any]:
+        if self.evidence_status not in {"production", "compatibility"}:
+            raise ContractValidationError(
+                code="invalid_stochastic_evidence_status",
+                message="stochastic evidence status must be production or compatibility",
+                field_path="evidence_status",
+                details={"evidence_status": self.evidence_status},
+            )
+        if self.evidence_status == "production" and self.residual_history_ref is None:
+            raise ContractValidationError(
+                code="missing_residual_history_evidence",
+                message=(
+                    "production stochastic evidence requires a residual history ref"
+                ),
+                field_path="residual_history_ref",
+            )
+        if self.evidence_status == "production" and self.heuristic_gaussian_support:
+            raise ContractValidationError(
+                code="heuristic_gaussian_support_not_production",
+                message=(
+                    "heuristic Gaussian support is compatibility evidence only"
+                ),
+                field_path="heuristic_gaussian_support",
+            )
+        minimum_count = int(self.min_count_policy.get("minimum_residual_count", 0))
+        if self.evidence_status == "production" and self.residual_count < minimum_count:
+            raise ContractValidationError(
+                code="insufficient_stochastic_training_support",
+                message=(
+                    "production stochastic evidence requires enough residual rows"
+                ),
+                field_path="residual_count",
+                details={
+                    "residual_count": self.residual_count,
+                    "minimum_residual_count": minimum_count,
+                },
+            )
+        fitted_parameters = {
+            str(key): float(value) for key, value in self.fitted_parameters.items()
+        }
+        residual_location = (
+            float(self.residual_location)
+            if self.residual_location is not None
+            else float(fitted_parameters.get("location", 0.0))
+        )
+        residual_scale = (
+            float(self.residual_scale)
+            if self.residual_scale is not None
+            else float(fitted_parameters.get("scale", 0.0))
+        )
+        payload: dict[str, Any] = {
+            "stochastic_model_id": self.stochastic_model_id,
+            "owner_id": self.owner_id,
+            "scope_id": self.scope_id,
+            "candidate_id": self.candidate_id,
+            "observation_family": self.observation_family,
+            "residual_family": self.residual_family,
+            "support_kind": self.support_kind,
+            "residual_location": residual_location,
+            "residual_scale": residual_scale,
+            "residual_parameter_summary": dict(fitted_parameters),
+            "fitted_parameters": dict(fitted_parameters),
+            "residual_count": int(self.residual_count),
+            "min_count_policy": dict(self.min_count_policy),
+            "horizon_scale_law": self.horizon_scale_law,
+            "evidence_status": self.evidence_status,
+            "production_evidence": self.evidence_status == "production",
+            "heuristic_gaussian_support": self.heuristic_gaussian_support,
+            "replay_identity": self.replay_identity,
+        }
+        if self.residual_history_ref is not None:
+            payload["residual_history_ref"] = self.residual_history_ref.as_dict()
+        return payload
+
+    @classmethod
+    def from_manifest(cls, manifest: ManifestEnvelope) -> "StochasticModelManifest":
+        cls._validate_manifest(manifest)
+        return cls(
+            object_id=manifest.object_id,
+            stochastic_model_id=str(manifest.body["stochastic_model_id"]),
+            candidate_id=str(manifest.body["candidate_id"]),
+            residual_history_ref=(
+                _typed_ref_from_payload(
+                    manifest.body["residual_history_ref"],
+                    field_path="body.residual_history_ref",
+                )
+                if manifest.body.get("residual_history_ref") is not None
+                else None
+            ),
+            observation_family=str(manifest.body["observation_family"]),
+            residual_family=str(
+                manifest.body.get(
+                    "residual_family",
+                    manifest.body["observation_family"],
+                )
+            ),
+            support_kind=str(manifest.body.get("support_kind", "all_real")),
+            horizon_scale_law=str(manifest.body["horizon_scale_law"]),
+            fitted_parameters=dict(
+                manifest.body.get(
+                    "fitted_parameters",
+                    manifest.body.get("residual_parameter_summary", {}),
+                )
+            ),
+            residual_count=int(manifest.body.get("residual_count", 0)),
+            min_count_policy=dict(manifest.body.get("min_count_policy", {})),
+            evidence_status=str(
+                manifest.body.get(
+                    "evidence_status",
+                    (
+                        "production"
+                        if manifest.body.get("production_evidence") is True
+                        else "compatibility"
+                    ),
+                )
+            ),
+            heuristic_gaussian_support=bool(
+                manifest.body.get("heuristic_gaussian_support", False)
+            ),
+            replay_identity=str(manifest.body["replay_identity"]),
+            residual_location=(
+                float(manifest.body["residual_location"])
+                if manifest.body.get("residual_location") is not None
+                else None
+            ),
+            residual_scale=(
+                float(manifest.body["residual_scale"])
+                if manifest.body.get("residual_scale") is not None
+                else None
+            ),
+            owner_id=str(
+                manifest.body.get(
+                    "owner_id",
+                    "module.probabilistic-evaluation-v1",
+                )
+            ),
+            scope_id=str(manifest.body.get("scope_id", _DEFAULT_SCOPE_ID)),
+        )
+
+
+@dataclass(frozen=True, kw_only=True)
 class PredictionArtifactManifest(RuntimeManifestModel):
     schema_name: ClassVar[str] = "prediction_artifact_manifest@1.1.0"
     module_id: ClassVar[str] = "evaluation"
@@ -1078,10 +1388,19 @@ class PredictionArtifactManifest(RuntimeManifestModel):
     timeguard_checks: tuple[Mapping[str, Any], ...] = ()
     composition_graph: Mapping[str, Any] | None = None
     composition_runtime_evidence: Mapping[str, Any] | None = None
+    residual_history_refs: tuple[TypedRef, ...] = ()
+    stochastic_model_refs: tuple[TypedRef, ...] = ()
+    stochastic_support_status: str | None = None
+    stochastic_support_reason_codes: tuple[str, ...] = ()
+    effective_probabilistic_config: Mapping[str, Any] | None = None
 
     @property
     def body_refs(self) -> tuple[TypedRef, ...]:
-        return (self.score_policy_ref,)
+        return (
+            self.score_policy_ref,
+            *self.residual_history_refs,
+            *self.stochastic_model_refs,
+        )
 
     def body(self) -> dict[str, Any]:
         body: dict[str, Any] = {
@@ -1125,6 +1444,21 @@ class PredictionArtifactManifest(RuntimeManifestModel):
             body["composition_runtime_evidence"] = dict(
                 self.composition_runtime_evidence
             )
+        if self.effective_probabilistic_config is not None:
+            body["effective_probabilistic_config"] = dict(
+                self.effective_probabilistic_config
+            )
+        if self.stochastic_support_status is not None:
+            body["stochastic_support_status"] = self.stochastic_support_status
+            body["stochastic_support_reason_codes"] = list(
+                self.stochastic_support_reason_codes
+            )
+            body["residual_history_refs"] = [
+                ref.as_dict() for ref in self.residual_history_refs
+            ]
+            body["stochastic_model_refs"] = [
+                ref.as_dict() for ref in self.stochastic_model_refs
+            ]
         if self.missing_scored_origins:
             body["missing_scored_origins"] = [
                 dict(item) for item in self.missing_scored_origins
@@ -1188,13 +1522,14 @@ class ProbabilisticScoreResultManifest(RuntimeManifestModel):
     forecast_object_type: str
     owner_prompt_id: str = "prompt.scoring-calibration-v1"
     scope_id: str = _DEFAULT_SCOPE_ID
+    effective_probabilistic_config: Mapping[str, Any] | None = None
 
     @property
     def body_refs(self) -> tuple[TypedRef, ...]:
         return (self.score_policy_ref, self.prediction_artifact_ref)
 
     def body(self) -> dict[str, Any]:
-        return {
+        body = {
             "score_result_id": self.score_result_id,
             "owner_prompt_id": self.owner_prompt_id,
             "scope_id": self.scope_id,
@@ -1206,6 +1541,11 @@ class ProbabilisticScoreResultManifest(RuntimeManifestModel):
             "comparison_status": self.comparison_status,
             "failure_reason_code": self.failure_reason_code,
         }
+        if self.effective_probabilistic_config is not None:
+            body["effective_probabilistic_config"] = dict(
+                self.effective_probabilistic_config
+            )
+        return body
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1221,6 +1561,11 @@ class CalibrationContractManifest(RuntimeManifestModel):
     pass_rule: str
     gate_effect: str
     thresholds: Mapping[str, float] = field(default_factory=dict)
+    reliability_bins: Mapping[str, Any] = field(default_factory=dict)
+    pit_config: Mapping[str, Any] = field(default_factory=dict)
+    interval_levels: tuple[float, ...] = ()
+    quantile_levels: tuple[float, ...] = ()
+    calibration_lane: str = "evaluation_only"
     owner_prompt_id: str = "prompt.scoring-calibration-v1"
     scope_id: str = _DEFAULT_SCOPE_ID
 
@@ -1240,6 +1585,15 @@ class CalibrationContractManifest(RuntimeManifestModel):
             body["thresholds"] = {
                 key: float(value) for key, value in self.thresholds.items()
             }
+        if self.reliability_bins:
+            body["reliability_bins"] = dict(self.reliability_bins)
+        if self.pit_config:
+            body["pit"] = dict(self.pit_config)
+        if self.interval_levels:
+            body["interval_levels"] = [float(level) for level in self.interval_levels]
+        if self.quantile_levels:
+            body["quantile_levels"] = [float(level) for level in self.quantile_levels]
+        body["calibration_lane"] = self.calibration_lane
         return body
 
 
@@ -1257,6 +1611,9 @@ class CalibrationResultManifest(RuntimeManifestModel):
     diagnostics: tuple[Mapping[str, Any], ...]
     failure_reason_code: str | None = None
     pass_value: bool | None = None
+    effective_calibration_config: Mapping[str, Any] | None = None
+    calibration_identity: Mapping[str, Any] | None = None
+    lane_status: str | None = None
     owner_prompt_id: str = "prompt.scoring-calibration-v1"
     scope_id: str = _DEFAULT_SCOPE_ID
 
@@ -1265,7 +1622,7 @@ class CalibrationResultManifest(RuntimeManifestModel):
         return (self.calibration_contract_ref, self.prediction_artifact_ref)
 
     def body(self) -> dict[str, Any]:
-        return {
+        body = {
             "calibration_result_id": self.calibration_result_id,
             "owner_prompt_id": self.owner_prompt_id,
             "scope_id": self.scope_id,
@@ -1278,6 +1635,15 @@ class CalibrationResultManifest(RuntimeManifestModel):
             "gate_effect": self.gate_effect,
             "diagnostics": [dict(item) for item in self.diagnostics],
         }
+        if self.effective_calibration_config is not None:
+            body["effective_calibration_config"] = dict(
+                self.effective_calibration_config
+            )
+        if self.calibration_identity is not None:
+            body["calibration_identity"] = dict(self.calibration_identity)
+        if self.lane_status is not None:
+            body["lane_status"] = self.lane_status
+        return body
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -2440,6 +2806,10 @@ class RunResultManifest(RuntimeManifestModel):
     forecast_object_type: str = "point"
     primary_validation_scope_ref: TypedRef | None = None
     prediction_artifact_refs: tuple[TypedRef, ...] = ()
+    residual_history_refs: tuple[TypedRef, ...] = ()
+    stochastic_model_refs: tuple[TypedRef, ...] = ()
+    stochastic_support_status: str | None = None
+    stochastic_support_reason_codes: tuple[str, ...] = ()
     primary_score_result_ref: TypedRef | None = None
     primary_calibration_result_ref: TypedRef | None = None
     primary_external_evidence_ref: TypedRef | None = None
@@ -2514,6 +2884,8 @@ class RunResultManifest(RuntimeManifestModel):
                 else (self.primary_validation_scope_ref,)
             ),
             *self.prediction_artifact_refs,
+            *self.residual_history_refs,
+            *self.stochastic_model_refs,
             *(
                 ()
                 if self.primary_score_result_ref is None
@@ -2561,12 +2933,23 @@ class RunResultManifest(RuntimeManifestModel):
             "prediction_artifact_refs": [
                 ref.as_dict() for ref in self.prediction_artifact_refs
             ],
+            "residual_history_refs": [
+                ref.as_dict() for ref in self.residual_history_refs
+            ],
+            "stochastic_model_refs": [
+                ref.as_dict() for ref in self.stochastic_model_refs
+            ],
             "robustness_report_refs": [
                 ref.as_dict() for ref in self.robustness_report_refs
             ],
             "reproducibility_bundle_ref": self.reproducibility_bundle_ref.as_dict(),
         }
         body["forecast_object_type"] = self.forecast_object_type
+        if self.stochastic_support_status is not None:
+            body["stochastic_support_status"] = self.stochastic_support_status
+            body["stochastic_support_reason_codes"] = list(
+                self.stochastic_support_reason_codes
+            )
         if self.primary_validation_scope_ref is not None:
             body["primary_validation_scope_ref"] = (
                 self.primary_validation_scope_ref.as_dict()
@@ -2678,6 +3061,23 @@ class RunResultManifest(RuntimeManifestModel):
             prediction_artifact_refs=_typed_ref_list_from_payload(
                 manifest.body.get("prediction_artifact_refs", []),
                 field_path="body.prediction_artifact_refs",
+            ),
+            residual_history_refs=_typed_ref_list_from_payload(
+                manifest.body.get("residual_history_refs", []),
+                field_path="body.residual_history_refs",
+            ),
+            stochastic_model_refs=_typed_ref_list_from_payload(
+                manifest.body.get("stochastic_model_refs", []),
+                field_path="body.stochastic_model_refs",
+            ),
+            stochastic_support_status=(
+                str(manifest.body["stochastic_support_status"])
+                if manifest.body.get("stochastic_support_status") is not None
+                else None
+            ),
+            stochastic_support_reason_codes=_string_list_from_payload(
+                manifest.body.get("stochastic_support_reason_codes", []),
+                field_path="body.stochastic_support_reason_codes",
             ),
             primary_score_result_ref=(
                 _typed_ref_from_payload(
@@ -2969,6 +3369,7 @@ __all__ = [
     "FrontierManifest",
     "InvarianceTestManifest",
     "IntervalPredictionRow",
+    "IntervalValue",
     "MechanisticEvidenceDossierManifest",
     "NullResultManifest",
     "PerHorizonPrimaryScore",

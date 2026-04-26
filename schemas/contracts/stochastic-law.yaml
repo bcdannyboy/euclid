@@ -3,18 +3,26 @@ kind: contract_schema
 owner_ref: probabilistic_evaluation_owner
 owning_module: probabilistic_evaluation
 canonical_source_path: schemas/contracts/stochastic-law.yaml
-phase_ref: P10
+phase_ref: forecasting_core_phase_0
 description: >
   Explicit stochastic observation and residual-process evidence used for
   probabilistic forecast objects. Heuristic Gaussian support cannot satisfy this
   contract.
 required_fields:
+  - stochastic_model_id
   - candidate_id
+  - residual_history_ref
   - observation_family
+  - residual_family
+  - support_kind
   - residual_location
   - residual_scale
   - residual_parameter_summary
+  - fitted_parameters
+  - residual_count
+  - min_count_policy
   - horizon_scale_law
+  - evidence_status
   - production_evidence
   - heuristic_gaussian_support
   - replay_identity
@@ -29,11 +37,31 @@ admitted_observation_families:
   - lognormal
 forbidden_production_evidence:
   - heuristic_gaussian_scale_inflation
+production_evidence:
+  requires_residual_history_ref: true
+  requires_residual_count_at_least: min_count_policy.minimum_residual_count
+  forbidden_when:
+    heuristic_gaussian_support: true
+compatibility_evidence:
+  heuristic_gaussian_support:
+    allowed_evidence_status: compatibility
+    production_evidence: false
+    reason_code: heuristic_gaussian_support_not_production
+support_kinds:
+  - all_real
+  - nonnegative
+  - bounded_interval
+horizon_scale_laws:
+  - constant
+  - sqrt_horizon
+  - linear_horizon
 claim_boundary:
   stochastic_model_alone_can_publish_claim: false
   requires_scoring_calibration_and_promotion_gate: true
 replay:
   required_fields:
     - replay_identity
+    - residual_history_ref
     - residual_parameter_summary
+    - fitted_parameters
     - horizon_scale_law

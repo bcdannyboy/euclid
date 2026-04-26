@@ -93,6 +93,15 @@ from euclid.modules.replay import (
     selected_candidate_ref,
     verify_replayed_outcome,
 )
+from euclid.modules.residual_history import (
+    ForecastResidualRecord,
+    ResidualHistorySummary,
+    ResidualHistoryValidationIssue,
+    ResidualHistoryValidationResult,
+    residual_history_digest,
+    summarize_residual_history,
+    validate_residual_history,
+)
 from euclid.modules.robustness import (
     AggregateMetricEvaluation,
     NullComparisonEvaluation,
@@ -126,7 +135,14 @@ from euclid.modules.snapshotting import (
     SnapshotRow,
     freeze_dataset_snapshot,
 )
-from euclid.modules.split_planning import EvaluationPlan, build_evaluation_plan
+from euclid.modules.split_planning import (
+    EvaluationPlan,
+    TrainingOriginPanel,
+    TrainingOriginPanelDiagnostic,
+    TrainingOriginPanelRow,
+    build_evaluation_plan,
+    build_legal_training_origin_panel,
+)
 from euclid.modules.timeguard import TimeSafetyAudit, audit_snapshot_time_safety
 
 __all__ = [
@@ -150,6 +166,7 @@ __all__ = [
     "FeatureSpec",
     "FeatureView",
     "ForecastComparisonPolicy",
+    "ForecastResidualRecord",
     "FrozenDatasetSnapshot",
     "MechanisticEvidenceEvaluation",
     "ObservationRecord",
@@ -157,6 +174,9 @@ __all__ = [
     "PointComparatorEvaluationResult",
     "PersistentStateTransition",
     "ReplayInspection",
+    "ResidualHistorySummary",
+    "ResidualHistoryValidationIssue",
+    "ResidualHistoryValidationResult",
     "ReplayVerificationResult",
     "ReplayedOutcome",
     "RegisteredExternalEvidenceBundle",
@@ -169,12 +189,16 @@ __all__ = [
     "ScorecardStatusDecision",
     "SnapshotRow",
     "TimeSafetyAudit",
+    "TrainingOriginPanel",
+    "TrainingOriginPanelDiagnostic",
+    "TrainingOriginPanelRow",
     "audit_snapshot_time_safety",
     "build_candidate_fit_artifacts",
     "build_baseline_registry",
     "build_comparison_key",
     "build_comparison_universe",
     "build_evaluation_plan",
+    "build_legal_training_origin_panel",
     "build_evaluation_event_log",
     "build_evaluation_governance",
     "build_forecast_comparison_policy",
@@ -199,6 +223,7 @@ __all__ = [
     "resolve_prediction_artifact",
     "resolve_scorecard",
     "resolve_scorecard_status",
+    "residual_history_digest",
     "required_manifest_refs_for_publication",
     "required_manifest_refs_from_run_result",
     "inspect_reproducibility_bundle",
@@ -228,4 +253,6 @@ __all__ = [
     "score_point_prediction_artifact",
     "SharedLocalFitSummary",
     "fit_shared_plus_local_decomposition",
+    "summarize_residual_history",
+    "validate_residual_history",
 ]

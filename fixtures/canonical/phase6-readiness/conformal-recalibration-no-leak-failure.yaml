@@ -1,0 +1,22 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: conformal_recalibration_no_leak_failure
+expected_runtime_disposition: validator_rejected
+coverage_assertions:
+- prefix_only_evidence_required
+- future_residual_leak_detected
+- recalibration_blocked
+calibration_method: conformal_recalibration
+evidence_boundary:
+  prefix_only_required: true
+  inspected_residual_sets:
+  - residual_set_id: prefix_residuals_origin_2026_04_15
+    max_available_at: '2026-04-15T21:00:00Z'
+    legal_for_origin: '2026-04-16T00:00:00Z'
+  - residual_set_id: future_residuals_origin_2026_04_17
+    max_available_at: '2026-04-17T21:00:00Z'
+    legal_for_origin: null
+    leak_status: future_residual_leak
+validator_errors:
+- error_code: conformal_recalibration_uses_future_residuals
+  field_path: evidence_boundary.inspected_residual_sets[1]

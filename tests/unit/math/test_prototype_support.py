@@ -48,6 +48,29 @@ def test_prototype_support_bundle_builds_retained_scope_manifests() -> None:
     ] == bundle.reference_description_policy_manifest.ref.as_dict()
 
 
+def test_fixed_step_raw_reference_mdl_is_explicit_legacy_policy() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+
+    bundle = build_prototype_support_bundle(
+        catalog=catalog,
+        observed_values=(10.0, 12.0, 14.0),
+        quantization_step="0.5",
+    )
+
+    assert bundle.codelength_policy_manifest.body["quantization_mode"] == (
+        "fixed_step_mid_tread"
+    )
+    assert bundle.reference_description_policy_manifest.body["reference_kind"] == (
+        "raw_quantized_transformed_sequence"
+    )
+    assert bundle.codelength_policy_manifest.body["compatibility_policy_label"] == (
+        "legacy_fixed_step_raw_reference_mdl"
+    )
+    assert bundle.reference_description_policy_manifest.body[
+        "compatibility_policy_label"
+    ] == "legacy_raw_reference_description"
+
+
 def test_prototype_support_bundle_exposes_manifest_backed_runtime_objects() -> None:
     catalog = load_contract_catalog(PROJECT_ROOT)
 

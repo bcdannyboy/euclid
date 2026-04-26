@@ -70,6 +70,8 @@ Confirmatory, robustness, and other non-search axes are intentionally excluded f
 
 `modules/candidate_fitting.py` (`src/euclid/modules/candidate_fitting.py`) fits shortlisted CIR candidates on declared windows and emits fitted artifacts plus optimizer diagnostics.
 
+Fitting geometry is explicit through `FitStrategySpec`. The default `legacy_one_step` keeps old one-step behavior, while `recursive_rollout`, `direct_analytic`, `joint_analytic`, and `rectify_analytic` use legal training-origin panels and rollout objective rows when configured. Non-contiguous horizon sets are legal when the panel declares the corresponding origin/horizon rows.
+
 `modules/shared_plus_local_decomposition.py` handles panel-specific shared-plus-local fitting and unseen-entity constraints. `src/euclid/modules/shared_plus_local_decomposition.py` handles panel-specific shared-plus-local fitting and unseen-entity constraints.
 
 ### 7. Evaluation and scoring
@@ -82,6 +84,8 @@ Confirmatory, robustness, and other non-search axes are intentionally excluded f
 - `interval`
 - `quantile`
 - `event_probability`
+
+Production non-point artifacts are residual-history-backed and cite stochastic model manifest evidence through `residual_history_refs` and `stochastic_model_refs`. Family-aware scoring and calibration keep Gaussian, Student-t, Laplace, interval, quantile, and event-probability evidence from being treated as interchangeable. A heuristic Gaussian compatibility artifact remains readable, but it downgrades when those production refs are missing.
 
 `modules/scoring.py` (`src/euclid/modules/scoring.py`) then scores those artifacts under explicitly compatible comparison geometry. Cross-object comparisons are invalid by design.
 

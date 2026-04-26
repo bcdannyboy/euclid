@@ -45,23 +45,23 @@ describe("workbench packaged asset harness", () => {
       "Overview appears after the first analysis run.",
     );
     expect(textContent("#tab-atlas")).toContain(
-      "Atlas appears after the first analysis run.",
+      "Evidence appears after the first analysis run.",
     );
     expect(textContent("#tab-point")).toContain(
-      "Point lane results appear here.",
+      "Forecast path results appear here.",
     );
     expect(textContent("#tab-probabilistic")).toContain(
-      "Probabilistic lanes appear here when enabled.",
+      "Calibration and probabilistic lanes appear here when enabled.",
     );
     expect(textContent("#tab-benchmark")).toContain(
-      "Benchmark comparison appears here when enabled.",
+      "Search and codelength comparison appear here when enabled.",
     );
     expect(textContent("#tab-artifacts")).toContain(
       "Artifact paths appear after an analysis run.",
     );
   });
 
-  test("auto-opens Atlas on first analysis load and preserves manual tab selection on reload", async () => {
+  test("auto-opens Evidence on first analysis load and preserves manual tab selection on reload", async () => {
     const analysis = clone(savedAnalysisFixture);
 
     await mountWorkbench({
@@ -92,7 +92,7 @@ describe("workbench packaged asset harness", () => {
       ).toBe(true);
     });
 
-    expect(textContent("#tab-atlas")).toContain("Equation Atlas");
+    expect(textContent("#tab-atlas")).toContain("Analytical workspace");
 
     document
       .querySelector('.tab-button[data-tab="point"]')
@@ -125,7 +125,7 @@ describe("workbench packaged asset harness", () => {
     ).toBe(false);
   });
 
-  test("shares horizon and deterministic overlay state across Atlas and lane tabs", async () => {
+  test("shares horizon and deterministic overlay state across Evidence and lane tabs", async () => {
     const analysis = buildAtlasFixture();
 
     await mountWorkbench({
@@ -149,7 +149,7 @@ describe("workbench packaged asset harness", () => {
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     await waitFor(() => {
-      expect(textContent("#tab-atlas")).toContain("Equation Atlas");
+      expect(textContent("#tab-atlas")).toContain("Analytical workspace");
     });
 
     document
@@ -176,6 +176,113 @@ describe("workbench packaged asset harness", () => {
     expect(textContent("#tab-atlas")).toContain(
       "Replay verified a candidate, but publication gates failed.",
     );
+  });
+
+  test("renders production probabilistic refs, calibration bins, downgrade reasons, and configured family bands", async () => {
+    const analysis = buildAtlasFixture();
+    const distribution = analysis.probabilistic.distribution;
+    distribution.selected_family = "student_t";
+    distribution.distribution_family = "student_t";
+    distribution.lane_status = "downgraded";
+    distribution.downgrade_reason_codes = [
+      "heuristic_gaussian_compatibility_only",
+    ];
+    distribution.residual_history_refs = [
+      {
+        schema_name: "residual_history_manifest@1.0.0",
+        object_id: "spy_residual_history",
+      },
+    ];
+    distribution.stochastic_model_refs = [
+      {
+        schema_name: "stochastic_model_manifest@1.0.0",
+        object_id: "spy_student_t_model",
+      },
+    ];
+    distribution.evidence = {
+      ...distribution.evidence,
+      family: "student_t",
+      lane_status: "downgraded",
+      downgrade_reason_codes: distribution.downgrade_reason_codes,
+      residual_history_refs: [
+        "residual_history_manifest@1.0.0:spy_residual_history",
+      ],
+      stochastic_model_refs: [
+        "stochastic_model_manifest@1.0.0:spy_student_t_model",
+      ],
+      calibration_bin_count: 2,
+    };
+    distribution.calibration.diagnostics = [
+      {
+        diagnostic_id: "pit_or_randomized_pit_uniformity",
+        sample_size: 12,
+        calibration_bins: [
+          { bin_id: "0.0-0.5", observed_count: 5, expected_count: 6 },
+          { bin_id: "0.5-1.0", observed_count: 7, expected_count: 6 },
+        ],
+      },
+    ];
+    distribution.latest_row = {
+      ...distribution.latest_row,
+      distribution_family: "student_t",
+      scale: 50,
+      configured_interval: {
+        level: 0.9,
+        lower: 503.8,
+        upper: 507.1,
+      },
+      quantiles: [
+        { level: 0.1, value: 503.9 },
+        { level: 0.5, value: 505.3 },
+        { level: 0.9, value: 507.0 },
+      ],
+    };
+    distribution.rows[1] = { ...distribution.latest_row };
+    distribution.chart.forecast_bands[1] = {
+      origin_time: distribution.latest_row.origin_time,
+      available_at: distribution.latest_row.available_at,
+      center: 505.3,
+      lower: 503.8,
+      upper: 507.1,
+      source: "configured_interval",
+      realized_observation: 503.6,
+    };
+
+    await mountWorkbench({
+      route(url) {
+        if (url.pathname === "/api/config") {
+          return jsonResponse(
+            buildConfig({
+              recentAnalyses: [buildRecentEntry(analysis)],
+            }),
+          );
+        }
+        if (url.pathname === "/api/analysis") {
+          return jsonResponse(analysis);
+        }
+        throw new Error(`Unhandled request: ${url.pathname}`);
+      },
+    });
+
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    document
+      .querySelector('.tab-button[data-tab="probabilistic"]')
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-probabilistic")).toContain("student_t");
+    });
+
+    const probabilisticText = textContent("#tab-probabilistic");
+    expect(probabilisticText).toContain("spy_student_t_model");
+    expect(probabilisticText).toContain("spy_residual_history");
+    expect(probabilisticText).toContain("Heuristic Gaussian Compatibility Only");
+    expect(probabilisticText).toContain("Calibration Bins");
+    expect(probabilisticText).toContain("2");
+    expect(probabilisticText).toContain("503.8");
+    expect(probabilisticText).toContain("507.1");
   });
 
   test("guards the live-run and saved-analysis flow against stale action races", async () => {
@@ -689,7 +796,7 @@ describe("workbench packaged asset harness", () => {
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     await waitFor(() => {
-      expect(textContent("#tab-atlas")).toContain("Equation Atlas");
+      expect(textContent("#tab-atlas")).toContain("Analytical workspace");
     });
 
     const tablist = document.querySelector('.tab-strip[role="tablist"]');
@@ -705,8 +812,8 @@ describe("workbench packaged asset harness", () => {
     expect(document.querySelector("#status-line")?.getAttribute("aria-live")).toBe(
       "polite",
     );
-    expect(textContent("#analyst-briefing")).toContain("Evidence");
-    expect(textContent("#analyst-briefing")).toContain("Method");
+    expect(textContent("#analyst-briefing")).toContain("Publication");
+    expect(textContent("#analyst-briefing")).toContain("Workspace");
   });
 
   test("re-centers the loaded workbench around an analytical canvas and canonical equation rendering", async () => {
@@ -789,7 +896,7 @@ describe("workbench packaged asset harness", () => {
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     await waitFor(() => {
-      expect(textContent("#tab-atlas")).toContain("Equation Atlas");
+      expect(textContent("#tab-atlas")).toContain("Analytical workspace");
     });
 
     const atlasText = textContent("#tab-atlas");
@@ -1425,7 +1532,7 @@ describe("workbench packaged asset harness", () => {
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     await waitFor(() => {
-      expect(textContent("#tab-atlas")).toContain("Equation Atlas");
+      expect(textContent("#tab-atlas")).toContain("Analytical workspace");
     });
 
     const atlasText = textContent("#tab-atlas");
@@ -1818,7 +1925,7 @@ describe("workbench packaged asset harness", () => {
       .dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     await waitFor(() => {
-      expect(textContent("#tab-atlas")).toContain("Equation Atlas");
+      expect(textContent("#tab-atlas")).toContain("Analytical workspace");
     });
 
     expect(textContent("#tab-atlas")).toContain(

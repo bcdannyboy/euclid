@@ -1,0 +1,31 @@
+version: 1
+kind: phase6_readiness_fixture
+fixture_id: mdl_comparability_failure
+expected_runtime_disposition: validator_rejected
+coverage_assertions:
+- strict_single_class_rejected
+- codelength_comparison_key_mismatch
+- row_set_identity_present
+comparison_key_left:
+  law: CodelengthComparisonKey
+  quantizer_id: measurement_resolution_mid_tread
+  reference_policy_id: reference_bank_v1
+  data_code_family: prequential_laplace_residual_bin_v1
+  support_id: support_daily_return_v1
+  horizon_geometry_id: h1
+  row_set_id: row_set_confirmatory_a
+  residual_history_construction_id: prefix_only_v1
+  parameter_state_lattice_id: lattice_1e_minus_3
+comparison_key_right:
+  law: CodelengthComparisonKey
+  quantizer_id: scale_adaptive_mid_tread
+  reference_policy_id: reference_bank_v1
+  data_code_family: prequential_laplace_residual_bin_v1
+  support_id: support_daily_return_v1
+  horizon_geometry_id: h1
+  row_set_id: row_set_confirmatory_b
+  residual_history_construction_id: prefix_only_v1
+  parameter_state_lattice_id: lattice_1e_minus_4
+validator_errors:
+- error_code: strict_single_class_comparability_failed
+  field_path: codelength_comparison_key

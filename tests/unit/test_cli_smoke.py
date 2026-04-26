@@ -60,9 +60,9 @@ def test_demo_run_command_prints_readable_summary(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "Euclid demo run" in result.stdout
-    assert "Selected family: constant" in result.stdout
+    assert "Selected family: seasonal_naive" in result.stdout
     assert "Result mode: abstention_only_publication" in result.stdout
-    assert "prototype_constant_candidate_bundle_v1" in result.stdout
+    assert "prototype_seasonal_naive_candidate_bundle_v1" in result.stdout
 
 
 def test_demo_profile_run_command_prints_telemetry_summary(tmp_path: Path) -> None:
@@ -224,7 +224,7 @@ def test_demo_replay_command_reads_the_bundle_from_output_root(tmp_path: Path) -
     assert replay_result.exit_code == 0
     assert "Euclid demo replay" in replay_result.stdout
     assert "Replay verification: verified" in replay_result.stdout
-    assert "Selected family: constant" in replay_result.stdout
+    assert "Selected family: seasonal_naive" in replay_result.stdout
 
 
 def test_demo_replay_inspect_command_prints_bundle_details(
@@ -261,9 +261,12 @@ def test_demo_inspect_command_prints_run_manifest_graph_from_phase01_outputs(
 
     assert inspect_result.exit_code == 0
     assert "Euclid demo artifact inspection" in inspect_result.stdout
-    assert "Run id: prototype_constant_candidate_run_result_v1" in inspect_result.stdout
     assert (
-        "run_result_manifest@1.1.0:prototype_constant_candidate_run_result_v1"
+        "Run id: prototype_seasonal_naive_candidate_run_result_v1"
+        in inspect_result.stdout
+    )
+    assert (
+        "run_result_manifest@1.1.0:prototype_seasonal_naive_candidate_run_result_v1"
         in inspect_result.stdout
     )
     assert "search_plan_manifest@1.0.0:" in inspect_result.stdout
@@ -280,7 +283,10 @@ def test_demo_resolve_command_prints_manifest_relationships_from_phase01_outputs
             "--output-root",
             str(phase01_demo_output_root),
             "--ref",
-            "run_result_manifest@1.1.0:prototype_constant_candidate_run_result_v1",
+            (
+                "run_result_manifest@1.1.0:"
+                "prototype_seasonal_naive_candidate_run_result_v1"
+            ),
         ],
     )
 
@@ -303,7 +309,7 @@ def test_demo_lineage_command_prints_lineage_tree_from_phase01_outputs(
     assert lineage_result.exit_code == 0
     assert "Euclid demo lineage graph" in lineage_result.stdout
     assert (
-        "run_result_manifest@1.1.0:prototype_constant_candidate_run_result_v1"
+        "run_result_manifest@1.1.0:prototype_seasonal_naive_candidate_run_result_v1"
         in lineage_result.stdout
     )
     assert "publication_record_manifest@1.1.0:" in lineage_result.stdout

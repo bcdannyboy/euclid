@@ -149,6 +149,10 @@ def build_search_plan(
     candidate_batch_size: int = 1,
     minimum_description_gain_bits: float | None = None,
     seasonal_period: int | None = None,
+    fit_strategy: Mapping[str, Any] | None = None,
+    quantization_policy: Mapping[str, Any] | None = None,
+    reference_policy: Mapping[str, Any] | None = None,
+    data_code_family: str | None = None,
     parent_refs: tuple[TypedRef, ...] = (),
 ) -> SearchPlanManifest:
     if not candidate_family_ids:
@@ -246,6 +250,12 @@ def build_search_plan(
         search_time_predictive_policy="fold_local_only",
         minimum_description_gain_bits=minimum_description_gain_bits,
         seasonal_period=seasonal_period,
+        fit_strategy=dict(fit_strategy) if fit_strategy is not None else None,
+        quantization_policy=(
+            dict(quantization_policy) if quantization_policy is not None else None
+        ),
+        reference_policy=dict(reference_policy) if reference_policy is not None else None,
+        data_code_family=data_code_family,
     )
 
 

@@ -32,6 +32,10 @@ class LocalPublicationCatalogEntry:
     primary_score_result_ref: TypedRef | None = None
     primary_calibration_result_ref: TypedRef | None = None
     mechanistic_evidence_ref: TypedRef | None = None
+    residual_history_refs: tuple[TypedRef, ...] = ()
+    stochastic_model_refs: tuple[TypedRef, ...] = ()
+    stochastic_support_status: str | None = None
+    stochastic_support_reason_codes: tuple[str, ...] = ()
 
     @property
     def run_id(self) -> str:
@@ -72,6 +76,19 @@ class LocalPublicationCatalogEntry:
             payload["mechanistic_evidence_ref"] = (
                 self.mechanistic_evidence_ref.as_dict()
             )
+        if self.residual_history_refs:
+            payload["residual_history_refs"] = [
+                ref.as_dict() for ref in self.residual_history_refs
+            ]
+        if self.stochastic_model_refs:
+            payload["stochastic_model_refs"] = [
+                ref.as_dict() for ref in self.stochastic_model_refs
+            ]
+        if self.stochastic_support_status is not None:
+            payload["stochastic_support_status"] = self.stochastic_support_status
+            payload["stochastic_support_reason_codes"] = list(
+                self.stochastic_support_reason_codes
+            )
         return payload
 
     @classmethod
@@ -111,6 +128,21 @@ class LocalPublicationCatalogEntry:
             mechanistic_evidence_ref=_optional_typed_ref(
                 payload, "mechanistic_evidence_ref"
             ),
+            residual_history_refs=_typed_ref_list(
+                payload.get("residual_history_refs", ()),
+                field_path="residual_history_refs",
+            ),
+            stochastic_model_refs=_typed_ref_list(
+                payload.get("stochastic_model_refs", ()),
+                field_path="stochastic_model_refs",
+            ),
+            stochastic_support_status=_optional_string(
+                payload, "stochastic_support_status"
+            ),
+            stochastic_support_reason_codes=tuple(
+                str(code)
+                for code in payload.get("stochastic_support_reason_codes", ())
+            ),
         )
 
 
@@ -133,6 +165,10 @@ def build_run_result_manifest(
     claim_card_ref: TypedRef | None = None,
     abstention_ref: TypedRef | None = None,
     prediction_artifact_refs: Sequence[TypedRef] = (),
+    residual_history_refs: Sequence[TypedRef] = (),
+    stochastic_model_refs: Sequence[TypedRef] = (),
+    stochastic_support_status: str | None = None,
+    stochastic_support_reason_codes: Sequence[str] = (),
     primary_score_result_ref: TypedRef | None = None,
     primary_calibration_result_ref: TypedRef | None = None,
     primary_external_evidence_ref: TypedRef | None = None,
@@ -201,6 +237,12 @@ def build_run_result_manifest(
         primary_claim_card_ref=claim_card_ref,
         primary_abstention_ref=abstention_ref,
         prediction_artifact_refs=tuple(prediction_artifact_refs),
+        residual_history_refs=tuple(residual_history_refs),
+        stochastic_model_refs=tuple(stochastic_model_refs),
+        stochastic_support_status=stochastic_support_status,
+        stochastic_support_reason_codes=tuple(
+            str(code) for code in stochastic_support_reason_codes
+        ),
         primary_score_result_ref=primary_score_result_ref,
         primary_calibration_result_ref=primary_calibration_result_ref,
         primary_external_evidence_ref=primary_external_evidence_ref,
@@ -209,6 +251,34 @@ def build_run_result_manifest(
         reproducibility_bundle_ref=reproducibility_bundle_ref,
         deferred_scope_policy_refs=tuple(deferred_scope_policy_refs),
     )
+
+
+def stochastic_evidence_fields_from_prediction_artifact(
+    prediction_artifact_manifest: ManifestEnvelope | Mapping[str, Any],
+) -> dict[str, Any]:
+    body = (
+        prediction_artifact_manifest.body
+        if isinstance(prediction_artifact_manifest, ManifestEnvelope)
+        else prediction_artifact_manifest
+    )
+    return {
+        "residual_history_refs": _typed_ref_list(
+            body.get("residual_history_refs", ()),
+            field_path="prediction_artifact.residual_history_refs",
+        ),
+        "stochastic_model_refs": _typed_ref_list(
+            body.get("stochastic_model_refs", ()),
+            field_path="prediction_artifact.stochastic_model_refs",
+        ),
+        "stochastic_support_status": (
+            str(body["stochastic_support_status"])
+            if body.get("stochastic_support_status") is not None
+            else None
+        ),
+        "stochastic_support_reason_codes": tuple(
+            str(code) for code in body.get("stochastic_support_reason_codes", ())
+        ),
+    }
 
 
 def build_publication_record_manifest(
@@ -380,6 +450,24 @@ def build_local_publication_catalog_entry(
             run_result_manifest.body,
             "primary_mechanistic_evidence_ref",
         ),
+        residual_history_refs=_typed_ref_list(
+            run_result_manifest.body.get("residual_history_refs", ()),
+            field_path="run_result_manifest.body.residual_history_refs",
+        ),
+        stochastic_model_refs=_typed_ref_list(
+            run_result_manifest.body.get("stochastic_model_refs", ()),
+            field_path="run_result_manifest.body.stochastic_model_refs",
+        ),
+        stochastic_support_status=_optional_string(
+            run_result_manifest.body,
+            "stochastic_support_status",
+        ),
+        stochastic_support_reason_codes=tuple(
+            str(code)
+            for code in run_result_manifest.body.get(
+                "stochastic_support_reason_codes", ()
+            )
+        ),
     )
 
 
@@ -471,9 +559,22 @@ def _typed_ref(payload: Mapping[str, object], *, field_path: str) -> TypedRef:
     raise ValueError(f"{field_path} must contain schema_name and object_id")
 
 
+def _typed_ref_list(payload: object, *, field_path: str) -> tuple[TypedRef, ...]:
+    if payload is None:
+        return ()
+    if not isinstance(payload, Sequence) or isinstance(payload, (str, bytes)):
+        raise ValueError(f"{field_path} must be a sequence of typed refs")
+    return tuple(
+        _typed_ref(item, field_path=f"{field_path}[{index}]")
+        for index, item in enumerate(payload)
+        if isinstance(item, Mapping)
+    )
+
+
 __all__ = [
     "LocalPublicationCatalogEntry",
     "build_local_publication_catalog_entry",
     "build_publication_record_manifest",
     "build_run_result_manifest",
+    "stochastic_evidence_fields_from_prediction_artifact",
 ]

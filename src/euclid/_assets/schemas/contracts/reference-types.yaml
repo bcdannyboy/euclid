@@ -412,6 +412,20 @@ reference_profiles:
         allowed_schema_names:
           - evidence_independence_protocol_manifest@1.0.0
 
+  - schema_name: residual_history_manifest@1.0.0
+    owner_ref: candidate_fitting_owner
+    fields: []
+
+  - schema_name: stochastic_model_manifest@1.0.0
+    owner_ref: probabilistic_evaluation_owner
+    fields:
+      - path: residual_history_ref
+        required: false
+        required_when: evidence_status == production
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - residual_history_manifest@1.0.0
+
   - schema_name: prediction_artifact_manifest@1.1.0
     owner_ref: evaluation_owner
     fields:
@@ -430,6 +444,16 @@ reference_profiles:
             - quantile_score_policy_manifest@1.0.0
           event_probability:
             - event_probability_score_policy_manifest@1.0.0
+      - path: residual_history_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - residual_history_manifest@1.0.0
+      - path: stochastic_model_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - stochastic_model_manifest@1.0.0
 
   - schema_name: point_score_result_manifest@1.0.0
     owner_ref: scoring_owner
@@ -801,6 +825,8 @@ reference_profiles:
           - calibration_result_manifest@1.0.0
           - external_evidence_manifest@1.0.0
           - mechanistic_evidence_dossier_manifest@1.0.0
+          - residual_history_manifest@1.0.0
+          - stochastic_model_manifest@1.0.0
 
   - schema_name: run_result_manifest@1.1.0
     owner_ref: catalog_publishing_owner
@@ -835,6 +861,11 @@ reference_profiles:
         cardinality: exactly_one
         allowed_schema_names:
           - evaluation_governance_manifest@1.1.0
+      - path: primary_validation_scope_ref
+        required: false
+        cardinality: zero_or_one
+        allowed_schema_names:
+          - validation_scope_manifest@1.0.0
       - path: primary_reducer_artifact_ref
         required: false
         cardinality: zero_or_one
@@ -860,11 +891,16 @@ reference_profiles:
         cardinality: zero_or_more
         allowed_schema_names:
           - prediction_artifact_manifest@1.1.0
-      - path: primary_validation_scope_ref
+      - path: residual_history_refs[]
         required: false
-        cardinality: zero_or_one
+        cardinality: zero_or_more
         allowed_schema_names:
-          - validation_scope_manifest@1.0.0
+          - residual_history_manifest@1.0.0
+      - path: stochastic_model_refs[]
+        required: false
+        cardinality: zero_or_more
+        allowed_schema_names:
+          - stochastic_model_manifest@1.0.0
       - path: primary_score_result_ref
         required: false
         cardinality: zero_or_one

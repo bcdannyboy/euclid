@@ -99,3 +99,9 @@ The live machine-readable registries are `schemas/contracts/module-registry.yaml
 The registry covers scorecards, claims, and abstentions; reproducibility bundles; run results and publication records; lifecycle contracts; expression IR; rewrite traces; optimizer diagnostics; PySINDy and PySR engine traces; stochastic-law evidence; falsification dossiers; invariance evaluation; event definitions; prequential score streams; and paired predictive test results.
 
 Packaged release-support contracts live under `src/euclid/_assets/docs/implementation/*.yaml`, and the source copies live under `docs/implementation/*.yaml`. They bind authority snapshots, command contracts, fixture specs, evidence policy, closure mapping, lifecycle proof families, and subtask traceability to the same release story.
+
+## Residual and stochastic refs
+
+Production probabilistic publication closes through `residual_history_manifest@1.0.0` and `stochastic_model_manifest@1.0.0`. Prediction artifacts, scorecards, claim cards, run results, publication records, and reproducibility bundles use `residual_history_refs` and `stochastic_model_refs` so replay can hash the exact residual-history-backed stochastic model manifest evidence that supported the lane.
+
+Readable compatibility artifacts may omit these refs only when they are explicitly downgraded as heuristic Gaussian compatibility output. They remain inspectable, but they cannot satisfy production stochastic evidence or family-aware calibration by themselves.

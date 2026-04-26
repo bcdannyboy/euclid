@@ -23,7 +23,7 @@ from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.loader import load_contract_catalog
 from euclid.contracts.refs import TypedRef
 from euclid.manifests.base import ManifestEnvelope
-from euclid.modules.candidate_fitting import CandidateWindowFitResult, fit_candidate_window
+from euclid.modules.candidate_fitting import fit_candidate_window
 from euclid.modules.evaluation import emit_point_prediction_artifact
 from euclid.modules.features import default_feature_spec, materialize_feature_view
 from euclid.modules.snapshotting import FrozenDatasetSnapshot, SnapshotRow
@@ -230,20 +230,8 @@ def test_emit_point_prediction_artifact_requires_closed_cir_candidate() -> None:
         search_plan=search_plan,
         stage_id="outer_test",
     )
-    unclosed_fit_result = CandidateWindowFitResult(
-        candidate_id=fit_result.candidate_id,
-        family_id=fit_result.family_id,
-        candidate_hash=fit_result.candidate_hash,
-        fit_window_id=fit_result.fit_window_id,
-        stage_id=fit_result.stage_id,
-        training_row_count=fit_result.training_row_count,
-        backend_id=fit_result.backend_id,
-        objective_id=fit_result.objective_id,
-        parameter_summary=fit_result.parameter_summary,
-        initial_state=fit_result.initial_state,
-        final_state=fit_result.final_state,
-        state_transitions=fit_result.state_transitions,
-        optimizer_diagnostics=fit_result.optimizer_diagnostics,
+    unclosed_fit_result = replace(
+        fit_result,
         fitted_candidate=_unnormalized_candidate(),
     )
 

@@ -13,10 +13,18 @@ from euclid.algorithmic_dsl import (
 )
 from euclid.cir.models import CandidateIntermediateRepresentation
 from euclid.contracts.errors import ContractValidationError
+from euclid.math.codelength import (
+    CodelengthComparisonKey,
+    coding_row_set_id,
+    data_code_diagnostics,
+    data_code_length,
+    signed_integer_code_length,
+    strict_single_class_law_eligibility,
+)
 from euclid.math.quantization import FixedStepMidTreadQuantizer
+from euclid.math.quantization import QuantizationPolicy, resolve_quantizer
 from euclid.math.reference_descriptions import (
-    _natural_code_length,
-    _zigzag_encode,
+    ReferenceDescriptionPolicy,
     build_reference_description,
 )
 from euclid.modules.features import FeatureView
@@ -48,6 +56,14 @@ class DescriptionGainArtifact:
     L_total_bits: float
     reference_bits: float
     description_gain_bits: float
+    quantization_mode: str = "fixed_step_mid_tread"
+    quantization_step: str = _DEFAULT_QUANTIZATION_STEP
+    reference_policy_id: str = "raw_quantized_transformed_sequence_v1"
+    reference_family_id: str = "raw_quantized_transformed_sequence"
+    data_code_family: str = "residual_signed_integer_elias_delta_v1"
+    coding_row_set_id: str = ""
+    codelength_comparison_key: Mapping[str, Any] = field(default_factory=dict)
+    data_code_diagnostics: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -81,6 +97,15 @@ def evaluate_descriptive_candidates(
     *,
     feature_view: FeatureView,
     quantizer: FixedStepMidTreadQuantizer | None = None,
+    quantization_policy: QuantizationPolicy | None = None,
+    reference_policy: ReferenceDescriptionPolicy | Mapping[str, Any] | None = None,
+    data_code_family: str = "residual_signed_integer_elias_delta_v1",
+    seasonal_period: int | None = None,
+    horizon_geometry: Sequence[int] = (1,),
+    residual_history_construction: str = "none",
+    parameter_lattice_step: str | None = None,
+    state_lattice_step: str | None = None,
+    comparison_key_overrides: Mapping[str, CodelengthComparisonKey] | None = None,
     minimum_description_gain_bits: float | None = None,
 ) -> DescriptiveCodingResult:
     legal_feature_view = feature_view.require_stage_reuse("search")
@@ -88,16 +113,42 @@ def evaluate_descriptive_candidates(
     observed_values = tuple(
         float(value) for value in columnar_rows.target_values.tolist()
     )
-    active_quantizer = quantizer or FixedStepMidTreadQuantizer.from_string(
-        _DEFAULT_QUANTIZATION_STEP
-    )
+    if quantizer is None:
+        resolved_quantization = resolve_quantizer(
+            quantization_policy
+            or QuantizationPolicy(
+                quantization_mode="fixed_step_mid_tread",
+                quantization_step=_DEFAULT_QUANTIZATION_STEP,
+            ),
+            observed_values=observed_values,
+        )
+        active_quantizer = resolved_quantization.quantizer
+        quantization_mode = resolved_quantization.quantization_mode
+    else:
+        active_quantizer = quantizer
+        quantization_mode = "fixed_step_mid_tread"
+    active_reference_policy = _coerce_reference_policy(reference_policy)
     reference_description = build_reference_description(
         observed_values,
         quantizer=active_quantizer,
+        policy=active_reference_policy,
+        seasonal_period=seasonal_period,
     )
+    row_set_id = coding_row_set_id(tuple(legal_feature_view.rows))
+    parameter_lattice = parameter_lattice_step or active_quantizer.step_string
+    state_lattice = state_lattice_step or active_quantizer.step_string
     comparison_status = _comparison_status(
         candidates,
+        quantization_mode=quantization_mode,
         quantizer=active_quantizer,
+        reference_policy_id=reference_description.reference_policy_id,
+        data_code_family=data_code_family,
+        horizon_geometry=tuple(int(horizon) for horizon in horizon_geometry),
+        coding_row_set_id=row_set_id,
+        residual_history_construction=residual_history_construction,
+        parameter_lattice_step=parameter_lattice,
+        state_lattice_step=state_lattice,
+        comparison_key_overrides=comparison_key_overrides or {},
     )
     minimum_gain = (
         0.0 if minimum_description_gain_bits is None else minimum_description_gain_bits
@@ -159,8 +210,9 @@ def evaluate_descriptive_candidates(
                 active_quantizer.quantize_index(actual - fitted)
                 for actual, fitted in zip(observed_values, fitted_values, strict=True)
             )
-            L_data_bits = _natural_code_length(len(residual_indices)) + float(
-                _code_bits(residual_indices)
+            L_data_bits = data_code_length(
+                residual_indices,
+                data_code_family=data_code_family,
             )
             L_total_bits = (
                 model_terms["L_family_bits"]
@@ -186,6 +238,20 @@ def evaluate_descriptive_candidates(
                 L_total_bits=float(L_total_bits),
                 reference_bits=float(reference_description.reference_bits),
                 description_gain_bits=float(description_gain_bits),
+                quantization_mode=quantization_mode,
+                quantization_step=active_quantizer.step_string,
+                reference_policy_id=reference_description.reference_policy_id,
+                reference_family_id=reference_description.reference_family_id,
+                data_code_family=data_code_family,
+                coding_row_set_id=row_set_id,
+                codelength_comparison_key=comparison_status.key_by_hash.get(
+                    candidate_hash,
+                    {},
+                ),
+                data_code_diagnostics=data_code_diagnostics(
+                    residual_indices,
+                    data_code_family=data_code_family,
+                ),
             )
             description_artifacts.append(artifact)
             if description_gain_bits <= minimum_gain:
@@ -219,57 +285,65 @@ def evaluate_descriptive_candidates(
 class _ComparisonStatus:
     comparable_hashes: frozenset[str]
     details: Mapping[str, Any] = field(default_factory=dict)
+    key_by_hash: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
 
 
 def _comparison_status(
     candidates: Sequence[CandidateIntermediateRepresentation],
     *,
+    quantization_mode: str,
     quantizer: FixedStepMidTreadQuantizer,
+    reference_policy_id: str,
+    data_code_family: str,
+    horizon_geometry: tuple[int, ...],
+    coding_row_set_id: str,
+    residual_history_construction: str,
+    parameter_lattice_step: str,
+    state_lattice_step: str,
+    comparison_key_overrides: Mapping[str, CodelengthComparisonKey],
 ) -> _ComparisonStatus:
-    grouped: dict[tuple[str, str, str, str, str], list[str]] = {}
+    keys_by_hash: dict[str, CodelengthComparisonKey] = {}
     for candidate in candidates:
+        candidate_hash = candidate.canonical_hash()
         observation_model = candidate.execution_layer.observation_model_binding
-        composition_signature = composition_runtime_signature(
+        runtime_signature = composition_runtime_signature(
             candidate.structural_layer.composition_graph
-        ) or "uncomposed"
-        key = (
-            observation_model.family,
-            observation_model.forecast_type,
-            observation_model.support_kind,
-            quantizer.step_string,
-            composition_signature,
         )
-        grouped.setdefault(key, []).append(candidate.canonical_hash())
-    if len(grouped) <= 1:
+        keys_by_hash[candidate_hash] = comparison_key_overrides.get(
+            candidate_hash,
+            CodelengthComparisonKey(
+                quantization_mode=quantization_mode,
+                quantization_step=quantizer.step_string,
+                reference_policy_id=reference_policy_id,
+                data_code_family=data_code_family,
+                support_kind=observation_model.support_kind,
+                horizon_geometry=horizon_geometry,
+                coding_row_set_id=coding_row_set_id,
+                residual_history_construction=residual_history_construction,
+                parameter_lattice_step=parameter_lattice_step,
+                state_lattice_step=state_lattice_step,
+                runtime_signature=runtime_signature or "none",
+            ),
+        )
+    comparability = strict_single_class_law_eligibility(tuple(keys_by_hash.values()))
+    serial_keys = {
+        candidate_hash: key.as_dict() for candidate_hash, key in keys_by_hash.items()
+    }
+    if comparability.comparable:
         return _ComparisonStatus(
             comparable_hashes=frozenset(
                 candidate.canonical_hash() for candidate in candidates
-            )
-        )
-
-    group_items = sorted(
-        grouped.items(),
-        key=lambda item: (-len(item[1]), item[0]),
-    )
-    leader_key, leader_hashes = group_items[0]
-    competing_sizes = [len(hashes) for _, hashes in group_items]
-    if competing_sizes.count(len(leader_hashes)) > 1:
-        return _ComparisonStatus(
-            comparable_hashes=frozenset(),
-            details={
-                "comparison_class_counts": {
-                    "|".join(key): len(hashes) for key, hashes in group_items
-                }
-            },
+            ),
+            key_by_hash=serial_keys,
         )
     return _ComparisonStatus(
-        comparable_hashes=frozenset(leader_hashes),
+        comparable_hashes=frozenset(),
         details={
-            "retained_comparison_class": "|".join(leader_key),
-            "comparison_class_counts": {
-                "|".join(key): len(hashes) for key, hashes in group_items
-            },
+            "comparison_failure_reason_code": comparability.reason_code,
+            "comparison_failure_details": dict(comparability.details or {}),
+            "comparison_keys": serial_keys,
         },
+        key_by_hash=serial_keys,
     )
 
 
@@ -352,16 +426,23 @@ def _fitted_values(
             return tuple(fitted)
 
     if family_id == "spectral":
-        harmonic = int(literals["harmonic"])
+        harmonics = _spectral_harmonics(literals)
         season_length = int(literals["season_length"])
         phase_index = int(state.get("phase_index", 0))
-        cosine = float(parameters.get("cosine_coefficient", 0.0))
-        sine = float(parameters.get("sine_coefficient", 0.0))
         phase_indices = (
             phase_index + np.arange(columnar_rows.row_count)
         ) % season_length
-        angles = (2.0 * math.pi * harmonic * phase_indices) / season_length
-        fitted = (cosine * np.cos(angles)) + (sine * np.sin(angles))
+        fitted = np.zeros(columnar_rows.row_count)
+        harmonic_group = len(harmonics) > 1 or "harmonic_group" in literals
+        for harmonic in harmonics:
+            angles = (2.0 * math.pi * harmonic * phase_indices) / season_length
+            if harmonic_group:
+                cosine = float(parameters.get(f"cosine_{harmonic}_coefficient", 0.0))
+                sine = float(parameters.get(f"sine_{harmonic}_coefficient", 0.0))
+            else:
+                cosine = float(parameters.get("cosine_coefficient", 0.0))
+                sine = float(parameters.get("sine_coefficient", 0.0))
+            fitted += (cosine * np.cos(angles)) + (sine * np.sin(angles))
         return tuple(float(value) for value in fitted.tolist())
     if family_id == "algorithmic":
         max_lag = int(candidate.execution_layer.history_access_contract.max_lag or 0)
@@ -412,18 +493,43 @@ def _analytic_fitted_values_for_rows(
     rows: Sequence[Mapping[str, Any]],
 ) -> tuple[float, ...]:
     intercept = float(parameters.get("intercept", 0.0))
-    if "lag_coefficient" not in parameters:
+    feature_terms = _analytic_feature_terms(parameters)
+    if not feature_terms:
         return tuple(float(intercept) for _ in rows)
-    if any("lag_1" not in row for row in rows):
-        raise ContractValidationError(
-            code="unsupported_descriptive_coding_candidate",
-            message="analytic lag coefficients require a lag_1 feature column",
-            field_path="candidate.structural_layer.parameter_block",
-        )
-    lag_coefficient = float(parameters["lag_coefficient"])
     return tuple(
-        float(intercept + (lag_coefficient * float(row["lag_1"]))) for row in rows
+        float(
+            intercept
+            + sum(
+                float(parameters[parameter_name]) * float(row[feature_name])
+                for feature_name, parameter_name in feature_terms
+            )
+        )
+        for row in rows
     )
+
+
+def _analytic_feature_terms(
+    parameters: Mapping[str, float | int],
+) -> tuple[tuple[str, str], ...]:
+    if "lag_coefficient" in parameters:
+        return (("lag_1", "lag_coefficient"),)
+    terms = []
+    for parameter_name in sorted(parameters):
+        if not parameter_name.endswith("__coefficient"):
+            continue
+        feature_name = parameter_name[: -len("__coefficient")]
+        terms.append((feature_name, parameter_name))
+    return tuple(terms)
+
+
+def _spectral_harmonics(literals: Mapping[str, Any]) -> tuple[int, ...]:
+    raw_group = literals.get("harmonic_group")
+    if isinstance(raw_group, str) and raw_group.strip():
+        return tuple(int(token) for token in raw_group.split(",") if token.strip())
+    raw_harmonics = literals.get("harmonics")
+    if isinstance(raw_harmonics, str) and raw_harmonics.strip():
+        return tuple(int(token) for token in raw_harmonics.split(",") if token.strip())
+    return (int(literals["harmonic"]),)
 
 
 def _piecewise_fitted_values(
@@ -570,7 +676,29 @@ def _algorithmic_observation_window(
 
 
 def _code_bits(indices: Sequence[int]) -> int:
-    return sum(_natural_code_length(_zigzag_encode(index)) for index in indices)
+    return sum(signed_integer_code_length(index) for index in indices)
+
+
+def _coerce_reference_policy(
+    reference_policy: ReferenceDescriptionPolicy | Mapping[str, Any] | None,
+) -> ReferenceDescriptionPolicy:
+    if reference_policy is None:
+        return ReferenceDescriptionPolicy()
+    if isinstance(reference_policy, ReferenceDescriptionPolicy):
+        return reference_policy
+    return ReferenceDescriptionPolicy(
+        reference_family_id=str(
+            reference_policy.get(
+                "reference_family_id",
+                "raw_quantized_transformed_sequence",
+            )
+        ),
+        policy_id=(
+            str(reference_policy["policy_id"])
+            if reference_policy.get("policy_id") is not None
+            else None
+        ),
+    )
 
 
 def _description_gain_reason(minimum_description_gain_bits: float) -> str:

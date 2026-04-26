@@ -59,7 +59,16 @@ def test_backend_emits_enumeration_cardinality() -> None:
     assert [
         candidate.evidence_layer.backend_origin_record.source_candidate_id
         for candidate in result.accepted_candidates
-    ] == ["algorithmic_last_observation"]
+    ] == [
+        "algorithmic_last_observation",
+        "algorithmic_running_half_average",
+    ]
+    assert (
+        result.accepted_candidate.evidence_layer.backend_origin_record.source_candidate_id
+        == "algorithmic_last_observation"
+    )
+    assert result.coverage.accepted_candidate_count == 1
+    assert result.coverage.law_eligible_candidate_count == 2
     assert result.coverage.disclosures["fragment_bounds"] == "proposal_limit=2"
     assert result.coverage.disclosures["enumeration_cardinality"] == 2
     assert result.coverage.disclosures["canonical_enumerator"] == (

@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from euclid.artifacts import FilesystemArtifactStore
+from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.loader import load_contract_catalog
 from euclid.contracts.refs import TypedRef
 from euclid.control_plane import SQLiteMetadataStore
@@ -14,6 +17,7 @@ from euclid.manifests.runtime_models import (
 )
 from euclid.modules.replay import (
     ReplayedOutcome,
+    _hash_record_failure_codes,
     build_replay_stage_order,
     build_reproducibility_bundle_manifest,
     inspect_reproducibility_bundle,
@@ -73,6 +77,38 @@ def _matching_outcome(result) -> ReplayedOutcome:
             record.stage_id for record in bundle.stage_order_records
         ),
     )
+
+
+def _production_probabilistic_run_result_body(
+    *,
+    residual_history_refs: tuple[TypedRef, ...],
+    stochastic_model_refs: tuple[TypedRef, ...],
+) -> dict:
+    return {
+        "result_mode": "candidate_publication",
+        "forecast_object_type": "distribution",
+        "stochastic_support_status": "production",
+        "primary_reducer_artifact_ref": _ref(
+            "reducer_artifact_manifest@1.0.0",
+            "candidate",
+        ).as_dict(),
+        "primary_scorecard_ref": _ref(
+            "scorecard_manifest@1.1.0",
+            "scorecard",
+        ).as_dict(),
+        "primary_claim_card_ref": _ref(
+            "claim_card_manifest@1.1.0",
+            "claim",
+        ).as_dict(),
+        "prediction_artifact_refs": [
+            _ref(
+                "prediction_artifact_manifest@1.1.0",
+                "prediction",
+            ).as_dict()
+        ],
+        "residual_history_refs": [ref.as_dict() for ref in residual_history_refs],
+        "stochastic_model_refs": [ref.as_dict() for ref in stochastic_model_refs],
+    }
 
 
 def test_build_reproducibility_bundle_manifest_captures_environment_and_stage_order(
@@ -135,6 +171,211 @@ def test_build_reproducibility_bundle_manifest_captures_environment_and_stage_or
         "search",
         "surrogate_generation",
     }
+
+
+def test_reproducibility_bundle_carries_residual_and_stochastic_refs_with_hashes(
+) -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    residual_history_ref = _ref(
+        "residual_history_manifest@1.0.0",
+        "residual_history_fixture",
+    )
+    stochastic_model_ref = _ref(
+        "stochastic_model_manifest@1.0.0",
+        "stochastic_model_fixture",
+    )
+    model = build_reproducibility_bundle_manifest(
+        object_id="stochastic_bundle",
+        bundle_id="stochastic_bundle",
+        bundle_mode="candidate_publication",
+        dataset_snapshot_ref=_ref("dataset_snapshot_manifest@1.0.0", "snapshot"),
+        feature_view_ref=_ref("feature_view_manifest@1.0.0", "feature_view"),
+        search_plan_ref=_ref("search_plan_manifest@1.0.0", "search"),
+        evaluation_plan_ref=_ref("evaluation_plan_manifest@1.1.0", "evaluation"),
+        comparison_universe_ref=_ref(
+            "comparison_universe_manifest@1.0.0", "comparison"
+        ),
+        evaluation_event_log_ref=_ref(
+            "evaluation_event_log_manifest@1.0.0", "event_log"
+        ),
+        evaluation_governance_ref=_ref(
+            "evaluation_governance_manifest@1.1.0", "governance"
+        ),
+        run_result_ref=_ref("run_result_manifest@1.1.0", "run_result"),
+        required_manifest_refs=(residual_history_ref, stochastic_model_ref),
+        artifact_hash_records=(
+            ArtifactHashRecord(
+                artifact_role="residual_history",
+                sha256="sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            ),
+            ArtifactHashRecord(
+                artifact_role="stochastic_model",
+                sha256="sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            ),
+        ),
+    )
+
+    inspection = inspect_reproducibility_bundle(model.to_manifest(catalog))
+
+    assert residual_history_ref in inspection.required_manifest_refs
+    assert stochastic_model_ref in inspection.required_manifest_refs
+    assert {record.artifact_role for record in inspection.artifact_hash_records} == {
+        "residual_history",
+        "stochastic_model",
+    }
+
+
+def test_run_result_round_trips_residual_and_stochastic_model_refs() -> None:
+    from euclid.manifests.runtime_models import RunResultManifest
+
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    residual_history_ref = _ref(
+        "residual_history_manifest@1.0.0",
+        "residual_history_fixture",
+    )
+    stochastic_model_ref = _ref(
+        "stochastic_model_manifest@1.0.0",
+        "stochastic_model_fixture",
+    )
+
+    run_result = RunResultManifest(
+        run_id="run",
+        scope_ledger_ref=_ref("scope_ledger_manifest@1.0.0", "scope"),
+        search_plan_ref=_ref("search_plan_manifest@1.0.0", "search"),
+        evaluation_plan_ref=_ref("evaluation_plan_manifest@1.1.0", "evaluation"),
+        comparison_universe_ref=_ref(
+            "comparison_universe_manifest@1.0.0", "comparison"
+        ),
+        evaluation_event_log_ref=_ref(
+            "evaluation_event_log_manifest@1.0.0", "event_log"
+        ),
+        evaluation_governance_ref=_ref(
+            "evaluation_governance_manifest@1.1.0", "governance"
+        ),
+        result_mode="abstention_only_publication",
+        forecast_object_type="distribution",
+        primary_abstention_ref=_ref("abstention_manifest@1.1.0", "abstention"),
+        reproducibility_bundle_ref=_ref(
+            "reproducibility_bundle_manifest@1.0.0",
+            "bundle",
+        ),
+        residual_history_refs=(residual_history_ref,),
+        stochastic_model_refs=(stochastic_model_ref,),
+    )
+
+    manifest = run_result.to_manifest(catalog)
+    round_tripped = RunResultManifest.from_manifest(manifest)
+
+    assert manifest.body["residual_history_refs"] == [residual_history_ref.as_dict()]
+    assert manifest.body["stochastic_model_refs"] == [stochastic_model_ref.as_dict()]
+    assert round_tripped.residual_history_refs == (residual_history_ref,)
+    assert round_tripped.stochastic_model_refs == (stochastic_model_ref,)
+
+
+def test_production_probabilistic_replay_requires_residual_history_refs() -> None:
+    with pytest.raises(ContractValidationError) as excinfo:
+        required_manifest_refs_from_run_result(
+            _production_probabilistic_run_result_body(
+                residual_history_refs=(),
+                stochastic_model_refs=(
+                    _ref(
+                        "stochastic_model_manifest@1.0.0",
+                        "stochastic_model_fixture",
+                    ),
+                ),
+            )
+        )
+
+    assert excinfo.value.code == "missing_residual_history_evidence"
+
+
+def test_production_probabilistic_replay_requires_stochastic_model_refs() -> None:
+    with pytest.raises(ContractValidationError) as excinfo:
+        required_manifest_refs_from_run_result(
+            _production_probabilistic_run_result_body(
+                residual_history_refs=(
+                    _ref(
+                        "residual_history_manifest@1.0.0",
+                        "residual_history_fixture",
+                    ),
+                ),
+                stochastic_model_refs=(),
+            )
+        )
+
+    assert excinfo.value.code == "missing_stochastic_model_evidence"
+
+
+def test_production_probabilistic_replay_hashes_stochastic_evidence_refs() -> None:
+    residual_history_ref = _ref(
+        "residual_history_manifest@1.0.0",
+        "residual_history_fixture",
+    )
+    stochastic_model_ref = _ref(
+        "stochastic_model_manifest@1.0.0",
+        "stochastic_model_fixture",
+    )
+
+    required_refs = required_manifest_refs_from_run_result(
+        _production_probabilistic_run_result_body(
+            residual_history_refs=(residual_history_ref,),
+            stochastic_model_refs=(stochastic_model_ref,),
+        )
+    )
+
+    assert residual_history_ref in required_refs
+    assert stochastic_model_ref in required_refs
+
+
+def test_replay_hash_verification_does_not_collapse_duplicate_evidence_roles() -> None:
+    expected = (
+        ArtifactHashRecord(artifact_role="residual_history", sha256="sha256:a"),
+        ArtifactHashRecord(artifact_role="residual_history", sha256="sha256:b"),
+        ArtifactHashRecord(artifact_role="stochastic_model", sha256="sha256:c"),
+        ArtifactHashRecord(artifact_role="stochastic_model", sha256="sha256:d"),
+    )
+
+    assert _hash_record_failure_codes(recorded=expected, expected=expected) == ()
+    assert _hash_record_failure_codes(
+        recorded=expected[:-1],
+        expected=expected,
+    ) == ("missing_required_hash",)
+    assert _hash_record_failure_codes(
+        recorded=(
+            ArtifactHashRecord(artifact_role="residual_history", sha256="sha256:a"),
+            ArtifactHashRecord(artifact_role="residual_history", sha256="sha256:b"),
+            ArtifactHashRecord(artifact_role="stochastic_model", sha256="sha256:c"),
+            ArtifactHashRecord(
+                artifact_role="stochastic_model",
+                sha256="sha256:wrong",
+            ),
+        ),
+        expected=expected,
+    ) == ("artifact_hash_mismatch",)
+
+
+def test_production_probabilistic_replay_rejects_heuristic_gaussian_reason_code(
+) -> None:
+    residual_history_ref = _ref(
+        "residual_history_manifest@1.0.0",
+        "residual_history_fixture",
+    )
+    stochastic_model_ref = _ref(
+        "stochastic_model_manifest@1.0.0",
+        "stochastic_model_fixture",
+    )
+    run_result_body = _production_probabilistic_run_result_body(
+        residual_history_refs=(residual_history_ref,),
+        stochastic_model_refs=(stochastic_model_ref,),
+    )
+    run_result_body["stochastic_support_reason_codes"] = [
+        "heuristic_gaussian_support_not_production"
+    ]
+
+    with pytest.raises(ContractValidationError) as excinfo:
+        required_manifest_refs_from_run_result(run_result_body)
+
+    assert excinfo.value.code == "heuristic_gaussian_support_not_production"
 
 
 def test_build_replay_stage_order_and_required_refs_include_external_evidence() -> None:

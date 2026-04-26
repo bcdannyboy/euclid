@@ -7,6 +7,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MATH_DOC = REPO_ROOT / "docs" / "math.md"
 REFERENCE_INDEX = REPO_ROOT / "docs" / "reference" / "README.md"
+SEARCH_DOCS = (
+    REPO_ROOT / "docs" / "search-core.md",
+    REPO_ROOT / "docs" / "reference" / "search-core.md",
+)
+MODELING_PIPELINE_DOC = REPO_ROOT / "docs" / "reference" / "modeling-pipeline.md"
+CONTRACTS_DOC = REPO_ROOT / "docs" / "reference" / "contracts-manifests.md"
 TRUTHFULNESS_DOCS = (
     REPO_ROOT / "docs" / "testing-truthfulness.md",
     REPO_ROOT / "docs" / "reference" / "testing-truthfulness.md",
@@ -17,16 +23,24 @@ def _text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_math_doc_matches_retained_stochastic_support_path() -> None:
+def test_math_doc_distinguishes_production_stochastic_support_from_compatibility_gaussian() -> None:
     text = _text(MATH_DOC)
 
     assert "`src/euclid/modules/probabilistic_evaluation.py`" in text
     assert "`src/euclid/stochastic/process_models.py`" in text
+    assert "residual_history_refs" in text
+    assert "stochastic_model_refs" in text
+    assert "family-aware scoring" in text
+    assert "family-aware calibration" in text
+    assert "Student-t" in text or "Student t" in text
+    assert "Laplace" in text
     assert "`family_id=\"gaussian\"`" in text
     assert "`horizon_scale_law=\"sqrt_horizon\"`" in text
+    assert "compatibility" in text.lower()
     assert "s_h=s_0\\sqrt{h}" in text
 
     stale_fragments = (
+        "Gaussian location-scale family is the whole production probabilistic story",
         "Scale uses family-specific growth",
         "Analytic: $s_h=s_0\\sqrt{h}$",
         "Recursive: $s_h=s_0(1+0.15(h-1))$",
@@ -35,6 +49,69 @@ def test_math_doc_matches_retained_stochastic_support_path() -> None:
     )
     for fragment in stale_fragments:
         assert fragment not in text
+
+
+def test_reference_docs_cover_multi_horizon_fit_and_mdl_comparability_laws() -> None:
+    combined_search_docs = "\n".join(_text(path) for path in SEARCH_DOCS)
+    pipeline_text = _text(MODELING_PIPELINE_DOC)
+    contracts_text = _text(CONTRACTS_DOC)
+
+    for required in (
+        "FitStrategySpec",
+        "legacy_one_step",
+        "recursive_rollout",
+        "direct_analytic",
+        "joint_analytic",
+        "rectify_analytic",
+        "non-contiguous",
+        "rollout objective",
+    ):
+        assert required in combined_search_docs + pipeline_text
+
+    for required in (
+        "CodelengthComparisonKey",
+        "strict_single_class",
+        "row_set_id",
+        "quantizer",
+        "reference policy",
+        "data-code family",
+        "horizon geometry",
+        "residual-history construction",
+        "parameter/state lattice",
+        "prequential_laplace_residual_bin_v1",
+    ):
+        assert required in combined_search_docs
+
+    for required in (
+        "residual_history_manifest@1.0.0",
+        "stochastic_model_manifest@1.0.0",
+        "residual_history_refs",
+        "stochastic_model_refs",
+    ):
+        assert required in contracts_text
+
+
+def test_reference_docs_cover_residual_backed_family_aware_probabilistic_runtime() -> None:
+    combined_text = "\n".join(
+        _text(path)
+        for path in (
+            MATH_DOC,
+            MODELING_PIPELINE_DOC,
+            CONTRACTS_DOC,
+            REPO_ROOT / "docs" / "workbench.md",
+        )
+    )
+
+    for required in (
+        "residual-history-backed",
+        "stochastic model manifest",
+        "heuristic Gaussian",
+        "compatibility",
+        "family-derived",
+        "calibration bins",
+        "downgrade reasons",
+    ):
+        assert required in combined_text
 
 
 def test_math_doc_states_rewrite_invariance_and_claim_boundaries() -> None:

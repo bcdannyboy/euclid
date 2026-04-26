@@ -61,12 +61,38 @@ describe("workbench workspace redesign", () => {
       Array.from(document.querySelectorAll(".tab-button"), (button) =>
         button.textContent.trim(),
       ),
-    ).toContain("Atlas");
+    ).toEqual([
+      "Overview",
+      "Evidence",
+      "Forecast",
+      "Calibration",
+      "Search",
+      "Artifacts",
+    ]);
     expect(document.body.textContent).toContain(analysis.dataset.symbol);
     expect(document.body.textContent).toContain(analysis.dataset.target.label);
   });
 
-  it("renders a linked analytical workspace, point explanation, and decision-first evidence regions", async () => {
+  it("renders a Euclid first-screen evidence spine before deeper views", async () => {
+    const { analysis, module } = await setupWorkbench();
+
+    module.__test__.adoptAnalysis(analysis);
+    module.__test__.render();
+
+    const firstScreen = document.querySelector('[data-euclid-first-screen="spine"]');
+    expect(firstScreen).toBeTruthy();
+    expect(firstScreen.textContent).toContain("Ordered observations");
+    expect(firstScreen.textContent).toContain("Candidate equation");
+    expect(firstScreen.textContent).toContain("Residual evidence");
+    expect(firstScreen.textContent).toContain("Stochastic support");
+    expect(firstScreen.textContent).toContain("Publication gate");
+    expect(firstScreen.textContent).toContain("Claim ceiling");
+    expect(firstScreen.textContent).toContain("Replay");
+    expect(firstScreen.textContent).toContain("Calibration");
+    expect(firstScreen.textContent).toContain(analysis.dataset.symbol);
+  });
+
+  it("renders a linked evidence workspace, forecast explanation, and decision-first evidence regions", async () => {
     const { analysis, module } = await setupWorkbench();
 
     module.__test__.adoptAnalysis(analysis);

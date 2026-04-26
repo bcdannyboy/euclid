@@ -441,9 +441,17 @@ def test_build_local_publication_catalog_entry_for_candidate_keeps_published_ref
             "validation_scope_manifest@1.0.0", "validation_scope"
         ),
         publication_mode="candidate_publication",
+        forecast_object_type="distribution",
         selected_candidate_ref=_ref("reducer_artifact_manifest@1.0.0", "candidate"),
         scorecard_ref=_ref("scorecard_manifest@1.1.0", "scorecard"),
         claim_card_ref=_ref("claim_card_manifest@1.1.0", "claim"),
+        residual_history_refs=(
+            _ref("residual_history_manifest@1.0.0", "residual_history"),
+        ),
+        stochastic_model_refs=(
+            _ref("stochastic_model_manifest@1.0.0", "stochastic_model"),
+        ),
+        stochastic_support_status="production",
     ).to_manifest(catalog)
     publication_record = build_publication_record_manifest(
         object_id="demo_publication_record",
@@ -468,7 +476,7 @@ def test_build_local_publication_catalog_entry_for_candidate_keeps_published_ref
 
     assert entry.request_id == "demo-request"
     assert entry.publication_mode == "candidate_publication"
-    assert entry.forecast_object_type == "point"
+    assert entry.forecast_object_type == "distribution"
     assert entry.validation_scope_ref == _ref(
         "validation_scope_manifest@1.0.0", "validation_scope"
     )
@@ -477,6 +485,13 @@ def test_build_local_publication_catalog_entry_for_candidate_keeps_published_ref
     assert entry.scorecard_ref == _ref("scorecard_manifest@1.1.0", "scorecard")
     assert entry.claim_card_ref == _ref("claim_card_manifest@1.1.0", "claim")
     assert entry.abstention_ref is None
+    assert entry.residual_history_refs == (
+        _ref("residual_history_manifest@1.0.0", "residual_history"),
+    )
+    assert entry.stochastic_model_refs == (
+        _ref("stochastic_model_manifest@1.0.0", "stochastic_model"),
+    )
+    assert entry.stochastic_support_status == "production"
 
 
 def test_build_local_publication_catalog_entry_for_abstention_omits_candidate_refs(

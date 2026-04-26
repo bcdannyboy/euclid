@@ -8,8 +8,18 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_SPEC_PATH = REPO_ROOT / "src/euclid/_assets/docs/implementation/certification-fixture-spec.yaml"
+FIXTURE_COVERAGE_PATH = REPO_ROOT / "fixtures/canonical/fixture-coverage.yaml"
 FIXTURE_ROOT = REPO_ROOT / "fixtures/runtime/full_vision_certification"
 FULL_VISION_SUITE_PATH = REPO_ROOT / "benchmarks/suites/full-vision.yaml"
+PHASE6_REQUIRED_FIXTURE_IDS = {
+    "residual_history_backed_probabilistic_publication",
+    "heuristic_gaussian_downgrade",
+    "student_t_calibrated_distribution",
+    "non_contiguous_horizon_panel",
+    "additive_residual_multi_horizon_fit",
+    "mdl_comparability_failure",
+    "conformal_recalibration_no_leak_failure",
+}
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -50,3 +60,27 @@ def test_certification_tasks_reference_certification_fixtures() -> None:
             "fixtures/runtime/full_vision_certification/"
         )
 
+
+def test_phase6_readiness_fixture_coverage_is_materialized() -> None:
+    coverage = _load_yaml(FIXTURE_COVERAGE_PATH)
+
+    entries = {
+        entry["fixture_id"]: entry
+        for entry in coverage["phase6_readiness_fixtures"]
+    }
+    assert PHASE6_REQUIRED_FIXTURE_IDS <= set(entries)
+
+    for fixture_id in PHASE6_REQUIRED_FIXTURE_IDS:
+        entry = entries[fixture_id]
+        fixture_path = REPO_ROOT / entry["path"]
+        payload = _load_yaml(fixture_path)
+
+        assert payload["version"] == 1
+        assert payload["kind"] == "phase6_readiness_fixture"
+        assert payload["fixture_id"] == fixture_id
+        assert set(entry["coverage_assertions"]) <= set(payload["coverage_assertions"])
+        assert payload["expected_runtime_disposition"] in {
+            "production_supported",
+            "legacy_compatibility_downgrade",
+            "validator_rejected",
+        }

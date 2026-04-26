@@ -225,10 +225,14 @@ where $\beta_{1,e}$ comes from shared lag + local lag adjustment (or explicit lo
 
 ## 6) Probabilistic support construction
 
-Probabilistic artifacts are built from point paths by attaching Gaussian location-scale support per horizon.
+Production probabilistic artifacts are residual-history-backed. The prediction artifact, scorecard, claim card, run result, publication record, and replay closure carry `residual_history_refs` and `stochastic_model_refs` when a non-point lane is using production stochastic evidence. The resolving modules are `src/euclid/modules/probabilistic_evaluation.py` and `src/euclid/stochastic/process_models.py`.
 
-- Location always equals point forecast for that horizon.
-- Scale is fitted through the retained residual stochastic model with the declared `sqrt_horizon` scale law. It is not family-specific in the current implementation.
+- Location is still anchored to the point forecast path for the same origin and horizon.
+- Scale, tails, intervals, quantiles, and event probabilities come from the referenced stochastic model manifest and its calibrated family.
+- family-aware scoring and family-aware calibration are required: a Student-t or Laplace distribution is scored and calibrated as that family, not as an implicit Gaussian.
+- Calibration bins are part of the evidence surface, because a passed badge without bin/sample context is not strong production proof.
+
+The legacy heuristic Gaussian path remains readable for compatibility and downgrade fixtures. In that path, `src/euclid/modules/probabilistic_evaluation.py` passes the residual proxy $(-s_0, s_0)$ into `fit_residual_stochastic_model(...)` with `family_id="gaussian"` and `horizon_scale_law="sqrt_horizon"`. This compatibility artifact does not by itself satisfy production stochastic evidence when `residual_history_refs` or `stochastic_model_refs` are absent.
 
 ### 6.1 Base scale
 
@@ -236,35 +240,29 @@ $$
 s_0 = \max\left(\sqrt{\frac{\max(\text{final loss},0)}{\max(N,1)}},\;0.25 + 0.05\,\max_j |\theta_j|\right).
 $$
 
-### 6.2 Horizon scaling
+### 6.2 Compatibility horizon scaling
 
-`src/euclid/modules/probabilistic_evaluation.py` passes the residual proxy
-$(-s_0, s_0)$ into `fit_residual_stochastic_model(...)` with
-`family_id="gaussian"` and `horizon_scale_law="sqrt_horizon"`.
-The fitted residual location is therefore 0, the residual scale is $s_0$, and
-every supported family currently uses:
+For the compatibility Gaussian artifact, the fitted residual location is 0, the residual scale is $s_0$, and the declared horizon law is:
 
 $$
 s_h=s_0\sqrt{h}.
 $$
 
-The implementation also supports `constant` and `linear_horizon` laws inside
-`src/euclid/stochastic/process_models.py`, but the retained probabilistic
-evaluation path does not select them.
+The implementation also supports `constant` and `linear_horizon` laws inside `src/euclid/stochastic/process_models.py`. Production lanes must cite the stochastic model manifest that declares which law and family were used.
 
 ## 7) Forecast object derivations
 
-Given Gaussian support $\mathcal N(\mu_h,s_h^2)$:
+Given a calibrated family support at horizon $h$:
 
-**Distribution object:** emits $(\mu_h,s_h)$.
+**Distribution object:** emits the family id, location, scale, family parameters, and production refs. For Gaussian compatibility this reduces to $(\mu_h,s_h)$.
 
-**Interval object** (nominal 0.8):
+**Interval object** (nominal 0.8 for Gaussian compatibility):
 
 $$
 [\mu_h-z_{0.9}s_h,\;\mu_h+z_{0.9}s_h],\quad z_{0.9}\approx1.281551565545.
 $$
 
-**Quantile object** at levels $0.1,0.5,0.9$:
+**Quantile object** at levels $0.1,0.5,0.9$ for Gaussian compatibility:
 
 $$
 q_\tau = \mu_h + z_\tau s_h,
@@ -272,7 +270,7 @@ $$
 
 with hard-coded z-scores $(-1.281551565545,0,1.281551565545)$.
 
-**Event probability object** for event $Y\ge \text{origin target}$:
+**Event probability object** for event $Y\ge \text{origin target}$ under Gaussian compatibility:
 
 $$
 p_h = 1-\Phi\left(\frac{\text{threshold}-\mu_h}{s_h}\right).
@@ -302,6 +300,8 @@ $$
 $$
 \frac12\log(2\pi s^2)+\frac{(y-\mu)^2}{2s^2}.
 $$
+
+Student-t and Laplace production distributions use their family-aware log score or calibrated distribution score through the stochastic model manifest. A heuristic Gaussian/sqrt-horizon compatibility artifact cannot stand in for those family-specific laws.
 
 **Interval score** for nominal coverage $1-\alpha$, bounds $[l,u]$:
 

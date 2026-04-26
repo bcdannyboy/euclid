@@ -57,10 +57,10 @@ from euclid.modules.evaluation_governance import (
 )
 from euclid.modules.gate_lifecycle import resolve_scorecard_status
 from euclid.modules.mechanistic_evidence import register_mechanistic_evidence
+from euclid.modules.predictive_tests import evaluate_predictive_promotion
 from euclid.modules.probabilistic_evaluation import (
     emit_probabilistic_prediction_artifact,
 )
-from euclid.modules.predictive_tests import evaluate_predictive_promotion
 from euclid.modules.replay import (
     ReplayedOutcome,
     build_artifact_hash_records,

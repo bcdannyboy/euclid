@@ -5,9 +5,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 import euclid.release as release
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+pytestmark = pytest.mark.timeout(600)
 
 
 def _run_command(

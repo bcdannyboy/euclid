@@ -1,8 +1,10 @@
 {
   "name": "euclid-frontend-harness",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "npm run test:frontend -- --run",
     "test:frontend": "vitest --environment jsdom",
     "test:frontend:watch": "vitest --environment jsdom --watch"
   },

@@ -1,13 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const INDEX_PATH =
-  "/Users/danielbloom/Desktop/euclid/src/euclid/_assets/workbench/index.html";
-const APP_PATH =
-  "/Users/danielbloom/Desktop/euclid/src/euclid/_assets/workbench/app.js";
-const ANALYSIS_PATH =
-  "/Users/danielbloom/Desktop/euclid/tests/frontend/workbench/fixtures/analysis-saved.json";
+const PROJECT_ROOT = process.cwd();
+const INDEX_PATH = join(
+  PROJECT_ROOT,
+  "src/euclid/_assets/workbench/index.html",
+);
+const APP_PATH = join(PROJECT_ROOT, "src/euclid/_assets/workbench/app.js");
+const ANALYSIS_PATH = join(
+  PROJECT_ROOT,
+  "tests/frontend/workbench/fixtures/analysis-saved.json",
+);
 
 const CONFIG_FIXTURE = {
   default_target_id: "price_close",

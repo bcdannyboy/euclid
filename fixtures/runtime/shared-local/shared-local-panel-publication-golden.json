@@ -103,22 +103,166 @@
         "comparison_status": "comparable",
         "failure_reason_code": null,
         "mean_loss_differential": 4.0,
+        "paired_loss_differential_stream": {
+          "baseline_id": "constant_baseline",
+          "baseline_prediction_artifact_ref": {
+            "object_id": "prediction_artifact_manifest_91f090fddbc88c16f8ec",
+            "schema_name": "prediction_artifact_manifest@1.1.0"
+          },
+          "baseline_row_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25",
+          "block_count": 2,
+          "candidate_id": "shared_local_candidate",
+          "candidate_prediction_artifact_ref": {
+            "object_id": "prediction_artifact_manifest_c8956438b844cae57734",
+            "schema_name": "prediction_artifact_manifest@1.1.0"
+          },
+          "candidate_row_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25",
+          "comparator_id": "constant_baseline",
+          "effective_block_count": 2,
+          "effective_sample_size": 2,
+          "entity_ids": [
+            "entity-a",
+            "entity-b"
+          ],
+          "horizon_geometry": [
+            {
+              "horizon": 1,
+              "weight": "1.0"
+            }
+          ],
+          "loss_id": "absolute_error",
+          "origin_ids": [
+            "2026-01-04T00:00:00Z"
+          ],
+          "pairs": [
+            {
+              "candidate_loss": 0.0,
+              "comparator_loss": 4.0,
+              "entity_id": "entity-a",
+              "horizon": 1,
+              "loss_differential": 4.0,
+              "origin_id": "2026-01-04T00:00:00Z"
+            },
+            {
+              "candidate_loss": 0.0,
+              "comparator_loss": 4.0,
+              "entity_id": "entity-b",
+              "horizon": 1,
+              "loss_differential": 4.0,
+              "origin_id": "2026-01-04T00:00:00Z"
+            }
+          ],
+          "raw_pair_count": 2,
+          "row_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25",
+          "schema_name": "paired_loss_differential_stream@1.0.0",
+          "stream_id": "shared_local_candidate__confirmatory_holdout__confirmatory_holdout__constant_baseline_prediction__absolute_error__paired_loss_differential",
+          "stream_ref": {
+            "object_id": "shared_local_candidate__confirmatory_holdout__confirmatory_holdout__constant_baseline_prediction__absolute_error__paired_loss_differential",
+            "schema_name": "paired_loss_differential_stream@1.0.0"
+          }
+        },
         "paired_origin_count": 2,
         "paired_predictive_test_result": {
-          "confidence_interval": [
-            4.0,
-            4.0
-          ],
-          "confidence_interval_method": "newey_west_hac_t_interval",
+          "actual_test_id": "diebold_mariano_hln_v1",
+          "confidence_interval": null,
+          "confidence_interval_method": "not_applicable",
+          "declared_test_id": "diebold_mariano_hln_v1",
+          "effective_block_count": 2,
+          "effective_sample_size": 2.0,
           "mean_loss_differential": 4.0,
-          "practical_margin": 0.0,
-          "promotion_allowed": true,
+          "minimum_pair_policy": {
+            "human_review_effective_sample_size": 50,
+            "minimum_effective_block_count": 8,
+            "minimum_effective_sample_size": 25
+          },
+          "p_value": null,
+          "paired_loss_differential_stream": {
+            "baseline_id": "constant_baseline",
+            "baseline_prediction_artifact_ref": {
+              "object_id": "prediction_artifact_manifest_91f090fddbc88c16f8ec",
+              "schema_name": "prediction_artifact_manifest@1.1.0"
+            },
+            "baseline_row_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25",
+            "block_count": 2,
+            "candidate_id": "shared_local_candidate",
+            "candidate_prediction_artifact_ref": {
+              "object_id": "prediction_artifact_manifest_c8956438b844cae57734",
+              "schema_name": "prediction_artifact_manifest@1.1.0"
+            },
+            "candidate_row_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25",
+            "comparator_id": "constant_baseline",
+            "effective_block_count": 2,
+            "effective_sample_size": 2,
+            "entity_ids": [
+              "entity-a",
+              "entity-b"
+            ],
+            "horizon_geometry": [
+              {
+                "horizon": 1,
+                "weight": "1.0"
+              }
+            ],
+            "loss_id": "absolute_error",
+            "origin_ids": [
+              "2026-01-04T00:00:00Z"
+            ],
+            "pairs": [
+              {
+                "candidate_loss": 0.0,
+                "comparator_loss": 4.0,
+                "entity_id": "entity-a",
+                "horizon": 1,
+                "loss_differential": 4.0,
+                "origin_id": "2026-01-04T00:00:00Z"
+              },
+              {
+                "candidate_loss": 0.0,
+                "comparator_loss": 4.0,
+                "entity_id": "entity-b",
+                "horizon": 1,
+                "loss_differential": 4.0,
+                "origin_id": "2026-01-04T00:00:00Z"
+              }
+            ],
+            "raw_pair_count": 2,
+            "row_set_id": "sha256:787b6b7a549c0217a722996dac0b93b46fc3c447faa377f50803b36259c30c25",
+            "schema_name": "paired_loss_differential_stream@1.0.0",
+            "stream_id": "shared_local_candidate__confirmatory_holdout__confirmatory_holdout__constant_baseline_prediction__absolute_error__paired_loss_differential",
+            "stream_ref": {
+              "object_id": "shared_local_candidate__confirmatory_holdout__confirmatory_holdout__constant_baseline_prediction__absolute_error__paired_loss_differential",
+              "schema_name": "paired_loss_differential_stream@1.0.0"
+            }
+          },
+          "paired_stream_identity": {
+            "entity_ids": [
+              "entity-a",
+              "entity-b"
+            ],
+            "horizons": [
+              1
+            ],
+            "origin_ids": [
+              "2026-01-04T00:00:00Z",
+              "2026-01-04T00:00:00Z"
+            ],
+            "row_set_id": "shared_local_candidate__confirmatory_holdout__confirmatory_holdout__constant_baseline_prediction__absolute_error__paired_loss_differential"
+          },
+          "paired_stream_ref": {
+            "object_id": "shared_local_candidate__confirmatory_holdout__confirmatory_holdout__constant_baseline_prediction__absolute_error__paired_loss_differential",
+            "schema_name": "paired_loss_differential_stream@1.0.0"
+          },
+          "practical_margin": 0.1,
+          "promotion_allowed": false,
           "raw_metric_comparison_role": "diagnostic_only",
-          "reason_codes": [],
-          "replay_identity": "predictive-promotion:1d8bf46d0207ef9d688cf1b039b800d7daa0f151cd9b84d763053a996261019e",
+          "raw_pair_count": 2,
+          "reason_codes": [
+            "insufficient_effective_sample_size"
+          ],
+          "replay_identity": "predictive-promotion:5466922400bb65b96750500ade6a1ae141501b0ac3b74adf11886eae55f56faf",
           "schema_name": "paired_predictive_test_result@1.0.0",
-          "statistical_test_backend": "statsmodels_hac_mean_loss_differential",
-          "status": "passed"
+          "statistical_test_backend": "diebold_mariano_hln_v1",
+          "status": "abstained"
         },
         "per_horizon_mean_loss_differentials": [
           {
@@ -126,7 +270,7 @@
             "mean_loss_differential": 4.0
           }
         ],
-        "practical_significance_margin": 0.0,
+        "practical_significance_margin": 0.1,
         "practical_significance_status": "candidate_better_than_margin",
         "primary_score_delta": 4.0,
         "score_result_ref": {

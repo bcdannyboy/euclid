@@ -1,0 +1,313 @@
+{
+  "agents": {
+    "agent-1779759060519-rwfam0": {
+      "agentId": "agent-1779759060519-rwfam0",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T01:31:00.519Z",
+      "domain": "release-engineering",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "agent-1779759062388-i1k2vv": {
+      "agentId": "agent-1779759062388-i1k2vv",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T01:31:02.388Z",
+      "domain": "operator-runtime",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "agent-1779759064265-qydzn0": {
+      "agentId": "agent-1779759064265-qydzn0",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T01:31:04.265Z",
+      "domain": "test-matrix",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "agent-1779759066149-wzlbax": {
+      "agentId": "agent-1779759066149-wzlbax",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T01:31:06.150Z",
+      "domain": "readiness-evidence",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "agent-1779759067914-vqk9no": {
+      "agentId": "agent-1779759067914-vqk9no",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T01:31:07.914Z",
+      "domain": "claim-math-realism",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "planner-math-realism": {
+      "agentId": "planner-math-realism",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "inherit"
+      },
+      "createdAt": "2026-05-26T02:01:43.304Z",
+      "domain": "mathematical realism",
+      "model": "inherit",
+      "modelRoutedBy": "explicit"
+    },
+    "planner-cir-identity": {
+      "agentId": "planner-cir-identity",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "inherit"
+      },
+      "createdAt": "2026-05-26T02:01:44.960Z",
+      "domain": "CIR reducer identity",
+      "model": "inherit",
+      "modelRoutedBy": "explicit"
+    },
+    "planner-symbolic-search": {
+      "agentId": "planner-symbolic-search",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "inherit"
+      },
+      "createdAt": "2026-05-26T02:01:46.470Z",
+      "domain": "symbolic regression search provenance",
+      "model": "inherit",
+      "modelRoutedBy": "explicit"
+    },
+    "planner-release-gates": {
+      "agentId": "planner-release-gates",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "inherit"
+      },
+      "createdAt": "2026-05-26T02:01:47.831Z",
+      "domain": "release gates and evidence ledger",
+      "model": "inherit",
+      "modelRoutedBy": "explicit"
+    },
+    "planner-adversarial": {
+      "agentId": "planner-adversarial",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "inherit"
+      },
+      "createdAt": "2026-05-26T02:01:49.402Z",
+      "domain": "adversarial validation",
+      "model": "inherit",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-benchmark-runtime": {
+      "agentId": "w4-planner-benchmark-runtime",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:15:43.517Z",
+      "domain": "benchmarks/runtime",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-release-matrix": {
+      "agentId": "w4-planner-release-matrix",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:15:47.934Z",
+      "domain": "release/repo-test-matrix",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-clean-install": {
+      "agentId": "w4-planner-clean-install",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:15:54.996Z",
+      "domain": "clean-install/regression-tests",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-evidence-lanes": {
+      "agentId": "w4-planner-evidence-lanes",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:15:59.449Z",
+      "domain": "readiness/evidence-lanes",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-fixtures-goldens": {
+      "agentId": "w4-planner-fixtures-goldens",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:16:03.977Z",
+      "domain": "fixtures/goldens/assets",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-regression-triage": {
+      "agentId": "w4-planner-regression-triage",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:16:08.824Z",
+      "domain": "tests/regression-matrix",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "w4-planner-jury-risk": {
+      "agentId": "w4-planner-jury-risk",
+      "agentType": "planner",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:16:12.848Z",
+      "domain": "release-jury/risk",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "wave4-planner-release": {
+      "agentId": "wave4-planner-release",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:17:21.067Z",
+      "domain": "release-engineering",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "wave4-planner-math": {
+      "agentId": "wave4-planner-math",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:17:25.430Z",
+      "domain": "mathematical-realism-cir-search-reducers",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "wave4-planner-stat": {
+      "agentId": "wave4-planner-stat",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:17:30.380Z",
+      "domain": "forecasting-calibration-probabilistic-evidence",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "wave4-planner-benchmark": {
+      "agentId": "wave4-planner-benchmark",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:17:35.068Z",
+      "domain": "benchmark-runtime-replay-clean-install",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "wave4-planner-truth": {
+      "agentId": "wave4-planner-truth",
+      "agentType": "reviewer",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-05-26T02:17:40.424Z",
+      "domain": "claim-surface-truth-docs-workbench-security",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    }
+  },
+  "version": "3.0.0"
+}

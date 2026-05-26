@@ -10,14 +10,34 @@ search_class_honesty:
   - proposer_mechanism
   - pruning_rules
   - stop_rule
+  declared_candidate_selection_rule: manifest_order_then_search_class_budget
+  declared_candidate_programs:
+  - candidate_id: algorithmic_lag_plus_two
+    algorithmic_program: "(program (state (lit 0)) (next (add (obs 0) (lit 2))) (emit (state 0)))"
+    algorithmic_state_slot_count: 1
+    program_node_count: 5
+    history_access_mode: causal_current_observation
+    max_lag: 0
+  - candidate_id: algorithmic_last_observation
+    algorithmic_program: "(program (state (lit 0)) (next (obs 0)) (emit (state 0)))"
+    algorithmic_state_slot_count: 1
+    program_node_count: 3
+    history_access_mode: causal_current_observation
+    max_lag: 0
+  - candidate_id: algorithmic_running_half_average
+    algorithmic_program: "(program (state (lit 0)) (next (div (add (state 0) (obs 0)) (lit 2))) (emit (state 0)))"
+    algorithmic_state_slot_count: 1
+    program_node_count: 7
+    history_access_mode: causal_current_observation
+    max_lag: 0
 regime_tags:
 - search_class_proof
 - bounded_heuristic
-dataset_ref: fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-search-series.csv
+dataset_ref: fixtures/runtime/full_vision_certification/algorithmic_rediscovery/search-class-lag-plus-two-series.csv
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-04-14T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:

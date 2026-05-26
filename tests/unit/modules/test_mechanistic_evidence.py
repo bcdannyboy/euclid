@@ -6,7 +6,10 @@ from euclid.contracts.loader import load_contract_catalog
 from euclid.contracts.refs import TypedRef
 from euclid.modules.claims import resolve_claim_publication
 from euclid.modules.gate_lifecycle import resolve_scorecard_status
-from euclid.modules.mechanistic_evidence import evaluate_mechanistic_evidence
+from euclid.modules.mechanistic_evidence import (
+    evaluate_mechanistic_evidence,
+    resolve_mechanistic_lower_claim_ceiling,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -204,3 +207,47 @@ def test_mechanistic_evidence_cannot_outrun_predictive_floor() -> None:
     assert evaluation.dossier.status == "blocked_predictive_floor"
     assert evaluation.dossier.resolved_claim_ceiling == "descriptive_structure"
     assert evaluation.dossier.reason_codes == ("predictive_floor_required",)
+
+
+def test_mechanistic_lower_claim_ceiling_accepts_declared_predictive_floor() -> None:
+    lower_claim_ceiling = resolve_mechanistic_lower_claim_ceiling(
+        descriptive_status="passed",
+        predictive_status="blocked",
+        predictive_reason_codes=("many_model_correction_failed",),
+        candidate_beats_baseline=True,
+        point_score_comparison_status="comparable",
+        time_safety_status="passed",
+        calibration_status="not_applicable_for_forecast_type",
+    )
+
+    assert lower_claim_ceiling == "predictive_within_declared_scope"
+
+
+def test_mechanistic_lower_claim_ceiling_accepts_thin_paired_diagnostic_floor() -> (
+    None
+):
+    lower_claim_ceiling = resolve_mechanistic_lower_claim_ceiling(
+        descriptive_status="passed",
+        predictive_status="blocked",
+        predictive_reason_codes=("insufficient_paired_count",),
+        candidate_beats_baseline=True,
+        point_score_comparison_status="comparable",
+        time_safety_status="passed",
+        calibration_status="not_applicable_for_forecast_type",
+    )
+
+    assert lower_claim_ceiling == "predictive_within_declared_scope"
+
+
+def test_mechanistic_lower_claim_ceiling_preserves_hard_predictive_blocks() -> None:
+    lower_claim_ceiling = resolve_mechanistic_lower_claim_ceiling(
+        descriptive_status="passed",
+        predictive_status="blocked",
+        predictive_reason_codes=("baseline_rule_failed",),
+        candidate_beats_baseline=False,
+        point_score_comparison_status="comparable",
+        time_safety_status="passed",
+        calibration_status="not_applicable_for_forecast_type",
+    )
+
+    assert lower_claim_ceiling == "descriptive_structure"

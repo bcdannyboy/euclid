@@ -7,7 +7,20 @@ entity_count: 1
 evidence_bundle_refs:
 - fixtures/runtime/full_vision_certification/external_evidence/external-evidence-positive-evidence.yaml
 - fixtures/runtime/full_vision_certification/external_evidence/external-evidence-negative-evidence.yaml
-- fixtures/runtime/full_vision_certification/external_evidence/external-evidence-tamper-golden.json
 diversity_axes:
 - provenance_integrity
 - independence
+fixture_provenance:
+  source_kind: hand_authored_adversarial
+  source_ref: fixtures/runtime/full_vision_certification/external_evidence/fixture-set.yaml
+  license: repo-internal
+  edge_cases:
+  - missing_provenance
+  - tamper_guard
+  regression_reason: Exercise external evidence provenance and independence without golden acceptance.
+  shortcut_disclosure:
+    fixture_only: true
+    forbidden_uses:
+    - golden_acceptance
+    - real_world_claim
+    - unproven_mechanistic_support

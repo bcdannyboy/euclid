@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from fractions import Fraction
 from typing import Any, Mapping, Sequence
 
@@ -21,6 +21,7 @@ from euclid.math.codelength import (
     signed_integer_code_length,
     strict_single_class_law_eligibility,
 )
+from euclid.math.lattice import LatticePolicy
 from euclid.math.quantization import FixedStepMidTreadQuantizer
 from euclid.math.quantization import QuantizationPolicy, resolve_quantizer
 from euclid.math.reference_descriptions import (
@@ -60,10 +61,17 @@ class DescriptionGainArtifact:
     quantization_step: str = _DEFAULT_QUANTIZATION_STEP
     reference_policy_id: str = "raw_quantized_transformed_sequence_v1"
     reference_family_id: str = "raw_quantized_transformed_sequence"
+    reference_scope: str = "raw_observation_reference"
     data_code_family: str = "residual_signed_integer_elias_delta_v1"
     coding_row_set_id: str = ""
     codelength_comparison_key: Mapping[str, Any] = field(default_factory=dict)
     data_code_diagnostics: Mapping[str, Any] = field(default_factory=dict)
+    lattice_policy: Mapping[str, Any] = field(default_factory=dict)
+    model_code_decomposition: Mapping[str, Any] = field(default_factory=dict)
+    comparable_group_id: str = ""
+    comparable_group_size: int = 0
+    comparable_group_rank: int = 0
+    comparable_group_selected: bool = False
 
 
 @dataclass(frozen=True)
@@ -83,6 +91,7 @@ class DescriptiveCodingResult:
     accepted_candidates: tuple[CandidateIntermediateRepresentation, ...]
     description_artifacts: tuple[DescriptionGainArtifact, ...]
     admissibility_diagnostics: tuple[DescriptiveAdmissibilityDiagnostic, ...]
+    selected_candidates: tuple[CandidateIntermediateRepresentation, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -105,6 +114,7 @@ def evaluate_descriptive_candidates(
     residual_history_construction: str = "none",
     parameter_lattice_step: str | None = None,
     state_lattice_step: str | None = None,
+    lattice_policy: LatticePolicy | Mapping[str, Any] | None = None,
     comparison_key_overrides: Mapping[str, CodelengthComparisonKey] | None = None,
     minimum_description_gain_bits: float | None = None,
 ) -> DescriptiveCodingResult:
@@ -133,21 +143,28 @@ def evaluate_descriptive_candidates(
         quantizer=active_quantizer,
         policy=active_reference_policy,
         seasonal_period=seasonal_period,
+        data_code_family=data_code_family,
     )
     row_set_id = coding_row_set_id(tuple(legal_feature_view.rows))
-    parameter_lattice = parameter_lattice_step or active_quantizer.step_string
-    state_lattice = state_lattice_step or active_quantizer.step_string
+    active_lattice_policy = LatticePolicy.coerce(
+        lattice_policy,
+        residual_quantization_step=active_quantizer.step_string,
+        parameter_lattice_step=parameter_lattice_step,
+        state_lattice_step=state_lattice_step,
+    )
     comparison_status = _comparison_status(
         candidates,
         quantization_mode=quantization_mode,
         quantizer=active_quantizer,
         reference_policy_id=reference_description.reference_policy_id,
+        reference_family_id=reference_description.reference_family_id,
+        reference_scope=reference_description.reference_scope,
         data_code_family=data_code_family,
         horizon_geometry=tuple(int(horizon) for horizon in horizon_geometry),
         coding_row_set_id=row_set_id,
         residual_history_construction=residual_history_construction,
-        parameter_lattice_step=parameter_lattice,
-        state_lattice_step=state_lattice,
+        parameter_lattice_step=active_lattice_policy.parameter_lattice_step,
+        state_lattice_step=active_lattice_policy.state_lattice_step,
         comparison_key_overrides=comparison_key_overrides or {},
     )
     minimum_gain = (
@@ -157,6 +174,9 @@ def evaluate_descriptive_candidates(
     accepted_candidates: list[CandidateIntermediateRepresentation] = []
     description_artifacts: list[DescriptionGainArtifact] = []
     diagnostics: list[DescriptiveAdmissibilityDiagnostic] = []
+    candidate_by_hash = {
+        candidate.canonical_hash(): candidate for candidate in candidates
+    }
 
     for candidate in candidates:
         candidate_id = (
@@ -169,7 +189,7 @@ def evaluate_descriptive_candidates(
         comparable = candidate_hash in comparison_status.comparable_hashes
         if not comparable:
             reason_codes.append("codelength_comparability_failed")
-            details.update(comparison_status.details)
+            details.update(comparison_status.diagnostic_details(candidate_hash))
 
         model_terms = _model_terms(candidate)
         nonfinite_fields = [
@@ -206,6 +226,10 @@ def evaluate_descriptive_candidates(
             support_valid = False
 
         if not reason_codes and fitted_values is not None:
+            _annotate_model_code_decomposition(
+                candidate,
+                lattice_policy=active_lattice_policy,
+            )
             residual_indices = tuple(
                 active_quantizer.quantize_index(actual - fitted)
                 for actual, fitted in zip(observed_values, fitted_values, strict=True)
@@ -242,6 +266,7 @@ def evaluate_descriptive_candidates(
                 quantization_step=active_quantizer.step_string,
                 reference_policy_id=reference_description.reference_policy_id,
                 reference_family_id=reference_description.reference_family_id,
+                reference_scope=reference_description.reference_scope,
                 data_code_family=data_code_family,
                 coding_row_set_id=row_set_id,
                 codelength_comparison_key=comparison_status.key_by_hash.get(
@@ -251,6 +276,19 @@ def evaluate_descriptive_candidates(
                 data_code_diagnostics=data_code_diagnostics(
                     residual_indices,
                     data_code_family=data_code_family,
+                ),
+                lattice_policy=active_lattice_policy.as_dict(),
+                model_code_decomposition=_model_code_decomposition(
+                    candidate,
+                    lattice_policy=active_lattice_policy,
+                ),
+                comparable_group_id=comparison_status.group_id_by_hash.get(
+                    candidate_hash,
+                    "",
+                ),
+                comparable_group_size=comparison_status.group_size_by_hash.get(
+                    candidate_hash,
+                    0,
                 ),
             )
             description_artifacts.append(artifact)
@@ -274,11 +312,28 @@ def evaluate_descriptive_candidates(
             )
         )
 
+    ranked_artifacts, selected_candidate_hashes = _rank_comparable_group_artifacts(
+        description_artifacts,
+        comparable_groups=comparison_status.comparable_groups,
+    )
+
     return DescriptiveCodingResult(
         accepted_candidates=tuple(accepted_candidates),
-        description_artifacts=tuple(description_artifacts),
+        description_artifacts=ranked_artifacts,
         admissibility_diagnostics=tuple(diagnostics),
+        selected_candidates=tuple(
+            candidate_by_hash[candidate_hash]
+            for candidate_hash in selected_candidate_hashes
+            if candidate_hash in candidate_by_hash
+        ),
     )
+
+
+@dataclass(frozen=True)
+class _ComparableGroup:
+    group_id: str
+    candidate_hashes: tuple[str, ...]
+    comparison_key: Mapping[str, Any]
 
 
 @dataclass(frozen=True)
@@ -286,6 +341,15 @@ class _ComparisonStatus:
     comparable_hashes: frozenset[str]
     details: Mapping[str, Any] = field(default_factory=dict)
     key_by_hash: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
+    comparable_groups: tuple[_ComparableGroup, ...] = ()
+    group_id_by_hash: Mapping[str, str] = field(default_factory=dict)
+    group_size_by_hash: Mapping[str, int] = field(default_factory=dict)
+    non_comparable_details_by_hash: Mapping[str, Mapping[str, Any]] = field(
+        default_factory=dict
+    )
+
+    def diagnostic_details(self, candidate_hash: str) -> Mapping[str, Any]:
+        return self.non_comparable_details_by_hash.get(candidate_hash, self.details)
 
 
 def _comparison_status(
@@ -294,6 +358,8 @@ def _comparison_status(
     quantization_mode: str,
     quantizer: FixedStepMidTreadQuantizer,
     reference_policy_id: str,
+    reference_family_id: str,
+    reference_scope: str,
     data_code_family: str,
     horizon_geometry: tuple[int, ...],
     coding_row_set_id: str,
@@ -315,6 +381,8 @@ def _comparison_status(
                 quantization_mode=quantization_mode,
                 quantization_step=quantizer.step_string,
                 reference_policy_id=reference_policy_id,
+                reference_family_id=reference_family_id,
+                reference_scope=reference_scope,
                 data_code_family=data_code_family,
                 support_kind=observation_model.support_kind,
                 horizon_geometry=horizon_geometry,
@@ -330,11 +398,77 @@ def _comparison_status(
         candidate_hash: key.as_dict() for candidate_hash, key in keys_by_hash.items()
     }
     if comparability.comparable:
+        comparable_group = _ComparableGroup(
+            group_id="codelength_comparison_group:1",
+            candidate_hashes=tuple(candidate.canonical_hash() for candidate in candidates),
+            comparison_key=(
+                tuple(serial_keys.values())[0] if serial_keys else {}
+            ),
+        )
         return _ComparisonStatus(
             comparable_hashes=frozenset(
                 candidate.canonical_hash() for candidate in candidates
             ),
             key_by_hash=serial_keys,
+            comparable_groups=(comparable_group,) if candidates else (),
+            group_id_by_hash={
+                candidate.canonical_hash(): comparable_group.group_id
+                for candidate in candidates
+            },
+            group_size_by_hash={
+                candidate.canonical_hash(): len(candidates) for candidate in candidates
+            },
+        )
+    grouped_hashes = _group_candidate_hashes_by_comparison_key(keys_by_hash)
+    comparable_group_hashes = tuple(
+        candidate_hashes
+        for candidate_hashes in grouped_hashes
+        if len(candidate_hashes) > 1
+    )
+    if comparable_group_hashes:
+        comparable_groups = tuple(
+            _ComparableGroup(
+                group_id=f"codelength_comparison_group:{index}",
+                candidate_hashes=candidate_hashes,
+                comparison_key=serial_keys[candidate_hashes[0]],
+            )
+            for index, candidate_hashes in enumerate(comparable_group_hashes, start=1)
+        )
+        group_id_by_hash = {
+            candidate_hash: group.group_id
+            for group in comparable_groups
+            for candidate_hash in group.candidate_hashes
+        }
+        group_size_by_hash = {
+            candidate_hash: len(group.candidate_hashes)
+            for group in comparable_groups
+            for candidate_hash in group.candidate_hashes
+        }
+        comparable_hashes = frozenset(group_id_by_hash)
+        singleton_hashes = tuple(
+            candidate_hashes[0]
+            for candidate_hashes in grouped_hashes
+            if len(candidate_hashes) == 1
+        )
+        return _ComparisonStatus(
+            comparable_hashes=comparable_hashes,
+            key_by_hash=serial_keys,
+            comparable_groups=comparable_groups,
+            group_id_by_hash=group_id_by_hash,
+            group_size_by_hash=group_size_by_hash,
+            non_comparable_details_by_hash={
+                candidate_hash: {
+                    "comparison_failure_reason_code": "no_comparable_peer_in_batch",
+                    "comparison_failure_details": {
+                        "candidate_hash": candidate_hash,
+                        "comparison_key": serial_keys[candidate_hash],
+                    },
+                    "comparison_key": serial_keys[candidate_hash],
+                    "comparison_keys": serial_keys,
+                    "comparable_group_size": 1,
+                }
+                for candidate_hash in singleton_hashes
+            },
         )
     return _ComparisonStatus(
         comparable_hashes=frozenset(),
@@ -344,6 +478,81 @@ def _comparison_status(
             "comparison_keys": serial_keys,
         },
         key_by_hash=serial_keys,
+    )
+
+
+def _group_candidate_hashes_by_comparison_key(
+    keys_by_hash: Mapping[str, CodelengthComparisonKey],
+) -> tuple[tuple[str, ...], ...]:
+    grouped: dict[tuple[Any, ...], list[str]] = {}
+    for candidate_hash, key in keys_by_hash.items():
+        fingerprint = _comparison_key_fingerprint(key)
+        grouped.setdefault(fingerprint, []).append(candidate_hash)
+    return tuple(tuple(candidate_hashes) for candidate_hashes in grouped.values())
+
+
+def _comparison_key_fingerprint(key: CodelengthComparisonKey) -> tuple[Any, ...]:
+    return (
+        key.quantization_mode,
+        key.quantization_step,
+        key.reference_scope,
+        key.reference_family_id,
+        key.reference_policy_id,
+        key.data_code_family,
+        key.support_kind,
+        tuple(key.horizon_geometry),
+        key.coding_row_set_id,
+        key.residual_history_construction,
+        key.parameter_lattice_step,
+        key.state_lattice_step,
+        key.runtime_signature,
+    )
+
+
+def _rank_comparable_group_artifacts(
+    artifacts: Sequence[DescriptionGainArtifact],
+    *,
+    comparable_groups: Sequence[_ComparableGroup],
+) -> tuple[tuple[DescriptionGainArtifact, ...], tuple[str, ...]]:
+    artifact_by_hash = {artifact.candidate_hash: artifact for artifact in artifacts}
+    rank_by_hash: dict[str, int] = {}
+    selected_hashes: list[str] = []
+    selected_hash_set: set[str] = set()
+    for group in comparable_groups:
+        group_artifacts = [
+            artifact_by_hash[candidate_hash]
+            for candidate_hash in group.candidate_hashes
+            if candidate_hash in artifact_by_hash
+        ]
+        if not group_artifacts:
+            continue
+        ranked_group = sorted(group_artifacts, key=_description_artifact_sort_key)
+        selected_hashes.append(ranked_group[0].candidate_hash)
+        selected_hash_set.add(ranked_group[0].candidate_hash)
+        for rank, artifact in enumerate(ranked_group, start=1):
+            rank_by_hash[artifact.candidate_hash] = rank
+    return (
+        tuple(
+            replace(
+                artifact,
+                comparable_group_rank=rank_by_hash.get(artifact.candidate_hash, 0),
+                comparable_group_selected=artifact.candidate_hash in selected_hash_set,
+            )
+            for artifact in artifacts
+        ),
+        tuple(selected_hashes),
+    )
+
+
+def _description_artifact_sort_key(
+    artifact: DescriptionGainArtifact,
+) -> tuple[float, float, float, int, str]:
+    return (
+        float(artifact.L_total_bits),
+        -float(artifact.description_gain_bits),
+        float(artifact.L_structure_bits),
+        len(str(artifact.candidate_hash)),
+        artifact.candidate_id,
     )
 
 
@@ -357,6 +566,52 @@ def _model_terms(
         "L_literals_bits": float(decomposition.L_literals_bits),
         "L_params_bits": float(decomposition.L_params_bits),
         "L_state_bits": float(decomposition.L_state_bits),
+    }
+
+
+def _model_code_decomposition(
+    candidate: CandidateIntermediateRepresentation,
+    *,
+    lattice_policy: LatticePolicy,
+) -> dict[str, Any]:
+    decomposition = candidate.evidence_layer.model_code_decomposition.as_dict()
+    return {
+        **decomposition,
+        **_lattice_decomposition_fields(lattice_policy),
+        "lattice_policy": lattice_policy.as_dict(),
+    }
+
+
+def _annotate_model_code_decomposition(
+    candidate: CandidateIntermediateRepresentation,
+    *,
+    lattice_policy: LatticePolicy,
+) -> None:
+    decomposition = candidate.evidence_layer.model_code_decomposition
+    base_payload = {
+        "L_family_bits": decomposition.L_family_bits,
+        "L_structure_bits": decomposition.L_structure_bits,
+        "L_literals_bits": decomposition.L_literals_bits,
+        "L_params_bits": decomposition.L_params_bits,
+        "L_state_bits": decomposition.L_state_bits,
+    }
+    payload = {
+        **_lattice_decomposition_fields(lattice_policy),
+        "lattice_policy": lattice_policy.as_dict(),
+    }
+    object.__setattr__(decomposition, "annotations", payload)
+
+
+def _lattice_decomposition_fields(lattice_policy: LatticePolicy) -> dict[str, Any]:
+    return {
+        "parameter_lattice_step": lattice_policy.parameter_lattice_step,
+        "state_lattice_step": lattice_policy.state_lattice_step,
+        "parameter_lattice_policy_id": (
+            f"fixed_step_mid_tread:{lattice_policy.parameter_lattice_step}"
+        ),
+        "state_lattice_policy_id": (
+            f"fixed_step_mid_tread:{lattice_policy.state_lattice_step}"
+        ),
     }
 
 
@@ -697,6 +952,9 @@ def _coerce_reference_policy(
             str(reference_policy["policy_id"])
             if reference_policy.get("policy_id") is not None
             else None
+        ),
+        reference_scope=str(
+            reference_policy.get("reference_scope", "raw_observation_reference")
         ),
     )
 

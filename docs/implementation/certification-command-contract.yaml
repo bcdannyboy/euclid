@@ -94,10 +94,10 @@ commands:
   - shipped_releasable
   run_order: 6
   command: python3.11 -m euclid release certify-clean-install --project-root . --wheel-dir
-    build/certification/wheels --output-root build/certification/clean_install
+    build/certification/clean_install/wheels --output-root build/certification/clean_install
   input_artifact_ids: []
   output_artifact_ids:
-  - build/certification/wheels
+  - build/certification/clean_install/wheels
   - build/certification/clean_install/clean-install-report.json
   - build/reports/clean-install-certification.json
   build_toolchain_requirements:
@@ -149,6 +149,7 @@ rules:
   contract changes in the same patch.
 - full_vision_operator_replay must derive run_id from build/certification/full_vision_run/run-result.json.
 - clean_install_certification must declare the wheel-building toolchain explicitly.
+- clean_install_certification must place --wheel-dir under the clean-install output root.
 - clean_install_certification must install the certified wheel through a local no-index
   wheelhouse rather than live network dependency resolution.
 - Required certification commands cannot be skipped or xfailed.

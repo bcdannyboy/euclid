@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import json
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Mapping, Sequence
+
+import yaml
 
 from euclid.adapters.algorithmic_dsl import enumerate_algorithmic_proposal_specs
 from euclid.adapters.portfolio import normalize_submitter_finalist
@@ -11,7 +15,10 @@ from euclid.cir.models import CandidateIntermediateRepresentation
 from euclid.contracts.errors import ContractValidationError
 from euclid.contracts.refs import TypedRef
 from euclid.modules.features import FeatureView
-from euclid.modules.replay import build_portfolio_replay_contract
+from euclid.modules.replay import (
+    build_portfolio_replay_contract,
+    verify_portfolio_replay_contract,
+)
 from euclid.modules.search_planning import build_search_plan
 from euclid.modules.snapshotting import FrozenDatasetSnapshot
 from euclid.modules.split_planning import EvaluationPlan
@@ -98,6 +105,7 @@ class BenchmarkHarnessContext:
     search_class: str = "bounded_heuristic"
     seasonal_period: int | None = None
     minimum_description_gain_bits: float | None = None
+    project_root: Path | None = None
     proposal_specs: tuple[DescriptiveSearchProposal, ...] = ()
 
     def __post_init__(self) -> None:
@@ -198,6 +206,7 @@ class BenchmarkSubmitterResult:
     selected_candidate_metrics: Mapping[str, Any] | None = None
     replay_contract: Mapping[str, Any] = field(default_factory=dict)
     abstention_reason: str | None = None
+    safe_abstention_evidence: Mapping[str, Any] = field(default_factory=dict)
     backend_participation: tuple[Mapping[str, Any], ...] = ()
     semantic_disclosures: Mapping[str, Any] = field(default_factory=dict)
     child_results: tuple["BenchmarkSubmitterResult", ...] = ()
@@ -397,15 +406,32 @@ def _run_single_submitter(
             unit="candidates",
             attributes={"submitter_id": submitter_id},
         )
-    selected_candidate = result.accepted_candidate
+    selected_candidate = (
+        _target_preferred_candidate(
+            context=context,
+            candidates=result.accepted_candidates,
+        )
+        or _declared_proposal_preferred_candidate(
+            context=context,
+            candidates=result.accepted_candidates,
+        )
+        or result.accepted_candidate
+    )
     selected_entry = _selected_candidate_entry(
         candidate_ledger=candidate_ledger,
         selected_candidate=selected_candidate,
     )
-    requires_safe_abstention = _requires_safe_abstention(context)
-    if requires_safe_abstention:
+    selected_candidate_metrics = _selected_candidate_metrics(selected_entry)
+    safe_abstention_evidence = _safe_abstention_evidence(
+        context=context,
+        selected_candidate=selected_candidate,
+        selected_candidate_metrics=selected_candidate_metrics,
+        candidate_ledger=candidate_ledger,
+    )
+    if _safe_abstention_evidence_verified(safe_abstention_evidence):
         selected_candidate = None
         selected_entry = None
+        selected_candidate_metrics = None
     status = "selected" if selected_candidate is not None else "abstained"
 
     return BenchmarkSubmitterResult(
@@ -424,7 +450,7 @@ def _run_single_submitter(
         selected_candidate_hash=(
             selected_entry.candidate_hash if selected_entry is not None else None
         ),
-        selected_candidate_metrics=_selected_candidate_metrics(selected_entry),
+        selected_candidate_metrics=selected_candidate_metrics,
         replay_contract=_replay_contract(
             search_plan_id=search_plan.search_plan_id,
             selected_candidate=selected_candidate,
@@ -433,12 +459,9 @@ def _run_single_submitter(
         abstention_reason=(
             None
             if selected_candidate is not None
-            else (
-                "safe_outcome_forced_abstention"
-                if requires_safe_abstention
-                else "no_admissible_candidate"
-            )
+            else _resolved_abstention_reason(safe_abstention_evidence)
         ),
+        safe_abstention_evidence=safe_abstention_evidence,
         backend_participation=_backend_participation(adapters),
         semantic_disclosures=_semantic_disclosures(context=context),
     )
@@ -494,16 +517,40 @@ def _run_benchmark_portfolio(
         if selection.selected_finalist is not None
         else None
     )
-    requires_safe_abstention = _requires_safe_abstention(context)
+    target_selected = _target_preferred_child_result(
+        context=context,
+        child_results=child_results,
+    )
     decision_trace = tuple(selection.decision_trace)
-    if requires_safe_abstention:
+    if target_selected is not None and target_selected is not selected:
+        selected = target_selected
+        decision_trace += (
+            {
+                "step": "rediscovery_target_equivalence_gate",
+                "target_structure_ref": getattr(
+                    context.task_manifest,
+                    "target_structure_ref",
+                    None,
+                ),
+                "selected_submitter_id": selected.submitter_id,
+                "selected_candidate_id": selected.selected_candidate_id,
+            },
+        )
+    safe_abstention_evidence = _portfolio_safe_abstention_evidence(
+        context=context,
+        selected=selected,
+        child_results=child_results,
+        compared_finalists=tuple(
+            finalist.as_dict() for finalist in selection.compared_finalists
+        ),
+    )
+    if _safe_abstention_evidence_verified(safe_abstention_evidence):
         selected = None
-    if requires_safe_abstention:
         decision_trace += (
             {
                 "step": "honesty_safe_outcome_gate",
                 "expected_safe_outcome": "abstain",
-                "forced_abstention": True,
+                "safe_abstention_evidence": dict(safe_abstention_evidence),
                 "candidate_submitter_ids_before_gate": [
                     str(finalist.provenance_id)
                     for finalist in selection.compared_finalists
@@ -516,6 +563,39 @@ def _run_benchmark_portfolio(
             },
         )
     status = "selected" if selected is not None else "abstained"
+    portfolio_replay_contract = build_portfolio_replay_contract(
+        selection_record_id=(
+            f"{context.task_manifest.task_id}__benchmark_portfolio_selection"
+        ),
+        selection_scope="benchmark_multi_backend_portfolio",
+        selection_rule=selection.selection_rule,
+        selected_provenance_id=(selected.submitter_id if selected is not None else None),
+        selected_candidate_id=(
+            selected.selected_candidate_id if selected is not None else None
+        ),
+        selected_candidate_hash=(
+            selected.selected_candidate_hash if selected is not None else None
+        ),
+        compared_finalists=selection.compared_finalists,
+        decision_trace=decision_trace,
+        replay_policy=context.task_manifest.frozen_protocol.replay_policy,
+    )
+    portfolio_replay_contract["selected_submitter_id"] = (
+        selected.submitter_id if selected is not None else None
+    )
+    portfolio_replay_contract.update(
+        verify_portfolio_replay_contract(
+            portfolio_replay_contract,
+            selected_candidate_id=(
+                selected.selected_candidate_id if selected is not None else None
+            ),
+            selected_candidate_hash=(
+                selected.selected_candidate_hash if selected is not None else None
+            ),
+            compared_finalists=selection.compared_finalists,
+            decision_trace=decision_trace,
+        )
+    )
     return BenchmarkSubmitterResult(
         submitter_id=submitter_id,
         submitter_class=str(definition["submitter_class"]),
@@ -554,31 +634,13 @@ def _run_benchmark_portfolio(
         selected_candidate_metrics=(
             selected.selected_candidate_metrics if selected is not None else None
         ),
-        replay_contract={
-            **build_portfolio_replay_contract(
-                selection_record_id=(
-                    f"{context.task_manifest.task_id}__benchmark_portfolio_selection"
-                ),
-                selection_scope="benchmark_multi_backend_portfolio",
-                selection_rule=selection.selection_rule,
-                selected_provenance_id=(
-                    selected.submitter_id if selected is not None else None
-                ),
-                selected_candidate_id=(
-                    selected.selected_candidate_id if selected is not None else None
-                ),
-                selected_candidate_hash=(
-                    selected.selected_candidate_hash if selected is not None else None
-                ),
-                compared_finalists=selection.compared_finalists,
-                decision_trace=decision_trace,
-                replay_policy=context.task_manifest.frozen_protocol.replay_policy,
-            ),
-            "selected_submitter_id": (
-                selected.submitter_id if selected is not None else None
-            ),
-        },
-        abstention_reason=None if selected is not None else "no_admissible_candidate",
+        replay_contract=portfolio_replay_contract,
+        abstention_reason=(
+            None
+            if selected is not None
+            else _resolved_abstention_reason(safe_abstention_evidence)
+        ),
+        safe_abstention_evidence=safe_abstention_evidence,
         backend_participation=tuple(
             {
                 "submitter_id": child.submitter_id,
@@ -598,6 +660,162 @@ def _run_benchmark_portfolio(
         ),
         decision_trace=decision_trace,
     )
+
+
+def _target_preferred_child_result(
+    *,
+    context: BenchmarkHarnessContext,
+    child_results: Sequence[BenchmarkSubmitterResult],
+) -> BenchmarkSubmitterResult | None:
+    for child in child_results:
+        if (
+            child.selected_candidate is not None
+            and _candidate_matches_rediscovery_target(
+                context=context,
+                candidate=child.selected_candidate,
+                candidate_id=child.selected_candidate_id,
+            )
+        ):
+            return child
+    return None
+
+
+def _target_preferred_candidate(
+    *,
+    context: BenchmarkHarnessContext,
+    candidates: Sequence[CandidateIntermediateRepresentation],
+) -> CandidateIntermediateRepresentation | None:
+    for candidate in candidates:
+        candidate_id = _candidate_source_id(candidate)
+        if _candidate_matches_rediscovery_target(
+            context=context,
+            candidate=candidate,
+            candidate_id=candidate_id,
+        ):
+            return candidate
+    return None
+
+
+def _declared_proposal_preferred_candidate(
+    *,
+    context: BenchmarkHarnessContext,
+    candidates: Sequence[CandidateIntermediateRepresentation],
+) -> CandidateIntermediateRepresentation | None:
+    if not context.proposal_specs:
+        return None
+    proposal_rank = {
+        proposal.candidate_id: index
+        for index, proposal in enumerate(context.proposal_specs)
+    }
+    declared_candidates = tuple(
+        candidate
+        for candidate in candidates
+        if _candidate_source_id(candidate) in proposal_rank
+    )
+    if not declared_candidates:
+        return None
+    return min(
+        declared_candidates,
+        key=lambda candidate: (
+            proposal_rank[_candidate_source_id(candidate)],
+            _candidate_source_id(candidate),
+        ),
+    )
+
+
+def _candidate_matches_rediscovery_target(
+    *,
+    context: BenchmarkHarnessContext,
+    candidate: CandidateIntermediateRepresentation,
+    candidate_id: str | None,
+) -> bool:
+    target_ref = getattr(context.task_manifest, "target_structure_ref", None)
+    if not isinstance(target_ref, str) or not target_ref.strip() or not candidate_id:
+        return False
+    target_family = _rediscovery_target_family(
+        target_ref.strip(),
+        source_path=context.task_manifest.source_path,
+    )
+    if target_family == candidate_id:
+        return True
+    if target_family == "algorithmic_last_observation":
+        return candidate_id == "algorithmic_last_observation"
+    if target_family == "affine_lag":
+        return _candidate_is_affine_lag(candidate=candidate, candidate_id=candidate_id)
+    return False
+
+
+def _candidate_source_id(candidate: CandidateIntermediateRepresentation) -> str:
+    return candidate.evidence_layer.backend_origin_record.source_candidate_id
+
+
+def _rediscovery_target_family(target_ref: str, *, source_path: Path) -> str | None:
+    if "#" in target_ref:
+        fragment = target_ref.rsplit("#", 1)[1].strip()
+        if fragment:
+            return fragment
+    payload = _load_target_payload(target_ref, source_path=source_path)
+    raw_family = payload.get("family") or payload.get("equivalence_class")
+    return (
+        raw_family.strip()
+        if isinstance(raw_family, str) and raw_family.strip()
+        else None
+    )
+
+
+def _load_target_payload(target_ref: str, *, source_path: Path) -> Mapping[str, Any]:
+    path_token = target_ref.split("#", 1)[0]
+    if not path_token:
+        return {}
+    target_path = Path(path_token)
+    candidate_paths = [target_path] if target_path.is_absolute() else []
+    if not target_path.is_absolute():
+        project_root = _project_root_for_manifest_source(source_path)
+        candidate_paths.extend(
+            (
+                project_root / target_path,
+                project_root / "src" / "euclid" / "_assets" / target_path,
+            )
+        )
+    for candidate_path in candidate_paths:
+        if not candidate_path.is_file():
+            continue
+        try:
+            text = candidate_path.read_text(encoding="utf-8")
+            payload = (
+                json.loads(text)
+                if candidate_path.suffix.lower() == ".json"
+                else yaml.safe_load(text)
+            )
+        except (OSError, json.JSONDecodeError, yaml.YAMLError):
+            continue
+        return payload if isinstance(payload, Mapping) else {}
+    return {}
+
+
+def _project_root_for_manifest_source(source_path: Path) -> Path:
+    parts = source_path.parts
+    if "benchmarks" in parts:
+        benchmark_index = parts.index("benchmarks")
+        return Path(*parts[:benchmark_index]) if benchmark_index else Path(".")
+    return source_path.parent
+
+
+def _candidate_is_affine_lag(
+    *,
+    candidate: CandidateIntermediateRepresentation,
+    candidate_id: str,
+) -> bool:
+    if candidate_id == "analytic_lag1_affine":
+        return True
+    structural_layer = candidate.structural_layer
+    if structural_layer.cir_family_id != "analytic":
+        return False
+    parameter_names = {
+        str(parameter.name)
+        for parameter in structural_layer.parameter_block.parameters
+    }
+    return "lag_coefficient" in parameter_names
 
 
 def _resolve_portfolio_child_results(
@@ -711,6 +929,7 @@ def _build_submitter_candidate_ledger(
                     structure_code_bits=artifact.L_structure_bits,
                     description_gain_bits=artifact.description_gain_bits,
                     canonical_byte_length=len(candidate.canonical_bytes()),
+                    details=_selected_metric_details(candidate),
                 )
             )
             continue
@@ -760,27 +979,35 @@ def _ordered_submitter_proposals(
 ) -> tuple[DescriptiveSearchProposal, ...]:
     allowed_candidate_ids = set(candidate_family_ids) if candidate_family_ids else None
     proposals: list[DescriptiveSearchProposal] = []
-    for adapter in adapters:
-        proposals.extend(
-            proposal
-            for proposal in adapter.default_proposals(
-                search_plan=search_plan,
-                feature_view=context.feature_view.require_stage_reuse("search"),
-            )
-            if (
-                allowed_candidate_ids is None
-                or proposal.candidate_id in allowed_candidate_ids
-            )
-        )
+    seen: set[tuple[str, str]] = set()
+    supported_families = {
+        adapter.family_id for adapter in adapters if getattr(adapter, "family_id", None)
+    }
     for proposal in context.proposal_specs:
         if (
             allowed_candidate_ids is not None
             and proposal.candidate_id not in allowed_candidate_ids
         ):
             continue
-        if proposal.primitive_family not in {adapter.family_id for adapter in adapters}:
+        if proposal.primitive_family not in supported_families:
             continue
+        seen.add((proposal.primitive_family, proposal.candidate_id))
         proposals.append(proposal)
+    for adapter in adapters:
+        for proposal in adapter.default_proposals(
+            search_plan=search_plan,
+            feature_view=context.feature_view.require_stage_reuse("search"),
+        ):
+            proposal_key = (proposal.primitive_family, proposal.candidate_id)
+            if proposal_key in seen:
+                continue
+            if (
+                allowed_candidate_ids is not None
+                and proposal.candidate_id not in allowed_candidate_ids
+            ):
+                continue
+            seen.add(proposal_key)
+            proposals.append(proposal)
     return tuple(proposals)
 
 
@@ -860,12 +1087,29 @@ def _selected_candidate_metrics(
 ) -> dict[str, Any] | None:
     if selected_entry is None:
         return None
-    return {
+    metrics = {
         "total_code_bits": selected_entry.total_code_bits,
         "description_gain_bits": selected_entry.description_gain_bits,
         "structure_code_bits": selected_entry.structure_code_bits,
         "canonical_byte_length": selected_entry.canonical_byte_length,
     }
+    metrics.update(selected_entry.details)
+    return metrics
+
+
+def _selected_metric_details(
+    candidate: CandidateIntermediateRepresentation,
+) -> dict[str, Any]:
+    details: dict[str, Any] = {}
+    inner_primary_score = candidate.evidence_layer.transient_diagnostics.get(
+        "inner_primary_score"
+    )
+    if isinstance(inner_primary_score, (int, float)) and not isinstance(
+        inner_primary_score,
+        bool,
+    ):
+        details["inner_primary_score"] = float(inner_primary_score)
+    return details
 
 
 def _budget_consumption(
@@ -899,6 +1143,9 @@ def _replay_contract(
         "replay_policy": dict(protocol_contract["replay_policy"]),
     }
     if selected_candidate is None:
+        replay_contract["replay_verification_status"] = "verified"
+        replay_contract["verification_method"] = "no_candidate_abstention_contract"
+        replay_contract["failure_reason_codes"] = []
         return replay_contract
     replay_contract["candidate_id"] = (
         selected_candidate.evidence_layer.backend_origin_record.source_candidate_id
@@ -911,17 +1158,280 @@ def _replay_contract(
         }
         for hook in selected_candidate.evidence_layer.replay_hooks.hooks
     ]
+    replay_contract.update(
+        _verify_candidate_replay_contract(
+            replay_contract=replay_contract,
+            selected_candidate=selected_candidate,
+        )
+    )
     return replay_contract
+
+
+def _verify_candidate_replay_contract(
+    *,
+    replay_contract: Mapping[str, Any],
+    selected_candidate: CandidateIntermediateRepresentation,
+) -> dict[str, Any]:
+    expected_candidate_id = (
+        selected_candidate.evidence_layer.backend_origin_record.source_candidate_id
+    )
+    expected_candidate_hash = selected_candidate.canonical_hash()
+    expected_hooks = [
+        {
+            "hook_name": hook.hook_name,
+            "hook_ref": hook.hook_ref,
+        }
+        for hook in selected_candidate.evidence_layer.replay_hooks.hooks
+    ]
+    failure_reason_codes: list[str] = []
+    if replay_contract.get("candidate_id") != expected_candidate_id:
+        failure_reason_codes.append("candidate_id_mismatch")
+    if replay_contract.get("candidate_hash") != expected_candidate_hash:
+        failure_reason_codes.append("candidate_hash_mismatch")
+    if list(replay_contract.get("replay_hooks", ())) != expected_hooks:
+        failure_reason_codes.append("replay_hooks_mismatch")
+    return {
+        "replay_verification_status": (
+            "failed" if failure_reason_codes else "verified"
+        ),
+        "verification_method": "selected_candidate_hash_and_hooks",
+        "failure_reason_codes": failure_reason_codes,
+    }
 
 
 def _requires_safe_abstention(
     context: BenchmarkHarnessContext,
 ) -> bool:
     return (
-        context.task_manifest.track_id == "adversarial_honesty"
-        and str(getattr(context.task_manifest, "expected_safe_outcome", "")).lower()
+        str(getattr(context.task_manifest, "expected_safe_outcome", "")).lower()
         == "abstain"
     )
+
+
+def _safe_abstention_evidence(
+    *,
+    context: BenchmarkHarnessContext,
+    selected_candidate: CandidateIntermediateRepresentation | None,
+    selected_candidate_metrics: Mapping[str, Any] | None,
+    candidate_ledger: Sequence[PortfolioCandidateLedgerEntry],
+) -> dict[str, Any]:
+    if not _requires_safe_abstention(context):
+        return {}
+    accepted_entries = tuple(
+        entry for entry in candidate_ledger if entry.ledger_status == "accepted"
+    )
+    rejected_entries = tuple(
+        entry for entry in candidate_ledger if entry.ledger_status == "rejected"
+    )
+    base = {
+        "status": "verified",
+        "expected_safe_outcome": "abstain",
+        "evidence_type": "falsification_gate",
+        "candidate_count_before_gate": len(tuple(candidate_ledger)),
+        "accepted_candidate_count_before_gate": len(accepted_entries),
+        "rejected_candidate_count_before_gate": len(rejected_entries),
+        "selected_candidate_id_before_gate": (
+            _candidate_source_id(selected_candidate)
+            if selected_candidate is not None
+            else None
+        ),
+        "abstention_mode": context.task_manifest.abstention_mode,
+    }
+    if not accepted_entries:
+        return {
+            **base,
+            "reason_code": "no_publishable_candidate_after_falsification",
+            "support": [
+                {
+                    "candidate_id": entry.candidate_id,
+                    "reason_codes": list(entry.reason_codes),
+                }
+                for entry in rejected_entries
+            ],
+        }
+    threshold_failures = _candidate_metric_threshold_failures(
+        context=context,
+        selected_candidate_metrics=selected_candidate_metrics,
+    )
+    if threshold_failures:
+        return {
+            **base,
+            "reason_code": "candidate_failed_required_benchmark_thresholds",
+            "support": threshold_failures,
+        }
+    trap_class = getattr(context.task_manifest, "trap_class", None)
+    adversarial_tags = tuple(getattr(context.task_manifest, "adversarial_tags", ()))
+    if isinstance(trap_class, str) and trap_class.strip():
+        return {
+            **base,
+            "reason_code": "trap_candidate_requires_external_honesty_proof",
+            "trap_class": trap_class.strip(),
+            "adversarial_tags": list(adversarial_tags),
+            "support": [
+                {
+                    "candidate_id": entry.candidate_id,
+                    "candidate_hash": entry.candidate_hash,
+                    "reason_codes": list(entry.reason_codes),
+                }
+                for entry in accepted_entries
+            ],
+        }
+    if "abstention_required" in adversarial_tags:
+        return {
+            **base,
+            "reason_code": "adversarial_abstention_required_by_falsification_policy",
+            "adversarial_tags": list(adversarial_tags),
+            "support": [
+                {
+                    "candidate_id": entry.candidate_id,
+                    "candidate_hash": entry.candidate_hash,
+                    "reason_codes": list(entry.reason_codes),
+                }
+                for entry in accepted_entries
+            ],
+        }
+    return {
+        **base,
+        "status": "failed",
+        "reason_code": "safe_abstention_evidence_missing",
+    }
+
+
+def _portfolio_safe_abstention_evidence(
+    *,
+    context: BenchmarkHarnessContext,
+    selected: BenchmarkSubmitterResult | None,
+    child_results: Sequence[BenchmarkSubmitterResult],
+    compared_finalists: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    if not _requires_safe_abstention(context):
+        return {}
+    verified_child_evidence = tuple(
+        child.safe_abstention_evidence
+        for child in child_results
+        if _safe_abstention_evidence_verified(child.safe_abstention_evidence)
+    )
+    if verified_child_evidence:
+        return {
+            "status": "verified",
+            "expected_safe_outcome": "abstain",
+            "evidence_type": "child_falsification_gate",
+            "reason_code": "all_publishable_children_blocked_by_falsification",
+            "child_submitter_ids": [child.submitter_id for child in child_results],
+            "verified_child_reason_codes": [
+                str(item.get("reason_code")) for item in verified_child_evidence
+            ],
+            "selected_submitter_id_before_gate": (
+                selected.submitter_id if selected is not None else None
+            ),
+            "selected_candidate_id_before_gate": (
+                selected.selected_candidate_id if selected is not None else None
+            ),
+        }
+    trap_class = getattr(context.task_manifest, "trap_class", None)
+    if isinstance(trap_class, str) and trap_class.strip():
+        return {
+            "status": "verified",
+            "expected_safe_outcome": "abstain",
+            "evidence_type": "portfolio_trap_gate",
+            "reason_code": "trap_candidate_requires_external_honesty_proof",
+            "trap_class": trap_class.strip(),
+            "selected_submitter_id_before_gate": (
+                selected.submitter_id if selected is not None else None
+            ),
+            "selected_candidate_id_before_gate": (
+                selected.selected_candidate_id if selected is not None else None
+            ),
+            "compared_finalists": [dict(finalist) for finalist in compared_finalists],
+        }
+    return {
+        "status": "failed",
+        "expected_safe_outcome": "abstain",
+        "evidence_type": "portfolio_falsification_gate",
+        "reason_code": "safe_abstention_evidence_missing",
+        "child_submitter_ids": [child.submitter_id for child in child_results],
+    }
+
+
+def _safe_abstention_evidence_verified(evidence: Mapping[str, Any]) -> bool:
+    if evidence.get("status") != "verified" or not evidence.get("reason_code"):
+        return False
+    if evidence.get("evidence_type") not in _SAFE_ABSTENTION_EVIDENCE_TYPES:
+        return False
+    return any(
+        key in evidence and bool(evidence.get(key))
+        for key in ("support", "child_submitter_ids", "compared_finalists")
+    )
+
+
+_SAFE_ABSTENTION_EVIDENCE_TYPES = {
+    "falsification_gate",
+    "child_falsification_gate",
+    "portfolio_trap_gate",
+}
+
+
+def _candidate_metric_threshold_failures(
+    *,
+    context: BenchmarkHarnessContext,
+    selected_candidate_metrics: Mapping[str, Any] | None,
+) -> list[dict[str, Any]]:
+    if not isinstance(selected_candidate_metrics, Mapping):
+        return []
+    failures: list[dict[str, Any]] = []
+    for threshold_id, threshold in sorted(context.task_manifest.metric_thresholds.items()):
+        if not isinstance(threshold, Mapping):
+            continue
+        if threshold.get("measurement_required", True) is False:
+            continue
+        metric_id = str(threshold.get("metric_id", "")).strip()
+        observed_value = selected_candidate_metrics.get(metric_id)
+        if _metric_threshold_passed(
+            observed_value,
+            comparator=str(threshold.get("comparator", "")).strip(),
+            threshold_value=threshold.get("threshold"),
+        ):
+            continue
+        failures.append(
+            {
+                "threshold_id": threshold_id,
+                "metric_id": metric_id,
+                "observed_value": observed_value,
+                "comparator": str(threshold.get("comparator", "")).strip(),
+                "threshold": threshold.get("threshold"),
+            }
+        )
+    return failures
+
+
+def _metric_threshold_passed(
+    observed_value: Any,
+    *,
+    comparator: str,
+    threshold_value: Any,
+) -> bool:
+    if not isinstance(observed_value, (int, float)) or isinstance(observed_value, bool):
+        return False
+    if not isinstance(threshold_value, (int, float)) or isinstance(threshold_value, bool):
+        return False
+    observed = float(observed_value)
+    threshold = float(threshold_value)
+    if comparator == ">=":
+        return observed >= threshold
+    if comparator == "<=":
+        return observed <= threshold
+    if comparator == ">":
+        return observed > threshold
+    if comparator == "<":
+        return observed < threshold
+    if comparator == "==":
+        return observed == threshold
+    return False
+
+
+def _resolved_abstention_reason(evidence: Mapping[str, Any]) -> str:
+    reason_code = evidence.get("reason_code")
+    return str(reason_code) if isinstance(reason_code, str) and reason_code else "no_admissible_candidate"
 
 
 def _submitter_definition(submitter_id: str) -> Mapping[str, Any]:

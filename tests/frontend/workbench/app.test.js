@@ -655,7 +655,7 @@ describe("workbench packaged asset harness", () => {
       "Longer narrative tying the observed path",
     );
     expect(overviewText).toContain(
-      "Read this run from the operator publication outward",
+      "Read this run as descriptive-only: the point-lane candidate is inspectable context, not a published top-level predictive claim.",
     );
     expect(overviewText).toContain("Observed series rose materially.");
     expect(overviewText).toContain(
@@ -1609,6 +1609,65 @@ describe("workbench packaged asset harness", () => {
     expect(pointText).toContain("operator publication");
     expect(pointText).not.toContain("active deterministic law");
     expect(pointText).not.toContain("operator claim");
+  });
+
+  test("does not present nested point-lane publishable status as a descriptive-only page claim", async () => {
+    const analysis = buildAtlasFixture();
+    analysis.claim_class = "descriptive_fit";
+    analysis.publishable = null;
+    analysis.predictive_law = null;
+    analysis.holistic_equation = null;
+    analysis.operator_point.publication = {
+      status: "publishable",
+      headline: "Raw nested point-lane publishable marker.",
+    };
+    analysis.evidence_studio = {
+      claim_surface: {
+        claim_class: "descriptive_fit",
+        claim_lane: "descriptive",
+        claim_ceiling: "descriptive_structure",
+        publishable: false,
+        publication_status: "publishable",
+        abstention_reason_codes: [],
+        downgrade_reason_codes: [],
+      },
+      live_evidence: {},
+      replay_artifacts: { links: [] },
+      engine_provenance: { point_lane: {} },
+    };
+
+    await mountWorkbench({
+      route(url) {
+        if (url.pathname === "/api/config") {
+          return jsonResponse(
+            buildConfig({
+              recentAnalyses: [buildRecentEntry(analysis)],
+            }),
+          );
+        }
+        if (url.pathname === "/api/analysis") {
+          return jsonResponse(analysis);
+        }
+        throw new Error(`Unhandled request: ${url.pathname}`);
+      },
+    });
+
+    document
+      .querySelector('button[data-analysis-path]')
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-overview")).toContain(
+        "Best available descriptive approximation",
+      );
+    });
+
+    const pageText = textContent("body");
+    expect(pageText).toContain("Point-lane candidate is inspectable");
+    expect(pageText).toContain("candidate only");
+    expect(pageText).not.toContain("candidate_only");
+    expect(pageText).not.toContain("Raw nested point-lane publishable marker");
+    expect(pageText).not.toContain("Publication gate publishable");
   });
 
   test("prefers the predictive symbolic law when no holistic claim passed", async () => {

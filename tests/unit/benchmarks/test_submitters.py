@@ -150,6 +150,7 @@ def test_submitter_abstention_keeps_rejected_ledgers_visible() -> None:
     assert result.status == "abstained"
     assert result.selected_candidate_id is None
     assert result.abstention_reason == "no_admissible_candidate"
+    assert result.safe_abstention_evidence == {}
     assert {
         entry.candidate_id: entry.ledger_status for entry in result.candidate_ledger
     } == {
@@ -274,7 +275,15 @@ def test_adversarial_portfolio_abstains_when_task_requires_safe_outcome() -> Non
 
     assert result.status == "abstained"
     assert result.selected_candidate_id is None
-    assert result.abstention_reason == "no_admissible_candidate"
+    assert (
+        result.abstention_reason
+        == "all_publishable_children_blocked_by_falsification"
+    )
+    assert result.safe_abstention_evidence["status"] == "verified"
+    assert (
+        result.safe_abstention_evidence["reason_code"]
+        == "all_publishable_children_blocked_by_falsification"
+    )
     assert tuple(child.submitter_id for child in result.child_results) == (
         ANALYTIC_BACKEND_SUBMITTER_ID,
         RECURSIVE_SPECTRAL_BACKEND_SUBMITTER_ID,

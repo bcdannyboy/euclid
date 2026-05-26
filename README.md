@@ -69,6 +69,23 @@ Certified entrypoints:
 - `euclid release certify-research-readiness`
 - `euclid workbench serve`
 
+## Live SPY workbench run
+
+This snapshot shows a real-key Financial Modeling Prep and OpenAI workbench run
+for SPY over the last 30 calendar days available on May 26, 2026. FMP returned
+20 trading-day close observations from April 27, 2026 through May 22, 2026. The
+raw-close surface replayed the operator result, completed the probabilistic
+lanes, selected an algorithmic benchmark-local winner, and still kept the public
+claim ceiling at descriptive structure because publication gates abstained.
+
+![SPY price-close overview](docs/assets/readme/workbench/live-spy-30d/price-close-overview.png)
+
+![SPY price-close evidence workspace](docs/assets/readme/workbench/live-spy-30d/price-close-evidence.png)
+
+![SPY price-close calibration workspace](docs/assets/readme/workbench/live-spy-30d/price-close-calibration.png)
+
+![SPY price-close artifact trail](docs/assets/readme/workbench/live-spy-30d/price-close-artifacts.png)
+
 Compatibility-only entrypoints:
 
 - `euclid demo run`

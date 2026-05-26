@@ -373,9 +373,31 @@ def test_profile_benchmark_suite_runs_declared_full_vision_tasks_and_writes_summ
         "robustness_lane",
         "portfolio_orchestration",
     }
-    assert all(
-        surface.benchmark_status == "passed" for surface in result.surface_statuses
-    )
+    benchmark_status_by_surface = {
+        surface.surface_id: surface.benchmark_status
+        for surface in result.surface_statuses
+    }
+    assert benchmark_status_by_surface == {
+        "retained_core_release": "passed",
+        "probabilistic_forecast_surface": "passed",
+        "algorithmic_backend": "passed",
+        "search_class_honesty": "passed",
+        "composition_operator_semantics": "passed",
+        "shared_plus_local_decomposition": "passed",
+        "mechanistic_lane": "passed",
+        "external_evidence_ingestion": "passed",
+        "robustness_lane": "passed",
+        "portfolio_orchestration": "passed",
+    }
+    assert {
+        surface.surface_id
+        for surface in result.surface_statuses
+        if "semantic_assertion_failed" in surface.evidence["reason_codes"]
+    } == {
+        surface_id
+        for surface_id, status in benchmark_status_by_surface.items()
+        if status == "failed"
+    }
     assert all(surface.replay_status == "passed" for surface in result.surface_statuses)
 
     summary = json.loads(result.summary_path.read_text(encoding="utf-8"))

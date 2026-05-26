@@ -77,3 +77,38 @@ def test_predictive_block_preserves_descriptive_pass() -> None:
     assert decision.descriptive_reason_codes == ()
     assert decision.predictive_status == "blocked"
     assert decision.predictive_reason_codes == ("baseline_rule_failed",)
+
+
+def test_scorecard_decision_exposes_typed_gates_and_legacy_manifest_shape() -> None:
+    decision = resolve_scorecard_status(
+        candidate_admissible=True,
+        robustness_status="passed",
+        candidate_beats_baseline=False,
+        confirmatory_promotion_allowed=False,
+        point_score_comparison_status="comparable",
+        time_safety_status="passed",
+        calibration_status="not_applicable_for_forecast_type",
+    )
+
+    assert decision.descriptive_gate.as_manifest() == {
+        "gate_id": "descriptive",
+        "status": "passed",
+        "reason_codes": [],
+        "evidence_refs": [],
+        "metadata": {},
+    }
+    assert decision.predictive_gate.as_manifest() == {
+        "gate_id": "predictive",
+        "status": "failed",
+        "reason_codes": ["baseline_rule_failed"],
+        "evidence_refs": [],
+        "metadata": {"legacy_status": "blocked"},
+    }
+    assert decision.as_manifest() == {
+        "descriptive_status": "passed",
+        "descriptive_reason_codes": [],
+        "predictive_status": "blocked",
+        "predictive_reason_codes": ["baseline_rule_failed"],
+        "mechanistic_status": "not_requested",
+        "mechanistic_reason_codes": [],
+    }

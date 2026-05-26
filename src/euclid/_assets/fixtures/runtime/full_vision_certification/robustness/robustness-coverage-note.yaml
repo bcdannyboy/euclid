@@ -1,0 +1,17 @@
+fixture_id: robustness_coverage_note
+fixture_spec_id: euclid-certification-fixtures-v1
+fixture_family_id: robustness
+source_kind: hand_authored_adversarial
+source_ref: fixtures/runtime/full_vision_certification/robustness/fixture-set.yaml
+license: repo-internal
+edge_cases:
+- leakage_trap
+- sensitivity_abstention
+- positive_case
+regression_reason: Prove robustness fixtures are explicit regression surfaces, not accepted golden publications.
+shortcut_disclosure:
+  fixture_only: true
+  forbidden_uses:
+  - golden_acceptance
+  - real_world_claim
+  - leakage_tolerant_pass

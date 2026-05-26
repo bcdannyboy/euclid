@@ -514,6 +514,7 @@ def release_certify_clean_install(
         "Euclid clean-install certification",
         f"Project root: {result.project_root}",
         f"Report: {result.report_path}",
+        "Scope: installed-runtime certification only; not final release readiness.",
         f"Surface completion: {result.surface_completion:.6f}",
     ]
     lines.extend(

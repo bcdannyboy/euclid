@@ -307,6 +307,13 @@ def run_descriptive_search_portfolio(
             exactness_ceiling=family_result.coverage.exactness_ceiling,
             scope_declaration=family_result.coverage.scope_declaration,
             provenance_id=family_result.family_id,
+            replay_contract={
+                "codelength_comparison_key": dict(
+                    description_artifacts[
+                        finalist_candidate.canonical_hash()
+                    ].codelength_comparison_key
+                )
+            },
         )
         for family_result in search_result.family_results
         for finalist_entry, finalist_candidate in finalists
@@ -474,8 +481,19 @@ def select_comparable_portfolio_winner(
     collected_finalists: Mapping[str, str],
     omitted_finalists: Sequence[str] = (),
 ) -> ComparablePortfolioSelection:
-    ranked_finalists = tuple(sorted(finalists, key=_comparable_portfolio_sort_key))
+    finalist_groups = _group_finalists_by_codelength_key(finalists)
+    compared_group = _select_portfolio_comparison_group(finalist_groups)
+    ranked_finalists = tuple(
+        sorted(compared_group, key=_comparable_portfolio_sort_key)
+    )
     selected = ranked_finalists[0] if ranked_finalists else None
+    compared_hashes = {finalist.candidate_hash for finalist in ranked_finalists}
+    non_compared = tuple(
+        finalist
+        for group in finalist_groups
+        for finalist in group
+        if finalist.candidate_hash not in compared_hashes
+    )
     decision_trace: tuple[dict[str, Any], ...] = (
         {
             "step": collect_step,
@@ -486,6 +504,10 @@ def select_comparable_portfolio_winner(
             "step": rank_step,
             "ordered_candidate_ids": [
                 finalist.candidate_id for finalist in ranked_finalists
+            ],
+            "comparison_group_size": len(ranked_finalists),
+            "non_compared_candidate_ids": [
+                finalist.candidate_id for finalist in non_compared
             ],
         },
         {
@@ -498,6 +520,9 @@ def select_comparable_portfolio_winner(
             ),
             "selected_backend_family": (
                 selected.backend_family if selected is not None else None
+            ),
+            "multi_model_superiority": _multi_model_superiority_boundary(
+                ranked_finalists
             ),
         },
     )
@@ -519,6 +544,84 @@ def _comparable_portfolio_sort_key(
         float(finalist.structure_code_bits),
         int(finalist.canonical_byte_length),
         finalist.candidate_id,
+    )
+
+
+def _multi_model_superiority_boundary(
+    ranked_finalists: Sequence[ComparableBackendFinalist],
+) -> dict[str, Any]:
+    candidate_count = len(ranked_finalists)
+    if candidate_count <= 2:
+        return {
+            "status": "not_required",
+            "reason_codes": [],
+            "candidate_count": candidate_count,
+            "pairwise_dm_role": "pairwise_comparison_scope_only",
+            "unique_superior_candidate_id": (
+                ranked_finalists[0].candidate_id if ranked_finalists else None
+            ),
+        }
+    return {
+        "status": "not_tested",
+        "reason_codes": ["multi_model_superiority_not_tested"],
+        "candidate_count": candidate_count,
+        "pairwise_dm_role": "insufficient_for_unique_superiority",
+        "unique_superior_candidate_id": None,
+    }
+
+
+def _group_finalists_by_codelength_key(
+    finalists: Sequence[ComparableBackendFinalist],
+) -> tuple[tuple[ComparableBackendFinalist, ...], ...]:
+    grouped: dict[tuple[Any, ...], list[ComparableBackendFinalist]] = {}
+    for finalist in finalists:
+        grouped.setdefault(
+            _finalist_codelength_key_fingerprint(finalist),
+            [],
+        ).append(finalist)
+    return tuple(tuple(group) for group in grouped.values())
+
+
+def _select_portfolio_comparison_group(
+    finalist_groups: Sequence[Sequence[ComparableBackendFinalist]],
+) -> tuple[ComparableBackendFinalist, ...]:
+    if not finalist_groups:
+        return ()
+    comparable_groups = tuple(group for group in finalist_groups if len(group) > 1)
+    candidate_groups = comparable_groups or tuple(finalist_groups)
+    return tuple(
+        sorted(
+            candidate_groups,
+            key=lambda group: (
+                -len(group),
+                _comparable_portfolio_sort_key(
+                    sorted(group, key=_comparable_portfolio_sort_key)[0]
+                ),
+            ),
+        )[0]
+    )
+
+
+def _finalist_codelength_key_fingerprint(
+    finalist: ComparableBackendFinalist,
+) -> tuple[Any, ...]:
+    raw_key = finalist.replay_contract.get("codelength_comparison_key")
+    if not isinstance(raw_key, Mapping):
+        return ("missing_codelength_comparison_key",)
+    return (
+        raw_key.get("quantization_mode"),
+        raw_key.get("quantization_step"),
+        raw_key.get("reference_scope"),
+        raw_key.get("reference_family_id"),
+        raw_key.get("reference_policy_id"),
+        raw_key.get("data_code_family"),
+        raw_key.get("support_kind"),
+        tuple(raw_key.get("horizon_geometry", ())),
+        raw_key.get("coding_row_set_id"),
+        raw_key.get("residual_history_construction"),
+        raw_key.get("parameter_lattice_step"),
+        raw_key.get("state_lattice_step"),
+        raw_key.get("runtime_signature"),
     )
 
 

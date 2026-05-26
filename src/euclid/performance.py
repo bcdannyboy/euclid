@@ -392,6 +392,7 @@ class TelemetryRecorder:
         if not tracemalloc.is_tracing():
             tracemalloc.start()
             self._started_tracing = True
+        self._observed_peak_memory_bytes = 0
         self._spans: list[TelemetrySpanRecord] = []
         self._measurements: list[TelemetryMeasurement] = []
         self._seed_records: list[SeedTelemetryRecord] = []
@@ -443,6 +444,23 @@ class TelemetryRecorder:
                         error_type=error_type,
                     )
                 )
+
+    @contextmanager
+    def allocation_tracing_paused(self) -> Iterator[None]:
+        if not tracemalloc.is_tracing():
+            yield
+            return
+        _current_memory_bytes, peak_memory_bytes = tracemalloc.get_traced_memory()
+        with self._lock:
+            self._observed_peak_memory_bytes = max(
+                self._observed_peak_memory_bytes,
+                peak_memory_bytes,
+            )
+        tracemalloc.stop()
+        try:
+            yield
+        finally:
+            tracemalloc.start()
 
     def record_measurement(
         self,
@@ -544,6 +562,10 @@ class TelemetryRecorder:
     ) -> PerformanceTelemetryArtifact:
         current_memory_bytes, peak_memory_bytes = tracemalloc.get_traced_memory()
         with self._lock:
+            observed_peak_memory_bytes = max(
+                peak_memory_bytes,
+                self._observed_peak_memory_bytes,
+            )
             return PerformanceTelemetryArtifact(
                 profile_kind=profile_kind,
                 subject_id=subject_id,
@@ -551,7 +573,7 @@ class TelemetryRecorder:
                 wall_time_seconds=time.perf_counter() - self._start_wall,
                 cpu_time_seconds=time.process_time() - self._start_cpu,
                 current_memory_bytes=current_memory_bytes,
-                peak_memory_bytes=peak_memory_bytes,
+                peak_memory_bytes=observed_peak_memory_bytes,
                 rss_max_bytes=_rss_bytes(),
                 spans=tuple(
                     sorted(

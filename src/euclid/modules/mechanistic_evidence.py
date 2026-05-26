@@ -16,9 +16,25 @@ from euclid.manifests.runtime_models import (
 )
 from euclid.modules.claims import (
     CLAIM_LANE_MECHANISTIC,
+    CLAIM_LANE_DESCRIPTIVE,
     CLAIM_LANE_PREDICTIVE,
     normalize_claim_lane,
 )
+
+_MECHANISTIC_FLOOR_NON_BLOCKING_PREDICTIVE_CODES = frozenset(
+    {
+        "insufficient_paired_count",
+        "many_model_correction_failed",
+    }
+)
+_MECHANISTIC_FLOOR_NON_BLOCKING_CALIBRATION_STATUSES = frozenset(
+    {
+        "not_applicable_for_forecast_type",
+        "recorded_not_gating",
+        "passed",
+    }
+)
+_MECHANISTIC_FLOOR_TIME_SAFETY_STATUSES = frozenset({"passed", "verified"})
 
 
 @dataclass(frozen=True)
@@ -217,6 +233,36 @@ def register_mechanistic_evidence(
     )
 
 
+def resolve_mechanistic_lower_claim_ceiling(
+    *,
+    descriptive_status: str,
+    predictive_status: str,
+    predictive_reason_codes: Sequence[str],
+    candidate_beats_baseline: bool,
+    point_score_comparison_status: str,
+    time_safety_status: str,
+    calibration_status: str,
+) -> str:
+    if predictive_status == "passed":
+        return CLAIM_LANE_PREDICTIVE
+    if descriptive_status != "passed":
+        return CLAIM_LANE_DESCRIPTIVE
+    if not candidate_beats_baseline:
+        return CLAIM_LANE_DESCRIPTIVE
+    if point_score_comparison_status != "comparable":
+        return CLAIM_LANE_DESCRIPTIVE
+    if time_safety_status not in _MECHANISTIC_FLOOR_TIME_SAFETY_STATUSES:
+        return CLAIM_LANE_DESCRIPTIVE
+    if calibration_status not in _MECHANISTIC_FLOOR_NON_BLOCKING_CALIBRATION_STATUSES:
+        return CLAIM_LANE_DESCRIPTIVE
+    reason_codes = set(_unique_codes(predictive_reason_codes))
+    if reason_codes and reason_codes.issubset(
+        _MECHANISTIC_FLOOR_NON_BLOCKING_PREDICTIVE_CODES
+    ):
+        return CLAIM_LANE_PREDICTIVE
+    return CLAIM_LANE_DESCRIPTIVE
+
+
 def _mapping_status(
     term_bindings: Sequence[Mapping[str, Any]],
 ) -> tuple[str, tuple[str, ...]]:
@@ -356,4 +402,5 @@ __all__ = [
     "RegisteredMechanisticEvidenceEvaluation",
     "evaluate_mechanistic_evidence",
     "register_mechanistic_evidence",
+    "resolve_mechanistic_lower_claim_ceiling",
 ]

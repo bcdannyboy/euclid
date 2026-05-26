@@ -23,12 +23,15 @@ forecast_object_type: point
 score_policy:
   metric_id: mean_absolute_error
 practical_significance_margin: 0.01
+metric_thresholds: {}
 budget_policy:
   wall_clock_seconds: 240
   candidate_limit: 256
 baseline_registry:
 - baseline_id: reference_description
   manifest_path: benchmarks/baselines/rediscovery/reference-description.yaml
+- baseline_id: naive_last_value
+  manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
 submitter_registry:
 - submitter_id: algorithmic_search_backend
 seed_policy:
@@ -45,7 +48,7 @@ forbidden_shortcuts:
 replay_policy:
   ledger_mode: append_only
   persist_candidate_ledgers: true
-target_structure_ref: fixtures/runtime/phase06/algorithmic-search-demo.yaml#algorithmic_last_observation
+target_structure_ref: fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-search-generator.json
 equivalence_policy:
   equivalence_class: exact_symbolic_or_simplified
   canonicalizer: algorithmic_dsl_canonical_source

@@ -10,11 +10,13 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
-      - run: python3.11 -m pip install -e ".[dev]"
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+      - run: uv sync --locked --all-extras --dev
+      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - run: >-
           python3.11 -m ruff check --select F,I
           src/euclid/benchmarks/reporting.py
@@ -47,19 +49,21 @@ jobs:
     name: python unit and integration fixtures
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
-      - run: python3.11 -m pip install -e ".[dev]"
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+      - run: uv sync --locked --all-extras --dev
+      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - run: python3.11 -m pytest -q tests/unit tests/integration
 
   frontend:
     name: frontend tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
       - run: npm ci
@@ -69,32 +73,38 @@ jobs:
     name: benchmark smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
-      - run: python3.11 -m pip install -e ".[dev]"
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+      - run: uv sync --locked --all-extras --dev
+      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - run: python3.11 -m euclid benchmarks run --suite "current-release.yaml"
 
   release-status-smoke:
     name: release status smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.11"
-      - run: python3.11 -m pip install -e ".[dev]"
+      - uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081
+      - run: uv sync --locked --all-extras --dev
+      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
       - run: PYTHONPATH=src python3.11 -m euclid release repo-test-matrix --project-root .
       - run: PYTHONPATH=src python3.11 -m euclid benchmarks run --suite current-release.yaml --no-resume --benchmark-root build/certification/current_release_suite
       - run: PYTHONPATH=src python3.11 -m euclid benchmarks run --suite full-vision.yaml --no-resume --benchmark-root build/certification/full_vision_suite
       - run: PYTHONPATH=src python3.11 -m euclid run --config examples/full_vision_run.yaml --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_run_evidence.json
-      - run: python3.11 -m euclid replay --run-id full-vision-run --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_replay_evidence.json
-      - run: python3.11 -m euclid release certify-clean-install --project-root . --wheel-dir build/certification/wheels --output-root build/certification/clean_install
+      - run: |
+          FULL_VISION_RUN_ID="$(python3.11 -c 'import json, pathlib; print(json.loads(pathlib.Path("build/certification/full_vision_run/run-result.json").read_text(encoding="utf-8"))["run_id"])')"
+          python3.11 -m euclid replay --run-id "$FULL_VISION_RUN_ID" --output-root build/certification/full_vision_run --evidence-report build/reports/full_vision_operator_replay_evidence.json
+      - run: python3.11 -m euclid release certify-clean-install --project-root . --wheel-dir build/certification/clean_install/wheels --output-root build/certification/clean_install
       - run: PYTHONPATH=src python3.11 -m euclid release status --project-root .
       - run: PYTHONPATH=src python3.11 -m euclid release verify-completion --project-root .
       - run: PYTHONPATH=src python3.11 -m euclid release certify-research-readiness --project-root .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: release-evidence

@@ -193,6 +193,72 @@ def test_regime_conditioned_replay_is_exact(contract_catalog) -> None:
     )
 
 
+def test_regime_conditioned_runtime_evidence_exposes_valid_given_regime_scope(
+    contract_catalog,
+) -> None:
+    feature_view, evaluation_plan, search_plan = _search_context(
+        candidate_id="regime_conditioned_candidate",
+        regime_values=("stable", "stable", "volatile", "volatile", "volatile"),
+    )
+    score_policy = _score_policy_manifest(contract_catalog, evaluation_plan)
+    candidate = _candidate(
+        candidate_id="regime_conditioned_candidate",
+        composition_payload={
+            "operator_id": "regime_conditioned",
+            "gating_law": {
+                "gating_law_id": "market_regime_gate",
+                "selection_mode": "hard_switch",
+            },
+            "regime_information_contract": ["regime_flag"],
+            "branch_reducers": [
+                {"regime_value": "stable", "reducer_id": "fast_path"},
+                {"regime_value": "volatile", "reducer_id": "slow_path"},
+            ],
+        },
+        side_information_fields=("lag_1", "regime_flag"),
+    )
+
+    fit = fit_candidate_window(
+        candidate=candidate,
+        feature_view=feature_view,
+        fit_window=evaluation_plan.development_segments[0],
+        search_plan=search_plan,
+        stage_id="outer_test",
+    )
+    artifacts = build_candidate_fit_artifacts(
+        catalog=contract_catalog,
+        fit_result=fit,
+        search_plan_ref=TypedRef(
+            "search_plan_manifest@1.0.0",
+            search_plan.search_plan_id,
+        ),
+        selection_floor_bits=0.0,
+    )
+    prediction_artifact = emit_point_prediction_artifact(
+        catalog=contract_catalog,
+        feature_view=feature_view,
+        evaluation_plan=evaluation_plan,
+        evaluation_segment=evaluation_plan.development_segments[0],
+        fit_result=fit,
+        score_policy_manifest=score_policy,
+        stage_id="outer_test",
+    )
+
+    composition_graph = artifacts.reducer_artifact.body["composition_graph"]
+    scored_origin = prediction_artifact.body["composition_runtime_evidence"][
+        "scored_origins"
+    ][0]
+
+    assert composition_graph["claim_scope"] == "valid_given_regime"
+    assert scored_origin["claim_scope"] == "valid_given_regime"
+    assert scored_origin["valid_given_regime"] == {
+        "gating_law_id": "market_regime_gate",
+        "signal_fields": ["regime_flag"],
+        "observed_regime_value": "volatile",
+        "selected_branch_id": "slow_path",
+    }
+
+
 def _search_context(
     *,
     candidate_id: str,

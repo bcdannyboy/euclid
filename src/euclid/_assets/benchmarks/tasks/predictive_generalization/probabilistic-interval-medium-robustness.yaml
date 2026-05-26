@@ -5,11 +5,11 @@ regime_tags:
 - seasonal
 - probabilistic
 - robustness_sensitive
-dataset_ref: fixtures/runtime/full_vision_certification/robustness/robustness-forecast-series.csv
+dataset_ref: fixtures/runtime/full_vision_certification/single_entity_predictive/probabilistic-calibrated-series.csv
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-04-14T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:
@@ -61,4 +61,4 @@ baseline_comparison_policy:
   paired_test: diebold_mariano
   require_margin_win: true
 fixture_spec_id: euclid-certification-fixtures-v1
-fixture_family_id: robustness
+fixture_family_id: single_entity_predictive

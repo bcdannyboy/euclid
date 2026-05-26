@@ -23,6 +23,7 @@ forecast_object_type: point
 score_policy:
   metric_id: mean_absolute_error
 practical_significance_margin: 0.01
+metric_thresholds: {}
 budget_policy:
   wall_clock_seconds: 300
   candidate_limit: 256

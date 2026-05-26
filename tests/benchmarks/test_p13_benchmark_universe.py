@@ -33,6 +33,32 @@ def test_p13_current_and_full_vision_task_results_emit_semantic_assertions(
     assert assertions["claim_scope"]["status"] == "passed"
     assert assertions["claim_scope"]["counts_as_claim_evidence"] is False
     assert assertions["metric_thresholds"]["status"] == "passed"
+    metric_rows = {
+        row["threshold_id"]: row
+        for row in assertions["metric_thresholds"]["assertions"]
+    }
+    assert {
+        "metric_id": "mean_absolute_error",
+        "reason_code": "observed",
+        "source_candidate_id": "analytic_lag1_affine",
+        "source_submitter_id": "analytic_backend",
+        "status": "passed",
+    }.items() <= metric_rows["predictive_adequacy_floor"].items()
+    assert metric_rows["predictive_adequacy_floor"]["observed_value"] <= 0.15
+    assert metric_rows["practical_significance_margin"]["status"] == "passed"
+    assert metric_rows["practical_significance_margin"]["reason_code"] == "observed"
+    assert (
+        metric_rows["practical_significance_margin"]["observed_value"]
+        >= metric_rows["practical_significance_margin"]["threshold"]
+    )
+    assert assertions["rediscovery_target"]["status"] == "passed"
+    assert assertions["rediscovery_target"]["reason_code"] == (
+        "selected_candidate_structurally_equivalent"
+    )
+    assert assertions["rediscovery_target"]["target_family"] == "affine_lag"
+    assert assertions["rediscovery_target"]["selected_candidate_id"] == (
+        "analytic_lag1_affine"
+    )
     assert assertions["engine_requirements"]["status"] == "passed"
     assert assertions["semantic_readiness_row_ids"]["status"] == "passed"
     assert "benchmark_task_semantics:planted_analytic_demo" in assertions[

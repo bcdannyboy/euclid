@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
@@ -8,6 +9,8 @@ import pytest
 
 from euclid.benchmarks import load_benchmark_task_manifest
 from euclid.benchmarks.reporting import write_benchmark_task_report_artifacts
+from euclid.benchmarks.reporting import evaluate_benchmark_semantic_assertions
+from euclid.benchmarks.reporting import _portfolio_selection_explanation
 from euclid.benchmarks.submitters import (
     ALGORITHMIC_SEARCH_SUBMITTER_ID,
     ANALYTIC_BACKEND_SUBMITTER_ID,
@@ -69,15 +72,25 @@ def test_write_benchmark_task_report_artifacts_emits_typed_json_and_markdown(
     assert task_result["artifact_type"] == "benchmark_task_result"
     assert task_result["status"] == "completed"
     assert task_result["local_winner_submitter_id"] == ANALYTIC_BACKEND_SUBMITTER_ID
-    assert task_result["portfolio_selection_record_ref"] == {
+    assert {
         "artifact_type": "portfolio_selection_record",
         "relative_path": (
             "results/rediscovery/planted_analytic_demo/"
             "portfolio-selection-record.json"
         ),
-    }
+    }.items() <= task_result["portfolio_selection_record_ref"].items()
+    assert task_result["portfolio_selection_record_ref"]["sha256"].startswith(
+        "sha256:"
+    )
     assert len(task_result["submitter_result_refs"]) == 4
     assert len(task_result["replay_ref_refs"]) == 4
+    assert all(
+        ref["sha256"].startswith("sha256:")
+        for ref in task_result["submitter_result_refs"]
+    )
+    assert all(
+        ref["sha256"].startswith("sha256:") for ref in task_result["replay_ref_refs"]
+    )
 
     submitter_result = json.loads(
         written.submitter_result_paths[ANALYTIC_BACKEND_SUBMITTER_ID].read_text(
@@ -89,13 +102,14 @@ def test_write_benchmark_task_report_artifacts_emits_typed_json_and_markdown(
     assert submitter_result["candidate_ledger"][0]["candidate_id"] == (
         "analytic_intercept"
     )
-    assert submitter_result["replay_ref"] == {
+    assert {
         "artifact_type": "benchmark_replay_ref",
         "relative_path": (
             "results/rediscovery/planted_analytic_demo/"
             f"replay-{ANALYTIC_BACKEND_SUBMITTER_ID}.json"
         ),
-    }
+    }.items() <= submitter_result["replay_ref"].items()
+    assert submitter_result["replay_ref"]["sha256"].startswith("sha256:")
 
     replay_ref = json.loads(
         written.replay_ref_paths[ANALYTIC_BACKEND_SUBMITTER_ID].read_text(
@@ -146,7 +160,58 @@ def test_write_benchmark_task_report_artifacts_emits_typed_json_and_markdown(
     assert "[[Rediscovery Semantics]]" in report
     assert "This report covers only Track A: Rediscovery." in report
     assert "No single vanity score is reported here." in report
+    assert "## Semantic Assertions" in report
+    assert "- Overall status:" in report
+    assert "- `metric_thresholds`: `failed`" in report
+    assert "- `search_scope`: `passed`" in report
     assert "Winner beat runner-up on" in report
+
+
+def test_portfolio_explanation_honors_metric_threshold_override() -> None:
+    portfolio_result = BenchmarkSubmitterResult(
+        submitter_id="portfolio_orchestrator",
+        submitter_class="portfolio",
+        task_id="portfolio-demo",
+        track_id="predictive_generalization",
+        status="selected",
+        protocol_contract={},
+        budget_consumption={},
+        selected_candidate_id="threshold_candidate",
+        selected_candidate_hash="sha256:threshold",
+        replay_contract={
+            "selection_rule": "min_total_code_bits",
+            "selected_submitter_id": "threshold_backend",
+            "selected_candidate_id": "threshold_candidate",
+            "selected_candidate_hash": "sha256:threshold",
+        },
+        compared_finalists=(
+            {
+                "submitter_id": "threshold_backend",
+                "candidate_id": "threshold_candidate",
+                "total_code_bits": 499.0,
+            },
+            {
+                "submitter_id": "mdl_backend",
+                "candidate_id": "mdl_candidate",
+                "total_code_bits": 492.0,
+            },
+        ),
+        decision_trace=(
+            {
+                "step": "benchmark_metric_threshold_gate",
+                "reason_code": "selected_first_threshold_passing_finalist",
+            },
+        ),
+    )
+
+    explanation = _portfolio_selection_explanation(portfolio_result)
+
+    assert explanation is not None
+    assert explanation["decisive_axis"] == "metric_threshold_gate"
+    assert (
+        explanation["decision_reason_code"]
+        == "selected_first_threshold_passing_finalist"
+    )
 
 
 @pytest.mark.parametrize(
@@ -199,17 +264,204 @@ def test_report_artifacts_keep_each_track_separate(
     )
 
 
+def test_missing_non_abstention_metric_threshold_fails_with_submitter_source() -> None:
+    manifest = replace(
+        load_benchmark_task_manifest(
+            PROJECT_ROOT / "benchmarks/tasks/rediscovery/planted-analytic-demo.yaml"
+        ),
+        metric_thresholds={
+            "phase3_required_metric": {
+                "metric_id": "phase3_recovery_rate",
+                "comparator": ">=",
+                "threshold": 0.75,
+            }
+        },
+    )
+    result = _stub_submitter_result(
+        manifest,
+        submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+        status="selected",
+        selected_candidate_id="analytic_lag1_affine",
+        selected_candidate_metrics={"total_code_bits": 12.0},
+    )
+
+    assertions = evaluate_benchmark_semantic_assertions(
+        task_manifest=manifest,
+        submitter_results=(result,),
+        local_winner_submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+        local_winner_candidate_id="analytic_lag1_affine",
+    )
+
+    row = assertions["metric_thresholds"]["assertions"][0]
+    assert assertions["metric_thresholds"]["status"] == "failed"
+    assert {
+        "threshold_id": "phase3_required_metric",
+        "metric_id": "phase3_recovery_rate",
+        "comparator": ">=",
+        "threshold": 0.75,
+        "observed_value": None,
+        "status": "failed",
+        "reason": "missing_observed_metric",
+        "reason_code": "missing_observed_metric",
+        "source_submitter_id": ANALYTIC_BACKEND_SUBMITTER_ID,
+        "source_candidate_id": "analytic_lag1_affine",
+    }.items() <= row.items()
+
+
+def test_safe_abstention_only_passes_missing_metrics_without_a_winner() -> None:
+    manifest = replace(
+        load_benchmark_task_manifest(
+            PROJECT_ROOT / "benchmarks/tasks/adversarial_honesty/leakage-trap-demo.yaml"
+        ),
+        metric_thresholds={
+            "phase3_safe_abstention_metric": {
+                "metric_id": "false_holistic_rate",
+                "comparator": "<=",
+                "threshold": 0.0,
+            }
+        },
+    )
+
+    safe_assertions = evaluate_benchmark_semantic_assertions(
+        task_manifest=manifest,
+        submitter_results=(
+            _stub_submitter_result(
+                manifest,
+                submitter_id=ALGORITHMIC_SEARCH_SUBMITTER_ID,
+                status="abstained",
+                abstention_reason="no_publishable_candidate_after_falsification",
+                safe_abstention_evidence={
+                    "status": "verified",
+                    "evidence_type": "falsification_gate",
+                    "reason_code": "no_publishable_candidate_after_falsification",
+                    "support": [{"candidate_id": "unsafe_candidate"}],
+                },
+            ),
+        ),
+        local_winner_submitter_id=None,
+        local_winner_candidate_id=None,
+    )
+    unsafe_assertions = evaluate_benchmark_semantic_assertions(
+        task_manifest=manifest,
+        submitter_results=(
+            _stub_submitter_result(
+                manifest,
+                submitter_id=ALGORITHMIC_SEARCH_SUBMITTER_ID,
+                status="selected",
+                selected_candidate_id="unsafe_candidate",
+                selected_candidate_metrics={"total_code_bits": 1.0},
+            ),
+        ),
+        local_winner_submitter_id=ALGORITHMIC_SEARCH_SUBMITTER_ID,
+        local_winner_candidate_id="unsafe_candidate",
+    )
+
+    assert safe_assertions["metric_thresholds"]["assertions"][0]["reason"] == (
+        "not_applicable_safe_abstention"
+    )
+    assert safe_assertions["metric_thresholds"]["status"] == "passed"
+    assert unsafe_assertions["metric_thresholds"]["status"] == "failed"
+    assert unsafe_assertions["metric_thresholds"]["assertions"][0]["reason"] == (
+        "missing_observed_metric"
+    )
+
+
+def test_calibrated_or_abstain_requires_calibration_evidence_for_selected_winner(
+) -> None:
+    manifest = load_benchmark_task_manifest(
+        PROJECT_ROOT
+        / "benchmarks/tasks/predictive_generalization/probabilistic-event-probability-medium-abstention.yaml"
+    )
+    passing = evaluate_benchmark_semantic_assertions(
+        task_manifest=manifest,
+        submitter_results=(
+            _stub_submitter_result(
+                manifest,
+                submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+                status="selected",
+                selected_candidate_id="analytic_lag1_affine",
+                selected_candidate_metrics={
+                    "practical_significance_margin": 0.03,
+                    "max_reliability_gap": 0.10,
+                },
+            ),
+        ),
+        local_winner_submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+        local_winner_candidate_id="analytic_lag1_affine",
+    )
+    failing = evaluate_benchmark_semantic_assertions(
+        task_manifest=manifest,
+        submitter_results=(
+            _stub_submitter_result(
+                manifest,
+                submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+                status="selected",
+                selected_candidate_id="analytic_lag1_affine",
+                selected_candidate_metrics={
+                    "practical_significance_margin": 0.03,
+                    "max_reliability_gap": 0.40,
+                },
+            ),
+        ),
+        local_winner_submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+        local_winner_candidate_id="analytic_lag1_affine",
+    )
+
+    assert passing["abstention_policy"]["status"] == "passed"
+    assert (
+        passing["abstention_policy"]["reason_code"]
+        == "calibrated_candidate_selected"
+    )
+    assert failing["abstention_policy"]["status"] == "failed"
+    assert (
+        failing["abstention_policy"]["reason_code"]
+        == "selected_candidate_without_required_calibration_evidence"
+    )
+
+
+def test_search_scope_assertion_discloses_declared_candidate_boundary() -> None:
+    manifest = load_benchmark_task_manifest(
+        PROJECT_ROOT
+        / "benchmarks/tasks/predictive_generalization/search-class-bounded-medium.yaml"
+    )
+
+    assertions = evaluate_benchmark_semantic_assertions(
+        task_manifest=manifest,
+        submitter_results=(
+            _stub_submitter_result(
+                manifest,
+                submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+                status="selected",
+                selected_candidate_id="algorithmic_lag_plus_two",
+                selected_candidate_metrics={"practical_significance_margin": 0.05},
+            ),
+        ),
+        local_winner_submitter_id=ANALYTIC_BACKEND_SUBMITTER_ID,
+        local_winner_candidate_id="algorithmic_lag_plus_two",
+    )
+
+    search_scope = assertions["search_scope"]
+    assert search_scope["status"] == "passed"
+    assert search_scope["independent_symbolic_rediscovery_claim"] is False
+    assert search_scope["declared_candidate_count"] >= 1
+
+
 def _stub_submitter_result(
     manifest,
     *,
     submitter_id: str = ALGORITHMIC_SEARCH_SUBMITTER_ID,
+    status: str = "abstained",
+    selected_candidate_id: str | None = None,
+    selected_candidate_metrics: dict[str, float] | None = None,
+    abstention_reason: str | None = "no_admissible_candidate",
+    safe_abstention_evidence: dict[str, object] | None = None,
 ) -> BenchmarkSubmitterResult:
     return BenchmarkSubmitterResult(
         submitter_id=submitter_id,
         submitter_class="bounded_grammar",
         task_id=manifest.task_id,
         track_id=manifest.track_id,
-        status="abstained",
+        status=status,
         protocol_contract={
             "task_id": manifest.task_id,
             "track_id": manifest.track_id,
@@ -240,7 +492,10 @@ def _stub_submitter_result(
             "search_plan_id": f"{manifest.task_id}__{submitter_id}__search_plan",
             "replay_policy": dict(manifest.frozen_protocol.replay_policy),
         },
-        abstention_reason="no_admissible_candidate",
+        selected_candidate_id=selected_candidate_id,
+        selected_candidate_metrics=selected_candidate_metrics,
+        abstention_reason=abstention_reason,
+        safe_abstention_evidence=safe_abstention_evidence or {},
     )
 
 

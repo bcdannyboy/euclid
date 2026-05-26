@@ -10,7 +10,7 @@ dataset_ref: fixtures/runtime/full_vision_certification/panel_shared_local/panel
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-04-14T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:
@@ -31,6 +31,8 @@ budget_policy:
 baseline_registry:
 - baseline_id: reference_description
   manifest_path: benchmarks/baselines/rediscovery/reference-description.yaml
+- baseline_id: naive_last_value
+  manifest_path: benchmarks/baselines/predictive_generalization/naive-last-value.yaml
 submitter_registry:
 - submitter_id: analytic_backend
 seed_policy:

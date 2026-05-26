@@ -51,11 +51,40 @@ def test_negative_case_rejects_false_generalization(tmp_path: Path) -> None:
     submitter = result.submitter_results[0]
     assert submitter.status == "abstained"
     assert submitter.selected_candidate_id is None
-    assert submitter.abstention_reason == "no_admissible_candidate"
+    assert (
+        submitter.abstention_reason
+        == "no_publishable_candidate_after_falsification"
+    )
+    assert submitter.safe_abstention_evidence["status"] == "verified"
     assert submitter.budget_consumption["canonical_program_count"] == 1
     assert submitter.budget_consumption["accepted_candidate_count"] == 0
     assert submitter.candidate_ledger[0].ledger_status == "rejected"
     assert submitter.candidate_ledger[0].reason_codes == ("bounds_invalid",)
+
+
+def test_negative_case_declares_safe_abstention_semantics(tmp_path: Path) -> None:
+    result = euclid.profile_benchmark_task(
+        manifest_path=NEGATIVE_MANIFEST,
+        benchmark_root=tmp_path / "shared-local-negative-semantics",
+        resume=False,
+    )
+
+    task_result = yaml.safe_load(
+        result.report_paths.task_result_path.read_text(encoding="utf-8")
+    )
+    metric_rows = {
+        row["threshold_id"]: row
+        for row in task_result["semantic_assertions"]["metric_thresholds"][
+            "assertions"
+        ]
+    }
+
+    assert result.task_manifest.expected_safe_outcome == "abstain"
+    assert task_result["semantic_assertions"]["overall_status"] == "passed"
+    assert (
+        metric_rows["practical_significance_margin"]["reason_code"]
+        == "not_applicable_safe_abstention"
+    )
 
 
 def test_abstention_case_emits_expected_mode(tmp_path: Path) -> None:
@@ -71,7 +100,11 @@ def test_abstention_case_emits_expected_mode(tmp_path: Path) -> None:
     assert result.task_manifest.abstention_mode == "structural_miss"
     assert submitter.status == "abstained"
     assert submitter.selected_candidate_id is None
-    assert submitter.abstention_reason == "no_admissible_candidate"
+    assert (
+        submitter.abstention_reason
+        == "no_publishable_candidate_after_falsification"
+    )
+    assert submitter.safe_abstention_evidence["status"] == "verified"
     assert submitter.budget_consumption["canonical_program_count"] == 1
     assert submitter.candidate_ledger[0].ledger_status == "rejected"
 

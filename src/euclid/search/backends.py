@@ -382,12 +382,26 @@ def _descriptive_scope_exclusion_reason(
     candidate: CandidateIntermediateRepresentation,
 ) -> str | None:
     operator_id = candidate.structural_layer.composition_graph.operator_id
-    if operator_id in BANNED_DESCRIPTIVE_SCOPE_COMPOSITION_OPERATORS:
+    if (
+        operator_id in BANNED_DESCRIPTIVE_SCOPE_COMPOSITION_OPERATORS
+        and not _has_lookup_residual_wrapper(candidate)
+    ):
         return "requires_lookup_residual_wrapper"
     form_class = candidate.structural_layer.cir_form_class
     if form_class in BANNED_DESCRIPTIVE_SCOPE_FORM_CLASSES:
         return BANNED_DESCRIPTIVE_SCOPE_FORM_CLASSES[form_class]
     return None
+
+
+def _has_lookup_residual_wrapper(
+    candidate: CandidateIntermediateRepresentation,
+) -> bool:
+    return any(
+        literal.name == "lookup_residual_wrapper_ref"
+        and isinstance(literal.value, str)
+        and bool(literal.value.strip())
+        for literal in candidate.structural_layer.literal_block.literals
+    )
 
 
 def _partition_descriptive_scope_candidates(
@@ -1261,19 +1275,7 @@ def run_descriptive_search_backends(
     }
     unknown_family_proposals: list[DescriptiveSearchProposal] = []
 
-    if include_default_grammar:
-        for adapter in adapter_list:
-            for proposal in adapter.default_proposals(
-                search_plan=search_plan,
-                feature_view=legal_feature_view,
-            ):
-                if (
-                    allowed_candidate_ids is not None
-                    and proposal.candidate_id not in allowed_candidate_ids
-                ):
-                    continue
-                grouped_proposals[adapter.family_id].append(proposal)
-
+    seen_proposals: set[tuple[str, str]] = set()
     for proposal in proposal_specs:
         if (
             allowed_candidate_ids is not None
@@ -1284,7 +1286,25 @@ def run_descriptive_search_backends(
         if adapter is None:
             unknown_family_proposals.append(proposal)
             continue
+        seen_proposals.add((proposal.primitive_family, proposal.candidate_id))
         grouped_proposals[proposal.primitive_family].append(proposal)
+
+    if include_default_grammar:
+        for adapter in adapter_list:
+            for proposal in adapter.default_proposals(
+                search_plan=search_plan,
+                feature_view=legal_feature_view,
+            ):
+                proposal_key = (proposal.primitive_family, proposal.candidate_id)
+                if proposal_key in seen_proposals:
+                    continue
+                if (
+                    allowed_candidate_ids is not None
+                    and proposal.candidate_id not in allowed_candidate_ids
+                ):
+                    continue
+                seen_proposals.add(proposal_key)
+                grouped_proposals[adapter.family_id].append(proposal)
 
     ordered_proposals = tuple(
         proposal

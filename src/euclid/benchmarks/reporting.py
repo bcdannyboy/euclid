@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import math
 import os
-from dataclasses import dataclass, field
+import hashlib
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -60,12 +62,16 @@ _MISSING_REPLAY_STATUS = "missing"
 class BenchmarkArtifactRef:
     artifact_type: str
     relative_path: str
+    sha256: str | None = None
 
     def as_dict(self) -> dict[str, str]:
-        return {
+        payload = {
             "artifact_type": self.artifact_type,
             "relative_path": self.relative_path,
         }
+        if self.sha256 is not None:
+            payload["sha256"] = self.sha256
+        return payload
 
 
 @dataclass(frozen=True)
@@ -78,12 +84,19 @@ class BenchmarkReplayRefArtifact:
     artifact_version: str = _ARTIFACT_VERSION
 
     def as_dict(self) -> dict[str, Any]:
+        replay_verification_status = _replay_verification_status_from_contract(
+            self.replay_contract
+        )
         return {
             "artifact_type": self.artifact_type,
             "artifact_version": self.artifact_version,
             "task_id": self.task_id,
             "track_id": self.track_id,
             "submitter_id": self.submitter_id,
+            "replay_verification_status": replay_verification_status,
+            "failure_reason_codes": list(
+                _replay_failure_reason_codes_from_contract(self.replay_contract)
+            ),
             "replay_contract": _json_ready(self.replay_contract),
         }
 
@@ -99,12 +112,14 @@ class BenchmarkSubmitterResultArtifact:
     budget_consumption: Mapping[str, Any]
     candidate_ledger: tuple[Mapping[str, Any], ...]
     replay_ref: BenchmarkArtifactRef
+    replay_contract: Mapping[str, Any] = field(default_factory=dict)
     artifact_type: str = "submitter_result"
     artifact_version: str = _ARTIFACT_VERSION
     selected_candidate_id: str | None = None
     selected_candidate_hash: str | None = None
     selected_candidate_metrics: Mapping[str, Any] | None = None
     abstention_reason: str | None = None
+    safe_abstention_evidence: Mapping[str, Any] = field(default_factory=dict)
     backend_participation: tuple[Mapping[str, Any], ...] = ()
     semantic_disclosures: Mapping[str, Any] = field(default_factory=dict)
     portfolio_selection_record_ref: BenchmarkArtifactRef | None = None
@@ -122,6 +137,7 @@ class BenchmarkSubmitterResultArtifact:
             "budget_consumption": _json_ready(self.budget_consumption),
             "candidate_ledger": [_json_ready(item) for item in self.candidate_ledger],
             "replay_ref": self.replay_ref.as_dict(),
+            "replay_contract": _json_ready(self.replay_contract),
         }
         if self.selected_candidate_id is not None:
             payload["selected_candidate_id"] = self.selected_candidate_id
@@ -133,6 +149,10 @@ class BenchmarkSubmitterResultArtifact:
             )
         if self.abstention_reason is not None:
             payload["abstention_reason"] = self.abstention_reason
+        if self.safe_abstention_evidence:
+            payload["safe_abstention_evidence"] = _json_ready(
+                self.safe_abstention_evidence
+            )
         if self.backend_participation:
             payload["backend_participation"] = [
                 _json_ready(item) for item in self.backend_participation
@@ -349,14 +369,19 @@ def evaluate_benchmark_semantic_assertions(
     local_winner_submitter_id: str | None,
     local_winner_candidate_id: str | None,
 ) -> dict[str, Any]:
-    selected_metrics = _selected_semantic_metrics(
-        submitter_results,
-        local_winner_submitter_id=local_winner_submitter_id,
+    selected_metrics, selected_metric_source_submitter_id = (
+        _selected_semantic_metric_source(
+            submitter_results,
+            local_winner_submitter_id=local_winner_submitter_id,
+        )
     )
     metric_thresholds = _evaluate_metric_thresholds(
         task_manifest=task_manifest,
+        submitter_results=submitter_results,
         selected_metrics=selected_metrics,
+        local_winner_submitter_id=local_winner_submitter_id,
         local_winner_candidate_id=local_winner_candidate_id,
+        source_submitter_id=selected_metric_source_submitter_id,
     )
     engine_requirements = _evaluate_engine_requirements(
         task_manifest=task_manifest,
@@ -369,13 +394,42 @@ def evaluate_benchmark_semantic_assertions(
         local_winner_candidate_id=local_winner_candidate_id,
     )
     semantic_readiness_row_ids = _evaluate_semantic_readiness_row_ids(task_manifest)
+    rediscovery_target = _evaluate_rediscovery_target_assertion(
+        task_manifest=task_manifest,
+        submitter_results=submitter_results,
+        local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
+    abstention_policy = _evaluate_abstention_policy_assertion(
+        task_manifest=task_manifest,
+        submitter_results=submitter_results,
+        selected_metrics=selected_metrics,
+        local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
+    search_scope = _evaluate_search_scope_assertion(
+        task_manifest=task_manifest,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
+    composition_operator_semantics = _evaluate_composition_operator_assertion(
+        task_manifest=task_manifest,
+        submitter_results=submitter_results,
+        selected_metrics=selected_metrics,
+        local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
     sections = {
         "metric_thresholds": metric_thresholds,
         "engine_requirements": engine_requirements,
         "claim_scope": claim_scope,
         "false_claim_expectations": false_claim_expectations,
         "semantic_readiness_row_ids": semantic_readiness_row_ids,
+        "abstention_policy": abstention_policy,
+        "search_scope": search_scope,
+        "composition_operator_semantics": composition_operator_semantics,
     }
+    if rediscovery_target is not None:
+        sections["rediscovery_target"] = rediscovery_target
     overall_status = (
         "passed"
         if all(section.get("status") == "passed" for section in sections.values())
@@ -383,6 +437,7 @@ def evaluate_benchmark_semantic_assertions(
     )
     return {
         "overall_status": overall_status,
+        "sections": _json_ready(sections),
         **sections,
     }
 
@@ -392,48 +447,90 @@ def _selected_semantic_metrics(
     *,
     local_winner_submitter_id: str | None,
 ) -> Mapping[str, Any] | None:
+    selected_metrics, _source_submitter_id = _selected_semantic_metric_source(
+        submitter_results,
+        local_winner_submitter_id=local_winner_submitter_id,
+    )
+    return selected_metrics
+
+
+def _selected_semantic_metric_source(
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    *,
+    local_winner_submitter_id: str | None,
+) -> tuple[Mapping[str, Any] | None, str | None]:
     for result in submitter_results:
         if (
             result.submitter_id == local_winner_submitter_id
             and result.selected_candidate_metrics is not None
         ):
-            return result.selected_candidate_metrics
+            return result.selected_candidate_metrics, result.submitter_id
     for result in submitter_results:
         if (
             result.submitter_id == PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID
             and result.selected_candidate_metrics is not None
         ):
-            return result.selected_candidate_metrics
+            return result.selected_candidate_metrics, result.submitter_id
     for result in submitter_results:
         if result.selected_candidate_metrics is not None:
-            return result.selected_candidate_metrics
-    return None
+            return result.selected_candidate_metrics, result.submitter_id
+    return None, None
 
 
 def _evaluate_metric_thresholds(
     *,
     task_manifest: BenchmarkTaskManifest,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
     selected_metrics: Mapping[str, Any] | None,
-    local_winner_candidate_id: str | None,
+    local_winner_submitter_id: str | None = None,
+    local_winner_candidate_id: str | None = None,
+    source_submitter_id: str | None = None,
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
-    safe_abstention = (
+    expected_safe_abstention = (
         getattr(task_manifest, "expected_safe_outcome", None) == "abstain"
-        and local_winner_candidate_id is None
+    )
+    safe_abstention = _safe_abstention_has_evidence(
+        submitter_results=submitter_results,
+        expected_safe_abstention=expected_safe_abstention,
+        local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
     )
     for threshold_id, threshold in sorted(task_manifest.metric_thresholds.items()):
         if not isinstance(threshold, Mapping):
             rows.append(
                 {
                     "threshold_id": threshold_id,
+                    "source_submitter_id": source_submitter_id,
+                    "source_candidate_id": local_winner_candidate_id,
                     "status": "failed",
                     "reason": "threshold_payload_not_mapping",
+                    "reason_code": "threshold_payload_not_mapping",
                 }
             )
             continue
         metric_id = str(threshold.get("metric_id", "")).strip()
         comparator = str(threshold.get("comparator", "")).strip()
         threshold_value = threshold.get("threshold")
+        measurement_required_declared = "measurement_required" in threshold
+        measurement_required = threshold.get("measurement_required", True)
+        if not isinstance(measurement_required, bool):
+            rows.append(
+                {
+                    "threshold_id": threshold_id,
+                    "metric_id": metric_id,
+                    "comparator": comparator,
+                    "threshold": threshold_value,
+                    "measurement_required": measurement_required,
+                    "source_submitter_id": source_submitter_id,
+                    "source_candidate_id": local_winner_candidate_id,
+                    "observed_value": None,
+                    "status": "failed",
+                    "reason": "measurement_required_not_boolean",
+                    "reason_code": "measurement_required_not_boolean",
+                }
+            )
+            continue
         observed_value = (
             selected_metrics.get(metric_id)
             if isinstance(selected_metrics, Mapping)
@@ -442,6 +539,17 @@ def _evaluate_metric_thresholds(
         if safe_abstention:
             row_status = "passed"
             reason = "not_applicable_safe_abstention"
+        elif (
+            expected_safe_abstention
+            and observed_value is None
+            and local_winner_submitter_id is None
+            and local_winner_candidate_id is None
+        ):
+            row_status = "failed"
+            reason = "safe_abstention_evidence_missing"
+        elif observed_value is None and measurement_required:
+            row_status = "failed"
+            reason = "missing_observed_metric"
         elif observed_value is None:
             row_status = "passed"
             reason = "declared_not_measured_by_current_harness"
@@ -456,20 +564,352 @@ def _evaluate_metric_thresholds(
                 else "failed"
             )
             reason = "observed"
+        row = {
+            "threshold_id": threshold_id,
+            "metric_id": metric_id,
+            "comparator": comparator,
+            "threshold": threshold_value,
+            "observed_value": observed_value,
+            "status": row_status,
+            "reason": reason,
+            "reason_code": reason,
+            "source_submitter_id": source_submitter_id,
+            "source_candidate_id": local_winner_candidate_id,
+        }
+        if measurement_required_declared:
+            row["measurement_required"] = measurement_required
+        rows.append(row)
+    return {
+        "status": (
+            "passed"
+            if rows and all(row["status"] == "passed" for row in rows)
+            else "failed"
+        ),
+        "assertions": rows,
+    }
+
+
+def _safe_abstention_has_evidence(
+    *,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    expected_safe_abstention: bool,
+    local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
+) -> bool:
+    if (
+        not expected_safe_abstention
+        or local_winner_submitter_id is not None
+        or local_winner_candidate_id is not None
+        or not submitter_results
+    ):
+        return False
+    return all(
+        result.status == "abstained"
+        and _safe_abstention_evidence_verified(result.safe_abstention_evidence)
+        for result in submitter_results
+    )
+
+
+def _safe_abstention_evidence_verified(evidence: Mapping[str, Any]) -> bool:
+    if evidence.get("status") != "verified" or not evidence.get("reason_code"):
+        return False
+    if evidence.get("evidence_type") not in _SAFE_ABSTENTION_EVIDENCE_TYPES:
+        return False
+    return any(
+        key in evidence and bool(evidence.get(key))
+        for key in ("support", "child_submitter_ids", "compared_finalists")
+    )
+
+
+_SAFE_ABSTENTION_EVIDENCE_TYPES = {
+    "falsification_gate",
+    "child_falsification_gate",
+    "portfolio_trap_gate",
+}
+
+
+def _evaluate_abstention_policy_assertion(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    selected_metrics: Mapping[str, Any] | None,
+    local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any]:
+    expected_mode = str(
+        getattr(task_manifest, "abstention_mode", None) or ""
+    ).strip()
+    expected_safe_abstention = (
+        getattr(task_manifest, "expected_safe_outcome", None) == "abstain"
+    )
+    if expected_safe_abstention:
+        has_evidence = _safe_abstention_has_evidence(
+            submitter_results=submitter_results,
+            expected_safe_abstention=True,
+            local_winner_submitter_id=local_winner_submitter_id,
+            local_winner_candidate_id=local_winner_candidate_id,
+        )
+        return {
+            "status": "passed" if has_evidence else "failed",
+            "expected_safe_outcome": "abstain",
+            "abstention_mode": expected_mode or None,
+            "reason_code": (
+                "safe_abstention_falsification_evidence_verified"
+                if has_evidence
+                else "safe_abstention_evidence_missing"
+            ),
+            "evidence": [
+                _json_ready(result.safe_abstention_evidence)
+                for result in submitter_results
+                if result.safe_abstention_evidence
+            ],
+        }
+    if expected_mode == "calibrated_or_abstain":
+        if local_winner_submitter_id is None and local_winner_candidate_id is None:
+            has_evidence = _safe_abstention_has_evidence(
+                submitter_results=submitter_results,
+                expected_safe_abstention=True,
+                local_winner_submitter_id=local_winner_submitter_id,
+                local_winner_candidate_id=local_winner_candidate_id,
+            )
+            return {
+                "status": "passed" if has_evidence else "failed",
+                "abstention_mode": expected_mode,
+                "reason_code": (
+                    "abstained_with_falsification_evidence"
+                    if has_evidence
+                    else "calibrated_or_abstain_missing_calibration_and_abstention_evidence"
+                ),
+            }
+        calibration_rows = _calibration_metric_threshold_rows(
+            task_manifest=task_manifest,
+            selected_metrics=selected_metrics,
+        )
+        calibrated = bool(calibration_rows) and all(
+            row["status"] == "passed" for row in calibration_rows
+        )
+        return {
+            "status": "passed" if calibrated else "failed",
+            "abstention_mode": expected_mode,
+            "reason_code": (
+                "calibrated_candidate_selected"
+                if calibrated
+                else "selected_candidate_without_required_calibration_evidence"
+            ),
+            "selected_submitter_id": local_winner_submitter_id,
+            "selected_candidate_id": local_winner_candidate_id,
+            "calibration_assertions": calibration_rows,
+        }
+    return {
+        "status": "passed",
+        "abstention_mode": expected_mode or None,
+        "reason_code": "no_special_abstention_policy",
+    }
+
+
+def _calibration_metric_threshold_rows(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    selected_metrics: Mapping[str, Any] | None,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for threshold_id, threshold in sorted(task_manifest.metric_thresholds.items()):
+        if not str(threshold_id).startswith("calibration:"):
+            continue
+        if not isinstance(threshold, Mapping):
+            rows.append(
+                {
+                    "threshold_id": threshold_id,
+                    "status": "failed",
+                    "reason_code": "threshold_payload_not_mapping",
+                }
+            )
+            continue
+        metric_id = str(threshold.get("metric_id", "")).strip()
+        observed_value = (
+            selected_metrics.get(metric_id)
+            if isinstance(selected_metrics, Mapping)
+            else None
+        )
+        status = (
+            "passed"
+            if observed_value is not None
+            and _compare_metric_threshold(
+                observed_value,
+                comparator=str(threshold.get("comparator", "")).strip(),
+                threshold_value=threshold.get("threshold"),
+            )
+            else "failed"
+        )
         rows.append(
             {
                 "threshold_id": threshold_id,
                 "metric_id": metric_id,
-                "comparator": comparator,
-                "threshold": threshold_value,
                 "observed_value": observed_value,
-                "status": row_status,
-                "reason": reason,
+                "status": status,
+                "reason_code": (
+                    "observed" if status == "passed" else "calibration_metric_failed"
+                ),
+            }
+        )
+    return rows
+
+
+def _evaluate_search_scope_assertion(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any]:
+    honesty = task_manifest.search_class_honesty
+    if not honesty:
+        return {"status": "passed", "reason_code": "no_search_class_honesty_surface"}
+    declared_programs = tuple(
+        item
+        for item in honesty.get("declared_candidate_programs", ())
+        if isinstance(item, Mapping)
+    )
+    declared_ids = {
+        str(item["candidate_id"])
+        for item in declared_programs
+        if isinstance(item.get("candidate_id"), str)
+    }
+    required_fields = (
+        "coverage_statement",
+        "exactness_ceiling",
+        "requires_disclosure",
+    )
+    missing_fields = [
+        field_name
+        for field_name in required_fields
+        if not honesty.get(field_name)
+    ]
+    selected_declared = (
+        local_winner_candidate_id in declared_ids
+        if local_winner_candidate_id is not None
+        else False
+    )
+    status = "passed" if not missing_fields else "failed"
+    return {
+        "status": status,
+        "reason_code": (
+            "declared_candidate_scope_disclosed"
+            if status == "passed"
+            else "search_scope_disclosure_missing"
+        ),
+        "search_class": task_manifest.search_class,
+        "declared_candidate_count": len(declared_ids),
+        "selected_candidate_id": local_winner_candidate_id,
+        "selected_candidate_in_declared_space": selected_declared,
+        "independent_symbolic_rediscovery_claim": False,
+        "claim_boundary": "benchmark demonstrates declared search-scope behavior, not independent law discovery outside the disclosed candidate space",
+        "missing_fields": missing_fields,
+    }
+
+
+def _evaluate_composition_operator_assertion(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    selected_metrics: Mapping[str, Any] | None,
+    local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any]:
+    operator_ids = tuple(task_manifest.composition_operators)
+    if not operator_ids:
+        return {
+            "status": "passed",
+            "reason_code": "no_composition_operator_surface",
+        }
+    selected_result = _selected_submitter_result(
+        submitter_results,
+        submitter_id=local_winner_submitter_id,
+        candidate_id=local_winner_candidate_id,
+    )
+    selected_candidate = (
+        selected_result.selected_candidate if selected_result is not None else None
+    )
+    candidate_structure = (
+        selected_candidate.structural_layer.as_dict()
+        if selected_candidate is not None
+        else {}
+    )
+    composition_graph = candidate_structure.get("composition_graph")
+    if not isinstance(composition_graph, Mapping):
+        composition_graph = {}
+    assertions: list[dict[str, Any]] = []
+    for operator_id in operator_ids:
+        if operator_id == "additive_residual":
+            assertions.append(
+                _additive_residual_behavior_assertion(
+                    composition_graph=composition_graph,
+                    selected_metrics=selected_metrics,
+                    task_manifest=task_manifest,
+                )
+            )
+            continue
+        assertions.append(
+            {
+                "operator_id": operator_id,
+                "status": "passed",
+                "reason_code": "operator_checked_by_existing_benchmark_surface",
             }
         )
     return {
-        "status": "passed" if rows and all(row["status"] == "passed" for row in rows) else "failed",
-        "assertions": rows,
+        "status": (
+            "passed"
+            if assertions and all(row["status"] == "passed" for row in assertions)
+            else "failed"
+        ),
+        "assertions": assertions,
+    }
+
+
+def _additive_residual_behavior_assertion(
+    *,
+    composition_graph: Mapping[str, Any],
+    selected_metrics: Mapping[str, Any] | None,
+    task_manifest: BenchmarkTaskManifest,
+) -> dict[str, Any]:
+    operator_matches = composition_graph.get("operator_id") == "additive_residual"
+    base_reducer = composition_graph.get("base_reducer")
+    residual_reducer = composition_graph.get("residual_reducer")
+    graph_has_distinct_components = (
+        isinstance(base_reducer, str)
+        and isinstance(residual_reducer, str)
+        and bool(base_reducer)
+        and bool(residual_reducer)
+        and base_reducer != residual_reducer
+    )
+    margin_threshold = task_manifest.metric_thresholds.get(
+        "practical_significance_margin"
+    )
+    margin_passed = False
+    observed_margin = None
+    if isinstance(margin_threshold, Mapping) and isinstance(selected_metrics, Mapping):
+        metric_id = str(margin_threshold.get("metric_id", "")).strip()
+        observed_margin = selected_metrics.get(metric_id)
+        margin_passed = _compare_metric_threshold(
+            observed_margin,
+            comparator=str(margin_threshold.get("comparator", "")).strip(),
+            threshold_value=margin_threshold.get("threshold"),
+        )
+    status = (
+        "passed" if operator_matches and graph_has_distinct_components and margin_passed else "failed"
+    )
+    return {
+        "operator_id": "additive_residual",
+        "status": status,
+        "reason_code": (
+            "composition_operator_behavioral_margin_verified"
+            if status == "passed"
+            else "composition_operator_behavioral_evidence_missing"
+        ),
+        "operator_matches": operator_matches,
+        "graph_has_distinct_components": graph_has_distinct_components,
+        "base_reducer": base_reducer,
+        "residual_reducer": residual_reducer,
+        "observed_practical_significance_margin": observed_margin,
+        "claim_boundary": "additive residual evidence requires both a distinct composition graph and a passed replayed benchmark margin",
     }
 
 
@@ -556,6 +996,158 @@ def _evaluate_false_claim_expectations(
     }
 
 
+def _evaluate_rediscovery_target_assertion(
+    *,
+    task_manifest: BenchmarkTaskManifest,
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
+) -> dict[str, Any] | None:
+    target_ref = getattr(task_manifest, "target_structure_ref", None)
+    if not isinstance(target_ref, str) or not target_ref.strip():
+        return None
+    target = _load_rediscovery_target_spec(
+        target_ref.strip(),
+        source_path=task_manifest.source_path,
+    )
+    target_family = _target_family(target, target_ref.strip())
+    selected_result = _selected_submitter_result(
+        submitter_results,
+        submitter_id=local_winner_submitter_id,
+        candidate_id=local_winner_candidate_id,
+    )
+    selected_candidate = (
+        selected_result.selected_candidate if selected_result is not None else None
+    )
+    equivalent = _selected_candidate_matches_rediscovery_target(
+        target=target,
+        target_family=target_family,
+        selected_candidate_id=local_winner_candidate_id,
+        selected_candidate=selected_candidate,
+    )
+    return {
+        "status": "passed" if equivalent else "failed",
+        "reason_code": (
+            "selected_candidate_structurally_equivalent"
+            if equivalent
+            else "selected_candidate_not_structurally_equivalent"
+        ),
+        "target_structure_ref": target_ref.strip(),
+        "target_family": target_family,
+        "selected_submitter_id": local_winner_submitter_id,
+        "selected_candidate_id": local_winner_candidate_id,
+        "equivalence_policy": dict(getattr(task_manifest, "equivalence_policy", {})),
+    }
+
+
+def _selected_submitter_result(
+    submitter_results: Sequence[BenchmarkSubmitterResult],
+    *,
+    submitter_id: str | None,
+    candidate_id: str | None,
+) -> BenchmarkSubmitterResult | None:
+    for result in submitter_results:
+        if result.submitter_id == submitter_id and result.selected_candidate_id == candidate_id:
+            return result
+    for result in submitter_results:
+        if result.selected_candidate_id == candidate_id:
+            return result
+    return None
+
+
+def _load_rediscovery_target_spec(
+    target_ref: str,
+    *,
+    source_path: Path,
+) -> Mapping[str, Any]:
+    target_path_token = target_ref.split("#", 1)[0]
+    if not target_path_token:
+        return {}
+    target_path = Path(target_path_token)
+    candidate_paths = [target_path] if target_path.is_absolute() else []
+    if not target_path.is_absolute():
+        project_root = _project_root_for_manifest_source(source_path)
+        candidate_paths.extend(
+            [
+                project_root / target_path,
+                project_root / "src" / "euclid" / "_assets" / target_path,
+            ]
+        )
+    for candidate_path in candidate_paths:
+        if not candidate_path.is_file():
+            continue
+        try:
+            text = candidate_path.read_text(encoding="utf-8")
+            if candidate_path.suffix.lower() == ".json":
+                payload = json.loads(text)
+            else:
+                payload = yaml.safe_load(text)
+        except (OSError, json.JSONDecodeError, yaml.YAMLError):
+            continue
+        return payload if isinstance(payload, Mapping) else {}
+    return {}
+
+
+def _project_root_for_manifest_source(source_path: Path) -> Path:
+    parts = source_path.parts
+    if "benchmarks" in parts:
+        benchmark_index = parts.index("benchmarks")
+        return Path(*parts[:benchmark_index]) if benchmark_index else Path(".")
+    return source_path.parent
+
+
+def _target_family(target: Mapping[str, Any], target_ref: str) -> str | None:
+    raw_family = target.get("family") or target.get("equivalence_class")
+    if isinstance(raw_family, str) and raw_family.strip():
+        return raw_family.strip()
+    if "#" in target_ref:
+        fragment = target_ref.rsplit("#", 1)[1].strip()
+        return fragment or None
+    return None
+
+
+def _selected_candidate_matches_rediscovery_target(
+    *,
+    target: Mapping[str, Any],
+    target_family: str | None,
+    selected_candidate_id: str | None,
+    selected_candidate: Any,
+) -> bool:
+    if not selected_candidate_id:
+        return False
+    target_id = str(target.get("candidate_id") or target.get("law_id") or "").strip()
+    if target_id and selected_candidate_id == target_id:
+        return True
+    if target_family == selected_candidate_id:
+        return True
+    if target_family == "algorithmic_last_observation":
+        return selected_candidate_id == "algorithmic_last_observation"
+    if target_family == "affine_lag":
+        return _candidate_is_analytic_affine_lag(
+            selected_candidate_id=selected_candidate_id,
+            selected_candidate=selected_candidate,
+        )
+    return False
+
+
+def _candidate_is_analytic_affine_lag(
+    *,
+    selected_candidate_id: str,
+    selected_candidate: Any,
+) -> bool:
+    if selected_candidate_id == "analytic_lag1_affine":
+        return True
+    if selected_candidate is None:
+        return False
+    structural_layer = getattr(selected_candidate, "structural_layer", None)
+    if getattr(structural_layer, "cir_family_id", None) != "analytic":
+        return False
+    parameter_block = getattr(structural_layer, "parameter_block", None)
+    parameters = getattr(parameter_block, "parameters", ())
+    parameter_names = {str(getattr(parameter, "name", "")) for parameter in parameters}
+    return "lag_coefficient" in parameter_names
+
+
 def _evaluate_semantic_readiness_row_ids(
     task_manifest: BenchmarkTaskManifest,
 ) -> dict[str, Any]:
@@ -610,11 +1202,31 @@ def write_benchmark_task_report_artifacts(
         created_on=created_on or date.today(),
     )
 
-    _write_json(bundle.task_result_path, bundle.task_result.as_dict())
-    for submitter_id, artifact in bundle.submitter_artifacts.items():
-        _write_json(bundle.submitter_paths[submitter_id], artifact.as_dict())
     for submitter_id, artifact in bundle.replay_artifacts.items():
         _write_json(bundle.replay_paths[submitter_id], artifact.as_dict())
+
+    replay_refs_with_digest = {
+        submitter_id: _artifact_ref(
+            benchmark_root=tree.root,
+            artifact_type="benchmark_replay_ref",
+            path=path,
+            sha256=_sha256_file(path),
+        )
+        for submitter_id, path in bundle.replay_paths.items()
+    }
+    submitter_artifacts = {
+        submitter_id: replace(
+            artifact,
+            replay_ref=replay_refs_with_digest.get(
+                submitter_id,
+                artifact.replay_ref,
+            ),
+        )
+        for submitter_id, artifact in bundle.submitter_artifacts.items()
+    }
+    for submitter_id, artifact in submitter_artifacts.items():
+        _write_json(bundle.submitter_paths[submitter_id], artifact.as_dict())
+
     if (
         bundle.portfolio_selection_artifact is not None
         and bundle.portfolio_selection_path is not None
@@ -623,6 +1235,59 @@ def write_benchmark_task_report_artifacts(
             bundle.portfolio_selection_path,
             bundle.portfolio_selection_artifact.as_dict(),
         )
+
+    portfolio_selection_ref = None
+    if bundle.portfolio_selection_path is not None:
+        portfolio_selection_ref = _artifact_ref(
+            benchmark_root=tree.root,
+            artifact_type="portfolio_selection_record",
+            path=bundle.portfolio_selection_path,
+            sha256=_sha256_file(bundle.portfolio_selection_path),
+        )
+        portfolio_artifact = submitter_artifacts.get(
+            PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID
+        )
+        if portfolio_artifact is not None:
+            submitter_artifacts[PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID] = replace(
+                portfolio_artifact,
+                portfolio_selection_record_ref=portfolio_selection_ref,
+            )
+            _write_json(
+                bundle.submitter_paths[PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID],
+                submitter_artifacts[
+                    PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID
+                ].as_dict(),
+            )
+
+    submitter_refs_with_digest = {
+        submitter_id: _artifact_ref(
+            benchmark_root=tree.root,
+            artifact_type="submitter_result",
+            path=path,
+            sha256=_sha256_file(path),
+        )
+        for submitter_id, path in bundle.submitter_paths.items()
+    }
+    task_result = replace(
+        bundle.task_result,
+        submitter_result_refs=tuple(
+            submitter_refs_with_digest.get(ref_submitter_id, ref)
+            for ref_submitter_id, ref in zip(
+                (result.submitter_id for result in submitter_results),
+                bundle.task_result.submitter_result_refs,
+            )
+        ),
+        replay_ref_refs=tuple(
+            replay_refs_with_digest.get(result.submitter_id, ref)
+            for result, ref in zip(
+                submitter_results,
+                bundle.task_result.replay_ref_refs,
+            )
+        ),
+        portfolio_selection_record_ref=portfolio_selection_ref
+        or bundle.task_result.portfolio_selection_record_ref,
+    )
+    _write_json(bundle.task_result_path, task_result.as_dict())
     bundle.report_path.parent.mkdir(parents=True, exist_ok=True)
     bundle.report_path.write_text(bundle.report_text, encoding="utf-8")
 
@@ -698,10 +1363,12 @@ def _build_reporting_bundle(
                 entry.as_dict() for entry in result.candidate_ledger
             ),
             replay_ref=replay_ref,
+            replay_contract=result.replay_contract,
             selected_candidate_id=result.selected_candidate_id,
             selected_candidate_hash=result.selected_candidate_hash,
             selected_candidate_metrics=result.selected_candidate_metrics,
             abstention_reason=result.abstention_reason,
+            safe_abstention_evidence=result.safe_abstention_evidence,
             backend_participation=tuple(result.backend_participation),
             semantic_disclosures=result.semantic_disclosures,
         )
@@ -755,10 +1422,12 @@ def _build_reporting_bundle(
                 budget_consumption=portfolio_artifact.budget_consumption,
                 candidate_ledger=portfolio_artifact.candidate_ledger,
                 replay_ref=portfolio_artifact.replay_ref,
+                replay_contract=portfolio_artifact.replay_contract,
                 selected_candidate_id=portfolio_artifact.selected_candidate_id,
                 selected_candidate_hash=portfolio_artifact.selected_candidate_hash,
                 selected_candidate_metrics=portfolio_artifact.selected_candidate_metrics,
                 abstention_reason=portfolio_artifact.abstention_reason,
+                safe_abstention_evidence=portfolio_artifact.safe_abstention_evidence,
                 backend_participation=portfolio_artifact.backend_participation,
                 semantic_disclosures=portfolio_artifact.semantic_disclosures,
                 portfolio_selection_record_ref=portfolio_selection_ref,
@@ -811,6 +1480,7 @@ def _build_reporting_bundle(
         track_summary=track_summary,
         created_on=created_on,
         local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
         portfolio_selection_artifact=portfolio_selection_artifact,
         submitter_paths=submitter_paths,
         replay_paths=replay_paths,
@@ -841,6 +1511,7 @@ def _render_report(
     track_summary: Mapping[str, Any] | None,
     created_on: date,
     local_winner_submitter_id: str | None,
+    local_winner_candidate_id: str | None,
     portfolio_selection_artifact: BenchmarkPortfolioSelectionArtifact | None,
     submitter_paths: Mapping[str, Path],
     replay_paths: Mapping[str, Path],
@@ -910,6 +1581,27 @@ def _render_report(
         for key, value in track_summary.items():
             body_lines.append(f"- `{key}`: `{_format_scalar(value)}`")
 
+    semantic_assertions = evaluate_benchmark_semantic_assertions(
+        task_manifest=task_manifest,
+        submitter_results=submitter_results,
+        local_winner_submitter_id=local_winner_submitter_id,
+        local_winner_candidate_id=local_winner_candidate_id,
+    )
+    body_lines.extend(
+        [
+            "",
+            "## Semantic Assertions",
+            "",
+            f"- Overall status: `{semantic_assertions['overall_status']}`",
+        ]
+    )
+    for section_name, section in semantic_assertions.get("sections", {}).items():
+        if not isinstance(section, Mapping):
+            continue
+        body_lines.append(
+            f"- `{section_name}`: `{_format_scalar(section.get('status'))}`"
+        )
+
     body_lines.extend(
         [
             "",
@@ -964,19 +1656,25 @@ def _render_report(
             ]
         )
         if isinstance(runner_up, Mapping):
-            winner_total_code_bits = _format_scalar(
-                explanation.get("winner", {}).get("total_code_bits")
-            )
-            runner_up_total_code_bits = _format_scalar(
-                runner_up.get("total_code_bits")
-            )
-            body_lines.append(
-                "- Winner beat runner-up on "
-                f"`{_format_scalar(explanation.get('decisive_axis'))}`: "
-                f"`{winner_total_code_bits}`"
-                " vs "
-                f"`{runner_up_total_code_bits}` total code bits."
-            )
+            if explanation.get("decisive_axis") == "metric_threshold_gate":
+                body_lines.append(
+                    "- Selection reason: metric threshold gate "
+                    f"`{_format_scalar(explanation.get('decision_reason_code'))}`."
+                )
+            else:
+                winner_total_code_bits = _format_scalar(
+                    explanation.get("winner", {}).get("total_code_bits")
+                )
+                runner_up_total_code_bits = _format_scalar(
+                    runner_up.get("total_code_bits")
+                )
+                body_lines.append(
+                    "- Winner beat runner-up on "
+                    f"`{_format_scalar(explanation.get('decisive_axis'))}`: "
+                    f"`{winner_total_code_bits}`"
+                    " vs "
+                    f"`{runner_up_total_code_bits}` total code bits."
+                )
 
     body_lines.extend(
         [
@@ -1000,10 +1698,12 @@ def _artifact_ref(
     benchmark_root: Path,
     artifact_type: str,
     path: Path,
+    sha256: str | None = None,
 ) -> BenchmarkArtifactRef:
     return BenchmarkArtifactRef(
         artifact_type=artifact_type,
         relative_path=path.relative_to(benchmark_root).as_posix(),
+        sha256=sha256,
     )
 
 
@@ -1013,6 +1713,14 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
         json.dumps(payload, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return f"sha256:{digest.hexdigest()}"
 
 
 def _humanize_identifier(value: str) -> str:
@@ -1066,6 +1774,15 @@ def _portfolio_selection_explanation(
         return None
     winner = compared_finalists[0]
     runner_up = compared_finalists[1] if len(compared_finalists) > 1 else None
+    threshold_gate_step = _portfolio_threshold_gate_step(portfolio_result)
+    decisive_axis = _portfolio_decisive_axis(winner, runner_up)
+    if (
+        threshold_gate_step is not None
+        and runner_up is not None
+        and _numeric_value(runner_up.get("total_code_bits"))
+        < _numeric_value(winner.get("total_code_bits"))
+    ):
+        decisive_axis = "metric_threshold_gate"
     return {
         "selection_rule": _string_or_none(
             portfolio_result.replay_contract.get("selection_rule")
@@ -1084,8 +1801,22 @@ def _portfolio_selection_explanation(
             if runner_up is not None
             else None
         ),
-        "decisive_axis": _portfolio_decisive_axis(winner, runner_up),
+        "decisive_axis": decisive_axis,
+        "decision_reason_code": (
+            threshold_gate_step.get("reason_code")
+            if threshold_gate_step is not None
+            else None
+        ),
     }
+
+
+def _portfolio_threshold_gate_step(
+    portfolio_result: BenchmarkSubmitterResult,
+) -> Mapping[str, Any] | None:
+    for step in portfolio_result.decision_trace:
+        if isinstance(step, Mapping) and step.get("step") == "benchmark_metric_threshold_gate":
+            return step
+    return None
 
 
 def _portfolio_decisive_axis(
@@ -1106,8 +1837,40 @@ def _portfolio_decisive_axis(
     return None
 
 
+def _numeric_value(value: Any) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return math.inf
+
+
 def _string_or_none(value: Any) -> str | None:
     return value if isinstance(value, str) and value.strip() else None
+
+
+def _replay_verification_status_from_contract(
+    replay_contract: Mapping[str, Any],
+) -> str:
+    status = _string_or_none(replay_contract.get("replay_verification_status"))
+    if status is not None:
+        return status
+    return "unverified"
+
+
+def _replay_failure_reason_codes_from_contract(
+    replay_contract: Mapping[str, Any],
+) -> tuple[str, ...]:
+    reason_codes = replay_contract.get("failure_reason_codes")
+    if isinstance(reason_codes, str) and reason_codes.strip():
+        return (reason_codes.strip(),)
+    if isinstance(reason_codes, Sequence) and not isinstance(
+        reason_codes,
+        (str, bytes, bytearray),
+    ):
+        return tuple(str(code) for code in reason_codes if str(code).strip())
+    if _replay_verification_status_from_contract(replay_contract) != _VERIFIED_REPLAY_STATUS:
+        return ("unverified_replay_artifact",)
+    return ()
 
 
 def _format_scalar(value: Any) -> str:

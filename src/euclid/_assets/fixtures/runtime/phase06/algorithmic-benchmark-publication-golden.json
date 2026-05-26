@@ -1,11 +1,11 @@
 {
   "replay_ref": {
-    "candidate_hash": "sha256:df9f8c46a5cdcf6507175259dbba868e0c40f2e95140fc94442977252246ebb2",
-    "candidate_id": "algorithmic_efe315a71097",
+    "candidate_hash": "sha256:0b0c353c044a7a30383261809da5782d1d8efff1fa6da1af92f30352df4a8c11",
+    "candidate_id": "algorithmic_last_observation",
     "submitter_id": "algorithmic_search_backend"
   },
   "submitter": {
-    "accepted_candidate_count": 24,
+    "accepted_candidate_count": 26,
     "attempted_candidate_count": 155,
     "canonical_program_count": 155,
     "replay_hook_names": [
@@ -15,38 +15,40 @@
       "search_seed",
       "search_stop_rule"
     ],
-    "selected_candidate_id": "algorithmic_efe315a71097",
+    "selected_candidate_id": "algorithmic_last_observation",
     "status": "selected",
     "submitter_id": "algorithmic_search_backend"
   },
   "submitter_result": {
     "budget_consumption": {
-      "accepted_candidate_count": 24,
+      "accepted_candidate_count": 26,
       "attempted_candidate_count": 155,
       "canonical_program_count": 155,
       "declared_candidate_limit": 256,
       "declared_wall_clock_seconds": 300,
       "omitted_candidate_count": 0,
-      "rejected_candidate_count": 131
+      "rejected_candidate_count": 129
     },
-    "selected_candidate_id": "algorithmic_efe315a71097",
+    "selected_candidate_id": "algorithmic_last_observation",
     "status": "selected"
   },
   "task_id": "algorithmic_last_observation_demo",
   "task_result": {
-    "local_winner_candidate_id": "algorithmic_efe315a71097",
+    "local_winner_candidate_id": "algorithmic_last_observation",
     "local_winner_submitter_id": "algorithmic_search_backend",
     "replay_ref_refs": [
       {
         "artifact_type": "benchmark_replay_ref",
-        "relative_path": "results/rediscovery/algorithmic_last_observation_demo/replay-algorithmic_search_backend.json"
+        "relative_path": "results/rediscovery/algorithmic_last_observation_demo/replay-algorithmic_search_backend.json",
+        "sha256": "sha256:118efc1241ad5522a1b29f9f8aea766f1521db5aaf66d203c8dbf2321891c89f"
       }
     ],
     "status": "completed",
     "submitter_result_refs": [
       {
         "artifact_type": "submitter_result",
-        "relative_path": "results/rediscovery/algorithmic_last_observation_demo/submitter-algorithmic_search_backend.json"
+        "relative_path": "results/rediscovery/algorithmic_last_observation_demo/submitter-algorithmic_search_backend.json",
+        "sha256": "sha256:14b84f17943cdd510b54a4ded80e0768807568f34cb4fc8005270cb9be0a9057"
       }
     ]
   },

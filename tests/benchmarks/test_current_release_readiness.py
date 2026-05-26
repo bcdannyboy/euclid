@@ -28,6 +28,7 @@ def test_current_release_suite_is_truthfully_narrow(
 
     assert judgment.final_verdict == "ready"
     assert judgment.catalog_scope == "public"
+    assert judgment.reason_codes == ()
     assert {gate.gate_id for gate in judgment.gate_results} >= {
         "suite.current_release",
         "track.rediscovery",
@@ -38,6 +39,22 @@ def test_current_release_suite_is_truthfully_narrow(
         "surface.shared_plus_local_decomposition",
         "surface.mechanistic_lane",
     }
+    surface_gates = {
+        gate.gate_id: gate
+        for gate in judgment.gate_results
+        if gate.gate_id.startswith("surface.")
+    }
+    assert {
+        gate_id: gate.status for gate_id, gate in surface_gates.items()
+    } == {
+        "surface.algorithmic_backend": "passed",
+        "surface.mechanistic_lane": "passed",
+        "surface.retained_core_release": "passed",
+        "surface.shared_plus_local_decomposition": "passed",
+    }
+    assert surface_gates["surface.mechanistic_lane"].status == "passed"
+    assert surface_gates["surface.retained_core_release"].evidence["reason_codes"] == ()
+    assert surface_gates["surface.algorithmic_backend"].evidence["reason_codes"] == ()
 
 
 def test_current_release_suite_is_proper_subset_of_full_vision() -> None:

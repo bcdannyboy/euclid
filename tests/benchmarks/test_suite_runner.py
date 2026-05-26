@@ -56,9 +56,15 @@ def test_current_release_suite_uses_canonical_active_scope_name(
         "shared_plus_local_decomposition",
         "mechanistic_lane",
     }
-    assert all(
-        surface.benchmark_status == "passed" for surface in result.surface_statuses
-    )
+    assert {
+        surface.surface_id: surface.benchmark_status
+        for surface in result.surface_statuses
+    } == {
+        "retained_core_release": "passed",
+        "algorithmic_backend": "passed",
+        "shared_plus_local_decomposition": "passed",
+        "mechanistic_lane": "passed",
+    }
     assert all(surface.replay_status == "passed" for surface in result.surface_statuses)
 
 
@@ -88,6 +94,8 @@ def test_profile_benchmark_suite_uses_explicit_project_root_when_installed(
     )
 
     assert result.summary_path.exists()
-    assert all(
-        surface.benchmark_status == "passed" for surface in result.surface_statuses
-    )
+    assert {
+        surface.surface_id: surface.benchmark_status
+        for surface in result.surface_statuses
+    } == {"retained_core_release": "passed"}
+    assert all(surface.replay_status == "passed" for surface in result.surface_statuses)

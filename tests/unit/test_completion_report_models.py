@@ -57,12 +57,28 @@ def _validate_completion_report_payload(
     payload: dict[str, Any],
 ) -> None:
     required_fields = set(schema["required_fields"])
+    claim_truth_summary_required_fields = set(
+        schema["claim_truth_summary_required_fields"]
+    )
     policy_verdict_required_fields = set(schema["policy_verdict_required_fields"])
     scope_evidence_bundle_required_fields = set(
         schema["scope_evidence_bundle_required_fields"]
     )
     capability_row_required_fields = set(schema["capability_row_required_fields"])
     assert required_fields <= payload.keys()
+
+    claim_truth_summary = payload["claim_truth_summary"]
+    assert claim_truth_summary_required_fields <= set(claim_truth_summary)
+    assert claim_truth_summary["truth_status"] in set(
+        schema["claim_truth_status_values"]
+    )
+    assert isinstance(claim_truth_summary["ready"], bool)
+    assert isinstance(claim_truth_summary["blocked_policy_verdicts"], list)
+    assert isinstance(claim_truth_summary["unresolved_blockers"], list)
+    assert isinstance(claim_truth_summary["proof_status_counts"], dict)
+    assert claim_truth_summary["secondary_progress_evidence_role"] == (
+        "completion_values_and_confidence_are_secondary_progress_evidence_not_readiness"
+    )
 
     for verdict in payload["policy_verdicts"]:
         assert policy_verdict_required_fields <= set(verdict)
@@ -131,6 +147,7 @@ def test_completion_report_schema_declares_split_completion_fields_and_status_va
         "generated_at",
         "policy_verdicts",
         "scope_evidence_bundles",
+        "claim_truth_summary",
         "completion_values",
         "clean_install_certification",
         "capability_rows",
@@ -138,6 +155,20 @@ def test_completion_report_schema_declares_split_completion_fields_and_status_va
         "unresolved_blockers",
         "confidence",
     } <= set(schema["required_fields"])
+    assert set(schema["claim_truth_summary_required_fields"]) == {
+        "truth_status",
+        "ready",
+        "blocked_policy_verdicts",
+        "unresolved_blockers",
+        "proof_status_counts",
+        "secondary_progress_evidence",
+        "secondary_progress_evidence_role",
+    }
+    assert set(schema["claim_truth_status_values"]) == {
+        "ready",
+        "review_required",
+        "blocked",
+    }
     assert set(schema["clean_install_surface_status_values"]) == {
         "passed",
         "missing",
@@ -151,6 +182,7 @@ def test_completion_report_schema_declares_split_completion_fields_and_status_va
     assert set(schema["proof_status_values"]) == {
         "missing_proof",
         "failed_proof",
+        "policy_blocked",
     }
 
 
@@ -185,6 +217,46 @@ def test_completion_report_contract_accepts_independent_completion_scores() -> N
             },
         ],
         "scope_evidence_bundles": _scope_evidence_bundles_fixture(),
+        "claim_truth_summary": {
+            "truth_status": "blocked",
+            "ready": False,
+            "blocked_policy_verdicts": [
+                {
+                    "policy_id": "full_vision_v1",
+                    "verdict": "blocked",
+                    "reason_codes": ["forecast_object_type.distribution_missing_runtime"],
+                    "evidence_refs": ["matrix:forecast_object_type:distribution"],
+                }
+            ],
+            "unresolved_blockers": [
+                {
+                    "capability_row_id": "forecast_object_type:distribution",
+                    "proof_status": "missing_proof",
+                    "reason_codes": ["semantic_runtime_missing"],
+                }
+            ],
+            "proof_status_counts": {
+                "policy_blocked": 0,
+                "missing_proof": 1,
+                "failed_proof": 0,
+            },
+            "secondary_progress_evidence": {
+                "completion_values": {
+                    "full_vision_completion": 0.42,
+                    "current_gate_completion": 0.81,
+                    "shipped_releasable_completion": 0.67,
+                },
+                "confidence": {
+                    "score": 0.61,
+                    "reason_codes": [
+                        "current_release_scope_is_narrower_than_full_vision"
+                    ],
+                },
+            },
+            "secondary_progress_evidence_role": (
+                "completion_values_and_confidence_are_secondary_progress_evidence_not_readiness"
+            ),
+        },
         "completion_values": {
             "full_vision_completion": 0.42,
             "current_gate_completion": 0.81,
@@ -273,6 +345,42 @@ def test_completion_report_contract_requires_missing_and_failed_proof_blockers()
         "generated_at": "2026-04-14T00:00:00Z",
         "policy_verdicts": [],
         "scope_evidence_bundles": [],
+        "claim_truth_summary": {
+            "truth_status": "blocked",
+            "ready": False,
+            "blocked_policy_verdicts": [],
+            "unresolved_blockers": [
+                {
+                    "capability_row_id": "forecast_object_type:distribution",
+                    "proof_status": "missing_proof",
+                    "reason_codes": ["semantic_runtime_missing"],
+                },
+                {
+                    "capability_row_id": "lifecycle_artifact:run_result",
+                    "proof_status": "failed_proof",
+                    "reason_codes": ["clean_install_failed"],
+                },
+            ],
+            "proof_status_counts": {
+                "policy_blocked": 0,
+                "missing_proof": 1,
+                "failed_proof": 1,
+            },
+            "secondary_progress_evidence": {
+                "completion_values": {
+                    "full_vision_completion": 0.4,
+                    "current_gate_completion": 0.75,
+                    "shipped_releasable_completion": 0.65,
+                },
+                "confidence": {
+                    "score": 0.5,
+                    "reason_codes": ["multiple_runtime_surfaces_unproven"],
+                },
+            },
+            "secondary_progress_evidence_role": (
+                "completion_values_and_confidence_are_secondary_progress_evidence_not_readiness"
+            ),
+        },
         "completion_values": {
             "full_vision_completion": 0.4,
             "current_gate_completion": 0.75,

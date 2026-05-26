@@ -384,6 +384,36 @@ def verify_portfolio_replay_contract(
         failure_reason_codes.append("selected_candidate_id_mismatch")
     if replay_contract.get("selected_candidate_hash") != selected_candidate_hash:
         failure_reason_codes.append("selected_candidate_hash_mismatch")
+    if selected_candidate_id is not None:
+        expected_provenance_ids = {
+            str(
+                finalist.get("provenance_id")
+                or finalist.get("submitter_id")
+                or finalist.get("backend_family")
+                or finalist.get("family_id")
+            )
+            for finalist in expected_finalists
+            if finalist.get("candidate_id") == selected_candidate_id
+            and finalist.get("candidate_hash") == selected_candidate_hash
+            and (
+                finalist.get("provenance_id")
+                or finalist.get("submitter_id")
+                or finalist.get("backend_family")
+                or finalist.get("family_id")
+            )
+        }
+        observed_provenance_ids = {
+            str(value)
+            for value in (
+                replay_contract.get("selected_provenance_id"),
+                replay_contract.get("selected_submitter_id"),
+            )
+            if isinstance(value, str) and value.strip()
+        }
+        if expected_provenance_ids and not (
+            observed_provenance_ids & expected_provenance_ids
+        ):
+            failure_reason_codes.append("selected_provenance_id_mismatch")
     if tuple(replay_contract.get("compared_finalists", ())) != expected_finalists:
         failure_reason_codes.append("compared_finalists_mismatch")
     if tuple(replay_contract.get("decision_trace", ())) != expected_trace:

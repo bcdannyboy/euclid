@@ -33,7 +33,15 @@ def test_candidate_publication_path_supports_catalog_and_replay_surfaces(
     )
     assert inspection.claim_card is not None
     assert inspection.claim_card.manifest.body["claim_type"] == (
-        "predictive_within_declared_scope"
+        "descriptive_structure"
     )
+    assert inspection.claim_card.manifest.body["predictive_support_status"] == (
+        "blocked"
+    )
+    assert inspection.scorecard is not None
+    assert inspection.scorecard.manifest.body["predictive_status"] == "blocked"
+    assert inspection.scorecard.manifest.body["predictive_reason_codes"] == [
+        "insufficient_paired_count"
+    ]
     assert inspection.abstention is None
     assert inspection.replay_bundle.replay_verification_status == "verified"

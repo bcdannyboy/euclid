@@ -15,6 +15,7 @@ from euclid.fit.diagnostics import (
 from euclid.fit.objectives import get_objective
 from euclid.fit.parameterization import ParameterDeclaration
 from euclid.fit.scipy_optimizers import fit_least_squares
+from euclid.math.lattice import LatticePolicy
 from euclid.runtime.hashing import sha256_digest
 
 
@@ -69,6 +70,7 @@ def fit_cir_candidate(
     objective_id: str = "squared_error",
     seed: int | str = 0,
     max_nfev: int | None = None,
+    lattice_policy: LatticePolicy | Mapping[str, Any] | None = None,
 ) -> UnifiedFitResult:
     payload = candidate.structural_layer.expression_payload
     if payload is None:
@@ -103,6 +105,7 @@ def fit_cir_candidate(
         seed=seed_value,
         data=data,
     )
+    lattice_policy_payload = _lattice_policy_payload(lattice_policy)
     claim_boundary = {
         "claim_publication_allowed": False,
         "reason_codes": ["fit_is_not_claim_authority"],
@@ -125,8 +128,16 @@ def fit_cir_candidate(
                     validation_rows=validation_rows,
                     test_rows=test_rows,
                 ),
+                **(
+                    {}
+                    if lattice_policy_payload is None
+                    else {"lattice_policy": lattice_policy_payload}
+                ),
             },
-            replay_metadata={"seed": seed_value, "objective_id": objective_id},
+            replay_metadata=_with_lattice_policy(
+                {"seed": seed_value, "objective_id": objective_id},
+                lattice_policy_payload,
+            ),
             replay_identity=replay_identity,
             failure_reasons=("underdetermined_system",),
             rows_used=rows_used,
@@ -165,10 +176,15 @@ def fit_cir_candidate(
             train_rows=train_rows,
             feature_names=feature_names,
         )
+        if lattice_policy_payload is not None:
+            optimizer_diagnostics["lattice_policy"] = lattice_policy_payload
         failure_reasons = tuple(optimizer.failure_reasons)
         converged = optimizer.converged
         loss = float(optimizer.loss)
-        replay_metadata = dict(optimizer.replay_metadata)
+        replay_metadata = _with_lattice_policy(
+            dict(optimizer.replay_metadata),
+            lattice_policy_payload,
+        )
     else:
         predictions = tuple(
             _predict_row(expression=expression, row=row, params={})
@@ -179,7 +195,10 @@ def fit_cir_candidate(
         loss = objective.scalar_loss(observed, predictions)
         converged = True
         failure_reasons = ()
-        replay_metadata = {"seed": seed_value, "objective_id": objective_id}
+        replay_metadata = _with_lattice_policy(
+            {"seed": seed_value, "objective_id": objective_id},
+            lattice_policy_payload,
+        )
         optimizer_diagnostics = {
             "fit_layer": "src/euclid/fit",
             "optimizer_backend": "direct_expression_evaluation",
@@ -193,6 +212,8 @@ def fit_cir_candidate(
                 test_rows=test_rows,
             ),
         }
+        if lattice_policy_payload is not None:
+            optimizer_diagnostics["lattice_policy"] = lattice_policy_payload
 
     return UnifiedFitResult(
         candidate_hash=candidate.canonical_hash(),
@@ -345,6 +366,40 @@ def _row_fingerprints(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]
         }
         for row in rows
     ]
+
+
+def _lattice_policy_payload(
+    lattice_policy: LatticePolicy | Mapping[str, Any] | None,
+) -> dict[str, Any] | None:
+    if lattice_policy is None:
+        return None
+    if isinstance(lattice_policy, LatticePolicy):
+        return lattice_policy.as_dict()
+    normalized = LatticePolicy.coerce(
+        lattice_policy,
+        residual_quantization_step="1",
+    )
+    payload = {
+        "policy_id": str(lattice_policy.get("policy_id", normalized.policy_id)),
+        "parameter_lattice_step": normalized.parameter_lattice_step,
+        "state_lattice_step": normalized.state_lattice_step,
+    }
+    for reason_field in ("parameter_lattice_reason", "state_lattice_reason"):
+        if reason_field in lattice_policy:
+            payload[reason_field] = str(lattice_policy[reason_field])
+    return payload
+
+
+def _with_lattice_policy(
+    replay_metadata: dict[str, Any],
+    lattice_policy_payload: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    if lattice_policy_payload is None:
+        return replay_metadata
+    return {
+        **replay_metadata,
+        "lattice_policy": dict(lattice_policy_payload),
+    }
 
 
 __all__ = ["FitDataSplit", "UnifiedFitResult", "fit_cir_candidate"]

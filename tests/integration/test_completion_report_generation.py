@@ -102,6 +102,7 @@ def _scope_evidence_bundles_fixture() -> list[dict[str, object]]:
     ]
 
 
+@pytest.mark.timeout(900)
 def test_release_status_materializes_completion_report_with_split_scores_and_full_matrix_rows(  # noqa: E501
     project_root: Path,
 ) -> None:
@@ -142,6 +143,7 @@ def test_release_status_materializes_completion_report_with_split_scores_and_ful
     assert all("evidence_bundle_ids" in row for row in capability_rows)
 
 
+@pytest.mark.timeout(900)
 def test_completion_report_makes_incomplete_rows_and_blockers_explicit(
     project_root: Path,
 ) -> None:
@@ -153,19 +155,71 @@ def test_completion_report_makes_incomplete_rows_and_blockers_explicit(
     blocker_rows = {
         str(blocker["capability_row_id"]) for blocker in payload["unresolved_blockers"]
     }
+    policy_verdicts = {
+        str(verdict["policy_id"]): verdict for verdict in payload["policy_verdicts"]
+    }
+    capability_blocker_rows = {
+        row_id for row_id in blocker_rows if not row_id.startswith("policy:")
+    }
+    policy_blocker_rows = {
+        row_id.removeprefix("policy:")
+        for row_id in blocker_rows
+        if row_id.startswith("policy:")
+    }
+    claim_truth_summary = payload["claim_truth_summary"]
 
     if incomplete_rows:
         assert payload[
             "unresolved_blockers"
         ], "incomplete capability rows must surface unresolved blockers"
 
-    assert blocker_rows <= {str(row["row_id"]) for row in incomplete_rows}
+    assert claim_truth_summary["truth_status"] == "blocked"
+    assert claim_truth_summary["ready"] is False
+    assert claim_truth_summary["secondary_progress_evidence_role"] == (
+        "completion_values_and_confidence_are_secondary_progress_evidence_not_readiness"
+    )
+    assert (
+        claim_truth_summary["secondary_progress_evidence"]["completion_values"]
+        == payload["completion_values"]
+    )
+    assert claim_truth_summary["secondary_progress_evidence"]["confidence"] == payload[
+        "confidence"
+    ]
+    assert {
+        str(verdict["policy_id"])
+        for verdict in claim_truth_summary["blocked_policy_verdicts"]
+    } == {
+        policy_id
+        for policy_id, verdict in policy_verdicts.items()
+        if verdict["verdict"] == "blocked"
+    }
+    assert {
+        str(blocker["capability_row_id"])
+        for blocker in claim_truth_summary["unresolved_blockers"]
+    } == blocker_rows
+    for proof_status in {"policy_blocked", "missing_proof", "failed_proof"}:
+        assert claim_truth_summary["proof_status_counts"][proof_status] == sum(
+            1
+            for blocker in payload["unresolved_blockers"]
+            if blocker["proof_status"] == proof_status
+        )
+
+    assert capability_blocker_rows <= {str(row["row_id"]) for row in incomplete_rows}
+    assert policy_blocker_rows <= {
+        policy_id
+        for policy_id, verdict in policy_verdicts.items()
+        if verdict["verdict"] != "ready"
+    }
     for row in incomplete_rows:
         assert row[
             "reason_codes"
         ], f"incomplete row {row['row_id']} must explain why it is not complete"
     for blocker in payload["unresolved_blockers"]:
-        assert blocker["proof_status"] in {"missing_proof", "failed_proof"}
+        assert blocker["proof_status"] in {
+            "missing_proof",
+            "failed_proof",
+            "policy_blocked",
+        }
         assert blocker[
             "reason_codes"
         ], f"blocker for {blocker['capability_row_id']} must emit explicit reason codes"
@@ -188,6 +242,8 @@ def test_release_certification_flow_captures_clean_install_surfaces_and_packagin
     )
 
     assert certify_result.exit_code == 0, certify_result.stdout
+    assert "Scope: installed-runtime certification only" in certify_result.stdout
+    assert "not final release readiness" in certify_result.stdout
     assert clean_install_report_path.is_file(), (
         "clean-install certification must materialize "
         "build/reports/clean-install-certification.json"
@@ -198,9 +254,13 @@ def test_release_certification_flow_captures_clean_install_surfaces_and_packagin
     assert {
         str(surface["surface_id"]) for surface in clean_install_payload["surfaces"]
     } == _clean_install_surface_ids()
-    assert all(
-        str(surface["status"]) == "passed"
+    surface_statuses = {
+        str(surface["surface_id"]): str(surface["status"])
         for surface in clean_install_payload["surfaces"]
+    }
+    assert all(
+        status == "passed"
+        for status in surface_statuses.values()
     )
 
     payload = _run_release_status_and_load_completion_report(project_root)
@@ -214,23 +274,47 @@ def test_release_certification_flow_captures_clean_install_surfaces_and_packagin
         str(surface["surface_id"])
         for surface in payload["clean_install_certification"]["surfaces"]
     } == _clean_install_surface_ids()
-    assert all(
-        str(surface["status"]) == "passed"
+    completion_surface_statuses = {
+        str(surface["surface_id"]): str(surface["status"])
         for surface in payload["clean_install_certification"]["surfaces"]
-    )
+    }
+    assert all(status == "passed" for status in completion_surface_statuses.values())
 
     readiness_and_closure_row = next(
         row
         for row in payload["capability_rows"]
         if row["row_id"] == "evidence_lane:readiness_and_closure"
     )
+    assert "packaging_install" in readiness_and_closure_row["available_evidence_classes"]
     assert (
-        "packaging_install" in readiness_and_closure_row["available_evidence_classes"]
+        "evidence_lane.readiness_and_closure_missing_packaging_install"
+        not in readiness_and_closure_row["reason_codes"]
     )
+    assert readiness_and_closure_row["status"] in {"partial", "complete"}
+    assert (
+        "shipped_releasable_clean_install_bundle"
+        in readiness_and_closure_row["evidence_bundle_ids"]
+    )
+    canonical_report_ref = f"artifact:{clean_install_report_path}"
     assert any(
-        "clean-install-certification.json" in ref
+        ref == canonical_report_ref
         for ref in readiness_and_closure_row["evidence_refs"]
     )
+
+    policy_verdicts = {
+        verdict["policy_id"]: verdict for verdict in payload["policy_verdicts"]
+    }
+    for policy_id in (
+        "current_release_v1",
+        "full_vision_v1",
+        "shipped_releasable_v1",
+    ):
+        verdict = policy_verdicts[policy_id]
+        assert verdict["verdict"] == "blocked"
+        assert not any(
+            reason.startswith("release.evidence_freshness_clean_install")
+            for reason in verdict["reason_codes"]
+        )
 
 
 def test_verify_completion_requires_ready_state_when_full_closure_policy_is_active(

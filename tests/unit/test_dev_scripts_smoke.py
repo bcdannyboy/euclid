@@ -61,7 +61,9 @@ def test_release_and_install_smoke_scripts_use_packaged_runtime_surfaces() -> No
     assert 'euclid benchmarks run --suite "current-release.yaml"' in release_smoke
     assert 'euclid benchmarks run --suite "full-vision.yaml"' in release_smoke
     assert 'euclid run --config "${PROJECT_ROOT}/examples/full_vision_run.yaml"' in release_smoke
-    assert 'euclid replay --run-id "full-vision-run"' in release_smoke
+    assert 'FULL_VISION_RUN_ARTIFACT="${PROJECT_ROOT}/build/certification/full_vision_run/run-result.json"' in release_smoke
+    assert 'FULL_VISION_RUN_ID="$("${PYTHON_BIN}" -c' in release_smoke
+    assert 'euclid replay --run-id "${FULL_VISION_RUN_ID}"' in release_smoke
     assert "euclid release certify-clean-install --project-root" in release_smoke
     assert 'euclid release status --project-root "${PROJECT_ROOT}"' in release_smoke
     assert 'euclid release verify-completion --project-root "${PROJECT_ROOT}"' in release_smoke

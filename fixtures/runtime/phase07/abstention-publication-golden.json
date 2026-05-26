@@ -12,7 +12,7 @@
     "paired_comparison_record_count": 1
   },
   "published_entry": {
-    "abstention_ref": "abstention_manifest@1.1.0:abstention_manifest_4faaccf8cd4cf5002d59",
+    "abstention_ref": "abstention_manifest@1.1.0:abstention_manifest_9216d505862f13252ecd",
     "claim_card_ref": null,
     "comparator_exposure_status": "not_applicable_abstention_only",
     "publication_mode": "abstention_only_publication"
@@ -21,8 +21,8 @@
     "bundle_ref": "reproducibility_bundle_manifest@1.0.0:prototype_seasonal_naive_candidate_bundle_v1",
     "replay_verification_status": "verified",
     "required_manifest_refs": [
-      "abstention_manifest@1.1.0:abstention_manifest_4faaccf8cd4cf5002d59",
-      "validation_scope_manifest@1.0.0:validation_scope_manifest_43adb7f377830c44ad98"
+      "abstention_manifest@1.1.0:abstention_manifest_9216d505862f13252ecd",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_04c9728d20cd7b9b42d5"
     ],
     "stage_order": [
       "dataset_snapshot_frozen",
@@ -40,7 +40,7 @@
   "result_mode": "abstention_only_publication",
   "run_result_ref": "run_result_manifest@1.1.0:prototype_seasonal_naive_candidate_run_result_v1",
   "run_result_refs": {
-    "abstention": "abstention_manifest@1.1.0:abstention_manifest_4faaccf8cd4cf5002d59",
+    "abstention": "abstention_manifest@1.1.0:abstention_manifest_9216d505862f13252ecd",
     "candidate": null,
     "claim_card": null,
     "scorecard": null

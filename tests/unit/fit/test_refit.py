@@ -167,6 +167,39 @@ def test_unified_refit_replay_identity_and_redacted_evidence_are_stable() -> Non
     assert "raw_rows" not in redacted
 
 
+def test_unified_refit_replay_metadata_records_active_lattice_policy() -> None:
+    result = fit_cir_candidate(
+        candidate=_linear_expression_candidate(),
+        data=FitDataSplit(
+            train_rows=(
+                _row("2026-01-01T00:00:00Z", target=1.0, lag_1=0.0),
+                _row("2026-01-02T00:00:00Z", target=3.0, lag_1=1.0),
+                _row("2026-01-03T00:00:00Z", target=5.0, lag_1=2.0),
+            )
+        ),
+        fit_window_id="outer_fold_0",
+        parameter_declarations=(
+            ParameterDeclaration("intercept", initial_value=0.0),
+            ParameterDeclaration("slope", initial_value=0.0),
+        ),
+        seed=23,
+        lattice_policy={
+            "policy_id": "fixed_step_mid_tread:0.25",
+            "parameter_lattice_step": "0.25",
+            "state_lattice_step": "0.5",
+        },
+    )
+
+    assert result.replay_metadata["lattice_policy"] == {
+        "policy_id": "fixed_step_mid_tread:0.25",
+        "parameter_lattice_step": "0.25",
+        "state_lattice_step": "0.5",
+    }
+    assert result.optimizer_diagnostics["lattice_policy"]["policy_id"] == (
+        "fixed_step_mid_tread:0.25"
+    )
+
+
 def _linear_expression_candidate():
     expression = BinaryOp(
         "add",

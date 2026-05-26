@@ -321,6 +321,32 @@ def test_resolve_confirmatory_promotion_rejects_boolean_only_evidence() -> None:
     )
 
 
+def test_resolve_confirmatory_promotion_rejects_gw_without_instruments() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    predictive_gate_policy = build_predictive_gate_policy(
+        allowed_forecast_object_types=("point",)
+    ).to_manifest(catalog)
+
+    assert (
+        resolve_confirmatory_promotion_allowed(
+            candidate_beats_baseline=True,
+            predictive_gate_policy_manifest=predictive_gate_policy,
+            predictive_test_result_manifest={
+                "schema_name": "paired_predictive_test_result@1.0.0",
+                "declared_test_id": (
+                    "giacomini_white_conditional_predictive_ability_v1"
+                ),
+                "conditional_instrument_declarations": [],
+                "status": "passed",
+                "promotion_allowed": True,
+                "reason_codes": [],
+                "raw_metric_comparison_role": "diagnostic_only",
+            },
+        )
+        is False
+    )
+
+
 def test_event_log_records_search_isolation_and_holdout_access() -> None:
     catalog = load_contract_catalog(PROJECT_ROOT)
     freeze_event_manifest = _freeze_event_manifest(catalog)

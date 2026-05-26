@@ -83,6 +83,68 @@ def test_portfolio_replay_contract_round_trips_selected_winner_and_finalists() -
     assert verification["failure_reason_codes"] == []
 
 
+def test_portfolio_replay_verification_rejects_wrong_selected_provenance() -> None:
+    feature_view, search_plan = _context()
+    portfolio_result = run_descriptive_search_portfolio(
+        search_plan=search_plan,
+        feature_view=feature_view,
+    )
+    compared_finalists = tuple(
+        normalize_cir_finalist(
+            candidate,
+            total_code_bits=float(entry.total_code_bits),
+            description_gain_bits=float(entry.description_gain_bits),
+            structure_code_bits=float(entry.structure_code_bits),
+            provenance_id=ledger.family_id,
+            coverage_statement=ledger.coverage_statement,
+            exactness_ceiling=ledger.exactness_ceiling,
+            scope_declaration=ledger.scope_declaration,
+        )
+        for ledger in portfolio_result.backend_ledgers
+        for entry, candidate in (
+            [
+                (
+                    next(
+                        item
+                        for item in ledger.candidate_ledger
+                        if item.candidate_id == ledger.finalist_candidate_id
+                    ),
+                    next(
+                        candidate
+                        for candidate in (
+                            portfolio_result.search_result.accepted_candidates
+                        )
+                        if candidate.canonical_hash() == ledger.finalist_candidate_hash
+                    ),
+                )
+            ]
+            if ledger.finalist_candidate_id is not None
+            else []
+        )
+    )
+    replay_contract = build_portfolio_replay_contract(
+        selection_record_id=portfolio_result.selection_record.selection_record_id,
+        selection_scope=portfolio_result.selection_record.selection_scope,
+        selection_rule=portfolio_result.selection_record.selection_rule,
+        selected_provenance_id="wrong_backend",
+        selected_candidate_id=portfolio_result.selection_record.selected_candidate_id,
+        selected_candidate_hash=portfolio_result.selection_record.selected_candidate_hash,
+        compared_finalists=compared_finalists,
+        decision_trace=portfolio_result.selection_record.decision_trace,
+    )
+
+    verification = verify_portfolio_replay_contract(
+        replay_contract,
+        selected_candidate_id=portfolio_result.selection_record.selected_candidate_id,
+        selected_candidate_hash=portfolio_result.selection_record.selected_candidate_hash,
+        compared_finalists=compared_finalists,
+        decision_trace=portfolio_result.selection_record.decision_trace,
+    )
+
+    assert verification["replay_verification_status"] == "failed"
+    assert "selected_provenance_id_mismatch" in verification["failure_reason_codes"]
+
+
 def _context():
     snapshot = FrozenDatasetSnapshot(
         series_id="portfolio-replay-series",

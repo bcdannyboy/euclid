@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, Mapping
 
 import pytest
 import yaml
@@ -70,15 +71,91 @@ def test_benchmark_portfolio_records_ranked_finalists_in_replay_contract(
         "candidate_id": selected_finalist["candidate_id"],
         "total_code_bits": selected_finalist["total_code_bits"],
     }
-    assert runner_up["total_code_bits"] >= selected_finalist["total_code_bits"]
-    assert selection_record["selection_explanation"]["decisive_axis"] == (
-        "total_code_bits"
-    )
-    assert [step["step"] for step in selection_record["decision_trace"]] == [
+    decision_steps = [step["step"] for step in selection_record["decision_trace"]]
+    if "benchmark_metric_threshold_gate" in decision_steps:
+        assert runner_up["total_code_bits"] < selected_finalist["total_code_bits"]
+        assert selection_record["selection_explanation"]["decisive_axis"] == (
+            "metric_threshold_gate"
+        )
+    else:
+        assert runner_up["total_code_bits"] >= selected_finalist["total_code_bits"]
+        assert selection_record["selection_explanation"]["decisive_axis"] == (
+            "total_code_bits"
+        )
+    assert decision_steps[:3] == [
         "collect_submitter_finalists",
         "rank_submitter_finalists",
         "select_portfolio_winner",
     ]
+    if "benchmark_metric_threshold_gate" in decision_steps:
+        assert decision_steps[-2:] == [
+            "benchmark_metric_threshold_gate",
+            "select_portfolio_winner",
+        ]
+
+
+def test_benchmark_portfolio_prefers_threshold_passing_finalist_before_codelength(
+    tmp_path: Path,
+) -> None:
+    result = euclid.profile_benchmark_task(
+        manifest_path=PORTFOLIO_MANIFEST,
+        benchmark_root=tmp_path / "portfolio-threshold-gate",
+        resume=False,
+    )
+
+    portfolio = next(
+        item
+        for item in result.submitter_results
+        if item.submitter_id == PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID
+    )
+    child_results = tuple(
+        item
+        for item in result.submitter_results
+        if item.submitter_id != PORTFOLIO_ORCHESTRATOR_SUBMITTER_ID
+        and item.status == "selected"
+        and item.selected_candidate_metrics is not None
+    )
+    threshold_rows = tuple(result.task_manifest.metric_thresholds.values())
+    passing_children = tuple(
+        item
+        for item in child_results
+        if _passes_all_metric_thresholds(
+            item.selected_candidate_metrics or {},
+            threshold_rows=threshold_rows,
+        )
+    )
+    assert passing_children
+    expected = min(
+        passing_children,
+        key=lambda child: _portfolio_metric_sort_key(
+            child.selected_candidate_metrics or {}
+        ),
+    )
+    expected_metrics = expected.selected_candidate_metrics or {}
+    failing_children_with_lower_codelength = tuple(
+        item
+        for item in child_results
+        if item not in passing_children
+        and float((item.selected_candidate_metrics or {})["total_code_bits"])
+        < float(expected_metrics["total_code_bits"])
+    )
+
+    assert failing_children_with_lower_codelength
+
+    selection_record = json.loads(
+        result.report_paths.portfolio_selection_record_path.read_text(encoding="utf-8")
+    )
+
+    assert portfolio.selected_candidate_id == expected.selected_candidate_id
+    assert selection_record["selected_submitter_id"] == expected.submitter_id
+    assert selection_record["selected_candidate_id"] == expected.selected_candidate_id
+    assert "benchmark_metric_threshold_gate" in [
+        step["step"] for step in selection_record["decision_trace"]
+    ]
+    assert (
+        selection_record["selection_explanation"]["decisive_axis"]
+        == "metric_threshold_gate"
+    )
 
 
 def test_submitter_artifacts_persist_true_backend_identity(tmp_path: Path) -> None:
@@ -164,3 +241,56 @@ def test_single_retained_core_task_cannot_close_portfolio_surface(
             project_root=PROJECT_ROOT,
             resume=False,
         )
+
+
+def _portfolio_metric_sort_key(
+    metrics: Mapping[str, Any],
+) -> tuple[float, float, float, int]:
+    return (
+        float(metrics["total_code_bits"]),
+        -float(metrics["description_gain_bits"]),
+        float(metrics["structure_code_bits"]),
+        int(metrics["canonical_byte_length"]),
+    )
+
+
+def _passes_all_metric_thresholds(
+    metrics: Mapping[str, Any],
+    *,
+    threshold_rows: tuple[Mapping[str, Any], ...],
+) -> bool:
+    return all(
+        _passes_metric_threshold(metrics, threshold) for threshold in threshold_rows
+    )
+
+
+def _passes_metric_threshold(
+    metrics: Mapping[str, Any],
+    threshold: Mapping[str, Any],
+) -> bool:
+    metric_id = str(threshold.get("metric_id", "")).strip()
+    observed_value = metrics.get(metric_id)
+    threshold_value = threshold.get("threshold")
+    if not isinstance(observed_value, (int, float)) or isinstance(
+        observed_value,
+        bool,
+    ):
+        return False
+    if not isinstance(threshold_value, (int, float)) or isinstance(
+        threshold_value, bool
+    ):
+        return False
+    observed = float(observed_value)
+    target = float(threshold_value)
+    comparator = str(threshold.get("comparator", "")).strip()
+    if comparator == ">=":
+        return observed >= target
+    if comparator == "<=":
+        return observed <= target
+    if comparator == ">":
+        return observed > target
+    if comparator == "<":
+        return observed < target
+    if comparator == "==":
+        return observed == target
+    return False

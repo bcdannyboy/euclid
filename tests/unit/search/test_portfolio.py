@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from euclid.adapters.portfolio import ComparableBackendFinalist
 from euclid.contracts.refs import TypedRef
 from euclid.modules.features import default_feature_spec, materialize_feature_view
 from euclid.modules.search_planning import (
@@ -10,7 +11,10 @@ from euclid.modules.snapshotting import FrozenDatasetSnapshot, SnapshotRow
 from euclid.modules.split_planning import build_evaluation_plan
 from euclid.modules.timeguard import audit_snapshot_time_safety
 from euclid.search.backends import DescriptiveSearchProposal
-from euclid.search.portfolio import run_descriptive_search_portfolio
+from euclid.search.portfolio import (
+    run_descriptive_search_portfolio,
+    select_comparable_portfolio_winner,
+)
 
 DEFAULT_PORTFOLIO_CANDIDATE_IDS = (
     "analytic_intercept",
@@ -213,6 +217,120 @@ def test_portfolio_excludes_exact_closure_and_posthoc_symbolic_candidates_from_f
     )
 
 
+def test_portfolio_winner_is_selected_within_comparable_codelength_group() -> None:
+    base_key = {
+        "quantization_mode": "fixed_step_mid_tread",
+        "quantization_step": "0.5",
+        "reference_policy_id": "raw_quantized_transformed_sequence_v1",
+        "reference_scope": "raw_observation_reference",
+        "reference_family_id": "raw_quantized_transformed_sequence",
+        "data_code_family": "residual_signed_integer_elias_delta_v1",
+        "support_kind": "all_real",
+        "horizon_geometry": [1],
+        "coding_row_set_id": "rows:a",
+        "residual_history_construction": "none",
+        "parameter_lattice_step": "0.5",
+        "state_lattice_step": "0.5",
+        "runtime_signature": "none",
+    }
+    foreign_key = {**base_key, "quantization_step": "0.25"}
+
+    selection = select_comparable_portfolio_winner(
+        finalists=(
+            _portfolio_finalist(
+                candidate_id="same_group_worse",
+                total_code_bits=12.0,
+                comparison_key=base_key,
+            ),
+            _portfolio_finalist(
+                candidate_id="same_group_best",
+                total_code_bits=10.0,
+                comparison_key=base_key,
+            ),
+            _portfolio_finalist(
+                candidate_id="foreign_group_lowest_raw_bits",
+                total_code_bits=1.0,
+                comparison_key=foreign_key,
+            ),
+        ),
+        selection_scope="shared_planning_cir_only",
+        collect_step="collect_family_finalists",
+        rank_step="rank_family_finalists",
+        collected_finalists={
+            "analytic": "same_group_worse",
+            "recursive": "same_group_best",
+            "spectral": "foreign_group_lowest_raw_bits",
+        },
+    )
+
+    assert selection.selected_finalist is not None
+    assert selection.selected_finalist.candidate_id == "same_group_best"
+    assert [finalist.candidate_id for finalist in selection.compared_finalists] == [
+        "same_group_best",
+        "same_group_worse",
+    ]
+
+
+def test_many_model_portfolio_records_superiority_not_tested_for_pairwise_dm_only(
+) -> None:
+    comparison_key = _shared_codelength_key()
+    pairwise_dm_results = (
+        {
+            "comparator_id": "recursive_lag",
+            "declared_test_id": "diebold_mariano_hln_v1",
+            "status": "passed",
+            "promotion_allowed": True,
+        },
+        {
+            "comparator_id": "spectral_lag",
+            "declared_test_id": "diebold_mariano_hln_v1",
+            "status": "passed",
+            "promotion_allowed": True,
+        },
+    )
+
+    selection = select_comparable_portfolio_winner(
+        finalists=(
+            _portfolio_finalist(
+                candidate_id="analytic_lag",
+                total_code_bits=9.0,
+                comparison_key=comparison_key,
+                replay_contract_extra={
+                    "pairwise_predictive_test_results": pairwise_dm_results
+                },
+            ),
+            _portfolio_finalist(
+                candidate_id="recursive_lag",
+                total_code_bits=10.0,
+                comparison_key=comparison_key,
+            ),
+            _portfolio_finalist(
+                candidate_id="spectral_lag",
+                total_code_bits=11.0,
+                comparison_key=comparison_key,
+            ),
+        ),
+        selection_scope="shared_planning_cir_only",
+        collect_step="collect_family_finalists",
+        rank_step="rank_family_finalists",
+        collected_finalists={
+            "analytic": "analytic_lag",
+            "recursive": "recursive_lag",
+            "spectral": "spectral_lag",
+        },
+    )
+
+    assert selection.selected_finalist is not None
+    assert selection.selected_finalist.candidate_id == "analytic_lag"
+    assert len(selection.compared_finalists) == 3
+    superiority = selection.decision_trace[-1]["multi_model_superiority"]
+    assert superiority["status"] == "not_tested"
+    assert "multi_model_superiority_not_tested" in superiority["reason_codes"]
+    assert superiority["candidate_count"] == 3
+    assert superiority["pairwise_dm_role"] == "insufficient_for_unique_superiority"
+    assert superiority.get("unique_superior_candidate_id") is None
+
+
 def _feature_view():
     snapshot = FrozenDatasetSnapshot(
         series_id="portfolio-series",
@@ -310,3 +428,47 @@ def _build_search_plan(
         proposal_limit=proposal_limit,
         seasonal_period=seasonal_period,
     )
+
+
+def _portfolio_finalist(
+    *,
+    candidate_id: str,
+    total_code_bits: float,
+    comparison_key: dict[str, object],
+    replay_contract_extra: dict[str, object] | None = None,
+) -> ComparableBackendFinalist:
+    return ComparableBackendFinalist(
+        candidate_id=candidate_id,
+        candidate_hash=f"sha256:{candidate_id}",
+        backend_family=candidate_id.split("_", maxsplit=1)[0],
+        adapter_id=f"{candidate_id}-adapter",
+        adapter_class="bounded_grammar",
+        forecast_object_type="point",
+        total_code_bits=total_code_bits,
+        description_gain_bits=100.0 - total_code_bits,
+        structure_code_bits=0.0,
+        canonical_byte_length=100,
+        provenance_id=candidate_id,
+        replay_contract={
+            "codelength_comparison_key": comparison_key,
+            **dict(replay_contract_extra or {}),
+        },
+    )
+
+
+def _shared_codelength_key() -> dict[str, object]:
+    return {
+        "quantization_mode": "fixed_step_mid_tread",
+        "quantization_step": "0.5",
+        "reference_policy_id": "raw_quantized_transformed_sequence_v1",
+        "reference_scope": "raw_observation_reference",
+        "reference_family_id": "raw_quantized_transformed_sequence",
+        "data_code_family": "residual_signed_integer_elias_delta_v1",
+        "support_kind": "all_real",
+        "horizon_geometry": [1],
+        "coding_row_set_id": "rows:a",
+        "residual_history_construction": "none",
+        "parameter_lattice_step": "0.5",
+        "state_lattice_step": "0.5",
+        "runtime_signature": "none",
+    }

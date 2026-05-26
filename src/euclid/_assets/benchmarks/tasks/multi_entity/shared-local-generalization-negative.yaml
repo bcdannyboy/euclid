@@ -9,7 +9,7 @@ dataset_ref: fixtures/runtime/shared-local/shared-local-panel-series.csv
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-01-06T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:
@@ -44,8 +44,9 @@ adversarial_tags:
 abstention_policy:
   allow_abstention: true
   expected_mode: structural_miss
+expected_safe_outcome: abstain
 forbidden_shortcuts:
-  - raw_test_set_fit
+- raw_test_set_fit
 origin_policy:
   origin_selection: declared_walk_forward_panel
 horizon_policy:

@@ -80,3 +80,167 @@ def test_phase08_holistic_honesty_suite_declares_wave3_assets() -> None:
             ]
         },
     }
+
+
+def test_phase08_efficacy_metrics_report_planted_law_exact_and_near_recovery() -> None:
+    from euclid.benchmarks.efficacy_metrics import (
+        PLANTED_LAW_RECOVERY_RATE,
+        compute_efficacy_metric,
+    )
+
+    metrics = compute_efficacy_metric(
+        PLANTED_LAW_RECOVERY_RATE,
+        [
+            {
+                "task_id": "phase08_planted_linear_exact",
+                "submitter_id": "analytic_backend",
+                "candidate_id": "linear_exact",
+                "replay_id": "replay:linear_exact",
+                "row_count": 64,
+                "recovery_status": "exact",
+            },
+            {
+                "task_id": "phase08_planted_affine_lag_noisy",
+                "submitter_id": "algorithmic_search_backend",
+                "candidate_id": "affine_lag_near",
+                "replay_id": "replay:affine_lag_near",
+                "row_count": 64,
+                "recovery_status": "near",
+            },
+            {
+                "task_id": "phase08_planted_damped_harmonic_noisy",
+                "submitter_id": "recursive_spectral_backend",
+                "candidate_id": "wrong_family",
+                "replay_id": "replay:wrong_family",
+                "row_count": 64,
+                "recovery_status": "miss",
+            },
+        ]
+    ).as_dict()
+
+    assert metrics["metric_id"] == "planted_law_recovery_rate"
+    assert metrics["details"]["exact_recovery_count"] == 1
+    assert metrics["details"]["near_recovery_count"] == 1
+    assert metrics["numerator"] == 2
+    assert metrics["denominator"] == 3
+    assert metrics["observed_value"] == 2 / 3
+    provenance_row = metrics["provenance"]["rows"][0]
+    assert provenance_row["task_id"] == "phase08_planted_linear_exact"
+    assert provenance_row["submitter_id"] == "analytic_backend"
+    assert provenance_row["candidate_id"] == "linear_exact"
+    assert provenance_row["replay_id"] == "replay:linear_exact"
+    assert provenance_row["row_count"] == 64
+
+
+def test_phase08_efficacy_metrics_report_false_holistic_claim_rate() -> None:
+    from euclid.benchmarks.efficacy_metrics import (
+        FALSE_HOLISTIC_RATE,
+        compute_efficacy_metric,
+    )
+
+    metrics = compute_efficacy_metric(
+        FALSE_HOLISTIC_RATE,
+        [
+            {
+                "task_id": "random_walk_canary_demo",
+                "expected_safe_outcome": "abstain",
+                "claim_scope": "holistic_law_claim",
+                "local_winner_submitter_id": "analytic_backend",
+            },
+            {
+                "task_id": "near_persistence_canary_demo",
+                "expected_safe_outcome": "abstain",
+                "claim_scope": "abstention_only",
+                "local_winner_submitter_id": None,
+            },
+        ]
+    ).as_dict()
+
+    assert metrics["metric_id"] == "false_holistic_rate"
+    assert metrics["details"]["false_positive_count"] == 1
+    assert metrics["denominator"] == 2
+    assert metrics["observed_value"] == 0.5
+    assert metrics["details"]["false_positive_task_ids"] == ["random_walk_canary_demo"]
+
+
+def test_phase08_efficacy_metrics_report_probabilistic_attachment_quality() -> None:
+    from euclid.benchmarks.efficacy_metrics import (
+        THIN_EVIDENCE_PROBABILISTIC_ATTACHMENT_RATE,
+        compute_efficacy_metric,
+    )
+
+    metrics = compute_efficacy_metric(
+        THIN_EVIDENCE_PROBABILISTIC_ATTACHMENT_RATE,
+        [
+            {
+                "task_id": "probabilistic_interval_thin_evidence",
+                "submitter_id": "probabilistic_backend",
+                "candidate_id": "interval_candidate",
+                "replay_id": "replay:interval_candidate",
+                "row_count": 20,
+                "probabilistic_attachment_retained": True,
+                "thin_evidence": True,
+                "evidence_strength": "thin",
+                "coverage": 0.55,
+                "mean_interval_width": 12.5,
+                "calibration_count": 20,
+                "calibration_status": "failed",
+            }
+        ]
+    ).as_dict()
+
+    assert metrics["metric_id"] == "thin_evidence_probabilistic_attachment_rate"
+    assert metrics["observed_value"] == 1.0
+    assert metrics["details"]["coverage"] == 0.55
+    assert metrics["details"]["width"] == 12.5
+    assert metrics["details"]["calibration_count"] == 20
+    assert metrics["details"]["calibration_status"] == "failed"
+    assert metrics["status"] == "failed"
+    assert metrics["provenance"]["rows"][0]["row_count"] == 20
+
+
+def test_phase08_efficacy_metrics_report_nonstationary_detection_tolerance() -> None:
+    from euclid.benchmarks.efficacy_metrics import (
+        NONSTATIONARY_DETECTION_DELAY,
+        NONSTATIONARY_DETECTION_HAUSDORFF_DISTANCE,
+        NONSTATIONARY_DETECTION_PRECISION,
+        NONSTATIONARY_DETECTION_RECALL,
+        compute_nonstationary_detection_placeholders,
+    )
+
+    metrics = {
+        metric.metric_id: metric.as_dict()
+        for metric in compute_nonstationary_detection_placeholders(
+            [
+                {
+                    "task_id": "phase08_nonstationary_break_demo",
+                    "truth_change_points": [40, 80],
+                    "detected_change_points": [39, 84],
+                    "detection_tolerance_steps": 2,
+                }
+            ]
+        )
+    }
+
+    assert set(metrics) == {
+        NONSTATIONARY_DETECTION_PRECISION,
+        NONSTATIONARY_DETECTION_RECALL,
+        NONSTATIONARY_DETECTION_HAUSDORFF_DISTANCE,
+        NONSTATIONARY_DETECTION_DELAY,
+    }
+    assert metrics[NONSTATIONARY_DETECTION_PRECISION]["status"] == "missing"
+    assert metrics[NONSTATIONARY_DETECTION_PRECISION]["reason"] == (
+        "nonstationary_lane_missing_until_phase6"
+    )
+    assert metrics[NONSTATIONARY_DETECTION_PRECISION]["details"][
+        "detection_tolerance_steps"
+    ] == 2
+    assert metrics[NONSTATIONARY_DETECTION_RECALL]["details"][
+        "detection_tolerance_steps"
+    ] == 2
+    assert metrics[NONSTATIONARY_DETECTION_HAUSDORFF_DISTANCE]["details"][
+        "detection_tolerance_steps"
+    ] == 2
+    assert metrics[NONSTATIONARY_DETECTION_DELAY]["details"][
+        "detection_tolerance_steps"
+    ] == 2

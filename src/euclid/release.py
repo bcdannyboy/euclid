@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from importlib import resources
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import yaml
 
@@ -98,7 +98,7 @@ _FULL_VISION_OPERATOR_RUN_EVIDENCE_PATH = (
 _FULL_VISION_OPERATOR_REPLAY_EVIDENCE_PATH = (
     "build/reports/full_vision_operator_replay_evidence.json"
 )
-_SUMMARY_TOKEN_PATTERN = re.compile(r"(?P<count>\\d+) (?P<label>[a-zA-Z_]+)")
+_SUMMARY_TOKEN_PATTERN = re.compile(r"(?P<count>\d+) (?P<label>[a-zA-Z_]+)")
 _REQUIREMENT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+")
 _SKIP_CLEAN_INSTALL_CERTIFICATION_ENV = "EUCLID_SKIP_CLEAN_INSTALL_CERTIFICATION"
 _CLEAN_INSTALL_REQUIRED_SURFACE_IDS = (
@@ -195,6 +195,47 @@ _PACKAGING_LIFECYCLE_ARTIFACT_SURFACES = {
     "publication_record": "operator_run",
     "run_result": "operator_run",
 }
+_CLEAN_INSTALL_BUNDLE_METADATA_FIELDS = (
+    "evidence_bundle_id",
+    "authority_snapshot_id",
+    "command_contract_id",
+    "closure_map_id",
+    "traceability_id",
+    "fixture_spec_id",
+)
+_CLEAN_INSTALL_RESERVED_OUTPUT_ROOT_NAMES = frozenset({"reports"})
+_SECONDARY_PROGRESS_EVIDENCE_ROLE = (
+    "completion_values_and_confidence_are_secondary_progress_evidence_not_readiness"
+)
+_RELEASE_SOURCE_DIGEST_PATHS = (
+    ".github/workflows",
+    "package.json",
+    "package-lock.json",
+    "pyproject.toml",
+    "uv.lock",
+    "src",
+    "tests",
+    "benchmarks",
+    "schemas",
+    "docs/implementation",
+    "examples",
+    "fixtures/runtime",
+    "output/jupyter-notebook",
+    "scripts",
+)
+_RELEASE_SOURCE_DIGEST_EXCLUDED_DIRS = frozenset(
+    {
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".git",
+        "build",
+        "dist",
+        "node_modules",
+    }
+)
+_RELEASE_SOURCE_DIGEST_EXCLUDED_SUFFIXES = frozenset({".pyc", ".pyo"})
 
 
 @dataclass(frozen=True)
@@ -371,6 +412,91 @@ def _directory_digest(root: Path) -> str:
     for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_file()):
         entries.append((str(path.relative_to(root)), _sha256_file(path)))
     return _sha256_payload(entries)
+
+
+def _release_source_digest_ref(root: Path) -> str:
+    digest_label = (
+        "repo_checkout_digest"
+        if (root / "pyproject.toml").is_file()
+        else "packaged_asset_digest"
+    )
+    return f"{digest_label}:{_release_source_tree_digest(root)}"
+
+
+def _release_source_tree_digest(root: Path) -> str:
+    entries = [
+        (str(path.relative_to(root)), _sha256_file(path))
+        for path in _release_source_digest_files(root)
+    ]
+    return _sha256_payload(entries)
+
+
+def _release_source_digest_files(root: Path) -> tuple[Path, ...]:
+    files: list[Path] = []
+    for relative_path in _RELEASE_SOURCE_DIGEST_PATHS:
+        candidate = root / relative_path
+        if candidate.is_file() and _include_release_source_digest_file(candidate):
+            files.append(candidate)
+            continue
+        if not candidate.is_dir():
+            continue
+        files.extend(
+            path
+            for path in candidate.rglob("*")
+            if path.is_file() and _include_release_source_digest_file(path)
+        )
+    return tuple(sorted(files))
+
+
+def _include_release_source_digest_file(path: Path) -> bool:
+    if path.suffix in _RELEASE_SOURCE_DIGEST_EXCLUDED_SUFFIXES:
+        return False
+    return not any(
+        part in _RELEASE_SOURCE_DIGEST_EXCLUDED_DIRS
+        or part.endswith(".egg-info")
+        for part in path.parts
+    )
+
+
+def _release_evidence_digest_root(
+    workspace_root: Path,
+    *,
+    asset_root: Path | None = None,
+) -> Path:
+    if (workspace_root / "pyproject.toml").is_file() and (
+        workspace_root / "src" / "euclid"
+    ).is_dir():
+        return workspace_root
+    return asset_root if asset_root is not None else workspace_root
+
+
+def _release_source_root_for_path(path: Path) -> Path:
+    resolved = path.resolve()
+    for candidate in (resolved.parent, *resolved.parents):
+        if (candidate / "pyproject.toml").is_file() and (
+            candidate / "src" / "euclid"
+        ).is_dir():
+            return candidate
+        if (candidate / "schemas" / "contracts").is_dir() and (
+            candidate / "examples"
+        ).is_dir():
+            return candidate
+    return resolved.parent
+
+
+def _workspace_root_for_report_path(report_path: Path) -> Path:
+    resolved = report_path.resolve()
+    if resolved.parent.name == "reports" and resolved.parent.parent.name == "build":
+        return resolved.parent.parent.parent
+    return resolved.parent
+
+
+def _path_is_within(path: Path, parent: Path) -> bool:
+    try:
+        path.resolve().relative_to(parent.resolve())
+    except ValueError:
+        return False
+    return True
 
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> Path:
@@ -580,6 +706,852 @@ def _load_json_report_if_present(path: Path) -> dict[str, Any] | None:
     if payload is None:
         return None
     return {**payload, "__report_path__": str(path)}
+
+
+def _release_evidence_freshness_failures(
+    *,
+    workspace_root: Path,
+    asset_root: Path | None = None,
+    repo_test_matrix_report: Mapping[str, Any] | None = None,
+    current_suite_report: Mapping[str, Any] | None = None,
+    full_suite_report: Mapping[str, Any] | None = None,
+    clean_install_report: Mapping[str, Any] | None = None,
+    operator_run_report: Mapping[str, Any] | None = None,
+    operator_replay_report: Mapping[str, Any] | None = None,
+) -> tuple[str, ...]:
+    digest_root = _release_evidence_digest_root(
+        workspace_root,
+        asset_root=asset_root,
+    )
+    expected_source_digest = _release_source_digest_ref(digest_root)
+    failures: list[str] = []
+
+    _validate_release_report_source_digest(
+        failures=failures,
+        report=repo_test_matrix_report,
+        report_id="repo_test_matrix",
+        expected_command_id="repo_test_matrix",
+        expected_source_digest=expected_source_digest,
+        command_key="producer_command_id",
+    )
+    _validate_release_suite_report(
+        failures=failures,
+        report=current_suite_report,
+        report_id="current_release_suite",
+        expected_scope_id="current_release",
+        expected_command_id="current_release_suite",
+        expected_source_digest=expected_source_digest,
+        workspace_root=workspace_root,
+    )
+    _validate_release_suite_report(
+        failures=failures,
+        report=full_suite_report,
+        report_id="full_vision_suite",
+        expected_scope_id="full_vision",
+        expected_command_id="full_vision_suite",
+        expected_source_digest=expected_source_digest,
+        workspace_root=workspace_root,
+    )
+    _validate_clean_install_report_freshness(
+        failures=failures,
+        report=clean_install_report,
+        expected_source_digest=expected_source_digest,
+        workspace_root=workspace_root,
+    )
+    _validate_release_report_source_digest(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        expected_command_id="full_vision_operator_run",
+        expected_source_digest=expected_source_digest,
+        command_key="command_id",
+    )
+    _validate_operator_report_identity(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        expected_report_id="operator_run_evidence_v1",
+        expected_scope_id="full_vision",
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        field_name="run_summary_path",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        field_name="output_root",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_directory(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        field_name="output_root",
+    )
+    _validate_release_report_file_digest(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        path_field_name="run_summary_path",
+        digest_field_name="run_summary_sha256",
+    )
+    _validate_release_report_source_digest(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        expected_command_id="full_vision_operator_replay",
+        expected_source_digest=expected_source_digest,
+        command_key="command_id",
+    )
+    _validate_operator_report_identity(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        expected_report_id="operator_replay_evidence_v1",
+        expected_scope_id="full_vision",
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        field_name="run_summary_path",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        field_name="output_root",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_directory(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        field_name="output_root",
+    )
+    _validate_release_report_file_digest(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        path_field_name="run_summary_path",
+        digest_field_name="run_summary_sha256",
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        field_name="operator_run_evidence_report_path",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_file_digest(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        path_field_name="operator_run_evidence_report_path",
+        digest_field_name="operator_run_evidence_report_sha256",
+    )
+    _validate_operator_run_replay_binding(
+        failures=failures,
+        operator_run_report=operator_run_report,
+        operator_replay_report=operator_replay_report,
+        workspace_root=workspace_root,
+    )
+    return tuple(_ordered_unique(failures))
+
+
+def _validate_release_report_source_digest(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    report_id: str,
+    expected_command_id: str,
+    expected_source_digest: str,
+    command_key: str,
+) -> None:
+    if report is None:
+        return
+    if str(report.get(command_key, "")) != expected_command_id:
+        failures.append(f"{report_id}_producer_command_mismatch")
+    observed_digest = report.get("source_tree_digest_or_wheel_digest")
+    if not isinstance(observed_digest, str) or not observed_digest:
+        failures.append(f"{report_id}_source_digest_missing")
+    elif observed_digest != expected_source_digest:
+        failures.append(f"{report_id}_source_digest_mismatch")
+
+
+def _validate_release_suite_report(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    report_id: str,
+    expected_scope_id: str,
+    expected_command_id: str,
+    expected_source_digest: str,
+    workspace_root: Path,
+) -> None:
+    if report is None:
+        return
+    _validate_release_report_source_digest(
+        failures=failures,
+        report=report,
+        report_id=report_id,
+        expected_command_id=expected_command_id,
+        expected_source_digest=expected_source_digest,
+        command_key="producer_command_id",
+    )
+    if str(report.get("scope_id", "")) != expected_scope_id:
+        failures.append(f"{report_id}_scope_mismatch")
+    _validate_release_report_path(
+        failures=failures,
+        report=report,
+        report_id=report_id,
+        field_name="summary_path",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_file_digest(
+        failures=failures,
+        report=report,
+        report_id=report_id,
+        path_field_name="summary_path",
+        digest_field_name="summary_sha256",
+    )
+
+
+def _validate_clean_install_report_freshness(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    expected_source_digest: str,
+    workspace_root: Path,
+) -> None:
+    if report is None:
+        return
+    if str(report.get("report_id", "")) != "euclid_clean_install_certification_v1":
+        failures.append("clean_install_report_id_mismatch")
+    if str(report.get("scope_id", "")) != "shipped_releasable":
+        failures.append("clean_install_scope_mismatch")
+    if str(report.get("producer_command_id", "")) != "clean_install_certification":
+        failures.append("clean_install_producer_command_mismatch")
+    _validate_clean_install_bundle_metadata(
+        failures=failures,
+        report=report,
+    )
+    observed_source_digest = report.get("source_tree_digest_at_build")
+    if not isinstance(observed_source_digest, str) or not observed_source_digest:
+        failures.append("clean_install_source_digest_missing")
+    elif observed_source_digest != expected_source_digest:
+        failures.append("clean_install_source_digest_mismatch")
+    _validate_clean_install_report_paths(
+        failures=failures,
+        report=report,
+        workspace_root=workspace_root,
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=report,
+        report_id="clean_install",
+        field_name="output_root",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_directory(
+        failures=failures,
+        report=report,
+        report_id="clean_install",
+        field_name="output_root",
+    )
+    output_root = _clean_install_output_root_path(report)
+    _validate_clean_install_output_root_dedication(
+        failures=failures,
+        output_root=output_root,
+        workspace_root=workspace_root,
+    )
+    _validate_clean_install_wheel_freshness(
+        failures=failures,
+        report=report,
+        workspace_root=workspace_root,
+        output_root=output_root,
+    )
+    _validate_clean_install_surface_artifacts(
+        failures=failures,
+        report=report,
+        workspace_root=workspace_root,
+        output_root=output_root,
+    )
+
+
+def _validate_clean_install_bundle_metadata(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any],
+) -> None:
+    shipped_bundle = _bundle_by_scope_id()["shipped_releasable"]
+    for field_name in _CLEAN_INSTALL_BUNDLE_METADATA_FIELDS:
+        observed = report.get(field_name)
+        expected = shipped_bundle.get(field_name)
+        if str(observed or "") != str(expected or ""):
+            failures.append(f"clean_install_{field_name}_mismatch")
+
+
+def _validate_clean_install_report_paths(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any],
+    workspace_root: Path,
+) -> None:
+    expected_report_path = _clean_install_report_path(workspace_root)
+    raw_canonical_path = report.get("canonical_report_path")
+    if not isinstance(raw_canonical_path, str) or not raw_canonical_path:
+        failures.append("clean_install_canonical_report_path_missing")
+    else:
+        canonical_path = Path(raw_canonical_path)
+        if canonical_path.resolve() != expected_report_path.resolve():
+            failures.append("clean_install_canonical_report_path_mismatch")
+        if not canonical_path.exists():
+            failures.append("clean_install_canonical_report_path_missing")
+        if not _path_is_within(canonical_path, workspace_root / "build"):
+            failures.append(
+                "clean_install_canonical_report_path_outside_workspace_build"
+            )
+
+    raw_report_path = report.get("report_path")
+    if isinstance(raw_report_path, str) and raw_report_path:
+        report_path = Path(raw_report_path)
+        if report_path.resolve() != expected_report_path.resolve():
+            failures.append("clean_install_report_path_mismatch")
+
+
+def _clean_install_output_root_path(report: Mapping[str, Any]) -> Path | None:
+    raw_output_root = report.get("output_root")
+    if not isinstance(raw_output_root, str) or not raw_output_root:
+        return None
+    output_root = Path(raw_output_root)
+    if not output_root.exists() or not output_root.is_dir():
+        return None
+    return output_root
+
+
+def _validate_clean_install_output_root_dedication(
+    *,
+    failures: list[str],
+    output_root: Path | None,
+    workspace_root: Path,
+) -> None:
+    if output_root is None:
+        return
+    failure = _clean_install_work_root_dedication_failure(
+        work_root=output_root,
+        workspace_root=workspace_root,
+    )
+    if failure == "not_dedicated":
+        failures.append("clean_install_output_root_not_dedicated")
+
+
+def _validate_clean_install_wheel_freshness(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any],
+    workspace_root: Path,
+    output_root: Path | None,
+) -> None:
+    _validate_release_report_path(
+        failures=failures,
+        report=report,
+        report_id="clean_install",
+        field_name="wheel_path",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_path(
+        failures=failures,
+        report=report,
+        report_id="clean_install",
+        field_name="runtime_dependency_wheelhouse",
+        workspace_root=workspace_root,
+        require_under_build=True,
+    )
+    _validate_release_report_directory(
+        failures=failures,
+        report=report,
+        report_id="clean_install",
+        field_name="runtime_dependency_wheelhouse",
+    )
+
+    raw_wheel_path = report.get("wheel_path")
+    wheel_path = Path(raw_wheel_path) if isinstance(raw_wheel_path, str) else None
+    wheel_digest = report.get("wheel_digest")
+    actual_wheel_digest = None
+    if wheel_path is not None and wheel_path.exists() and not wheel_path.is_file():
+        failures.append("clean_install_wheel_path_not_file")
+    if wheel_path is not None and wheel_path.is_file():
+        if not wheel_path.name.startswith("euclid-") or wheel_path.suffix != ".whl":
+            failures.append("clean_install_wheel_path_name_mismatch")
+        if output_root is not None and not _path_is_within(wheel_path, output_root):
+            failures.append("clean_install_wheel_path_outside_output_root")
+        actual_wheel_digest = _sha256_file(wheel_path)
+    if not isinstance(wheel_digest, str) or not wheel_digest:
+        failures.append("clean_install_wheel_digest_missing")
+    elif actual_wheel_digest is not None and wheel_digest != actual_wheel_digest:
+        failures.append("clean_install_wheel_digest_mismatch")
+
+    wheel_digest_ref = report.get("source_tree_digest_or_wheel_digest")
+    if not isinstance(wheel_digest_ref, str) or not wheel_digest_ref:
+        failures.append("clean_install_wheel_digest_ref_missing")
+    elif actual_wheel_digest is not None and wheel_digest_ref != (
+        f"wheel_digest:{actual_wheel_digest}"
+    ):
+        failures.append("clean_install_wheel_digest_ref_mismatch")
+
+    raw_wheelhouse = report.get("runtime_dependency_wheelhouse")
+    wheelhouse = Path(raw_wheelhouse) if isinstance(raw_wheelhouse, str) else None
+    if wheelhouse is not None and wheelhouse.is_dir() and output_root is not None:
+        if not _path_is_within(wheelhouse, output_root):
+            failures.append(
+                "clean_install_runtime_dependency_wheelhouse_outside_output_root"
+            )
+    if (
+        wheel_path is not None
+        and wheel_path.is_file()
+        and wheelhouse is not None
+        and wheelhouse.is_dir()
+        and not _path_is_within(wheel_path, wheelhouse)
+    ):
+        failures.append(
+            "clean_install_wheel_path_outside_runtime_dependency_wheelhouse"
+        )
+    manifest_digests = report.get("input_manifest_digests")
+    if not isinstance(manifest_digests, Sequence) or isinstance(
+        manifest_digests, (str, bytes)
+    ) or not manifest_digests:
+        failures.append("clean_install_input_manifest_digests_missing")
+        return
+    if wheelhouse is None or not wheelhouse.is_dir():
+        return
+    project_wheels = tuple(sorted(wheelhouse.glob("euclid-*.whl")))
+    if len(project_wheels) != 1 or (
+        wheel_path is not None
+        and wheel_path.is_file()
+        and project_wheels
+        and project_wheels[0].resolve() != wheel_path.resolve()
+    ):
+        failures.append("clean_install_project_wheel_count_mismatch")
+    expected_wheelhouse_digest = (
+        f"runtime_directory_digest:{_directory_digest(wheelhouse)}"
+    )
+    observed_wheelhouse_digest = _manifest_digest_for_path(
+        manifest_digests=manifest_digests,
+        path=wheelhouse,
+    )
+    if observed_wheelhouse_digest is None:
+        failures.append("clean_install_runtime_dependency_wheelhouse_digest_missing")
+    elif observed_wheelhouse_digest != expected_wheelhouse_digest:
+        failures.append("clean_install_runtime_dependency_wheelhouse_digest_mismatch")
+    expected_wheel_count = len(
+        [
+            path
+            for path in wheelhouse.glob("*.whl")
+            if wheel_path is None or path.resolve() != wheel_path.resolve()
+        ]
+    )
+    observed_wheel_count = report.get("runtime_dependency_wheel_count")
+    if type(observed_wheel_count) is not int or observed_wheel_count < 0:
+        failures.append("clean_install_runtime_dependency_wheel_count_missing")
+    elif observed_wheel_count != expected_wheel_count:
+        failures.append("clean_install_runtime_dependency_wheel_count_mismatch")
+
+
+def _manifest_digest_for_path(
+    *,
+    manifest_digests: Sequence[Any],
+    path: Path,
+) -> str | None:
+    expected_path = str(path)
+    for entry in manifest_digests:
+        if not isinstance(entry, Mapping):
+            continue
+        observed = entry.get(expected_path)
+        if isinstance(observed, str) and observed:
+            return observed
+    return None
+
+
+def _clean_install_reason_token(value: object) -> str:
+    token = "".join(
+        character if character.isalnum() or character == "_" else "_"
+        for character in str(value)
+    ).strip("_")
+    return token or "unknown"
+
+
+def _validate_clean_install_surface_artifacts(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any],
+    workspace_root: Path,
+    output_root: Path | None,
+) -> None:
+    raw_surfaces = report.get("surfaces")
+    if not isinstance(raw_surfaces, Sequence) or isinstance(
+        raw_surfaces, (str, bytes)
+    ):
+        failures.append("clean_install_surfaces_missing")
+        return
+    surfaces_by_id: dict[str, Mapping[str, Any]] = {}
+    for surface in raw_surfaces:
+        if not isinstance(surface, Mapping):
+            continue
+        raw_surface_id = surface.get("surface_id")
+        surface_id = str(raw_surface_id) if raw_surface_id is not None else ""
+        if surface_id in surfaces_by_id:
+            failures.append(
+                f"clean_install_surface_{_clean_install_reason_token(surface_id)}_duplicate"
+            )
+        surfaces_by_id[surface_id] = surface
+
+    for required_surface_id in _CLEAN_INSTALL_REQUIRED_SURFACE_IDS:
+        surface = surfaces_by_id.get(required_surface_id)
+        reason_surface_id = _clean_install_reason_token(required_surface_id)
+        if surface is None:
+            failures.append(f"clean_install_surface_{reason_surface_id}_missing")
+            continue
+        if surface.get("status") != "passed":
+            failures.append(f"clean_install_surface_{reason_surface_id}_not_passed")
+        reason_codes = surface.get("reason_codes")
+        if isinstance(reason_codes, Sequence) and not isinstance(
+            reason_codes, (str, bytes)
+        ):
+            if reason_codes:
+                failures.append(
+                    f"clean_install_surface_{reason_surface_id}_reason_codes_present"
+                )
+        else:
+            failures.append(
+                f"clean_install_surface_{reason_surface_id}_reason_codes_missing"
+            )
+        evidence_refs = surface.get("evidence_refs")
+        artifact_refs = [
+            ref
+            for ref in evidence_refs
+            if isinstance(ref, str) and ref.startswith("artifact:")
+        ] if isinstance(evidence_refs, Sequence) and not isinstance(
+            evidence_refs, (str, bytes)
+        ) else []
+        if not artifact_refs:
+            failures.append(
+                f"clean_install_surface_{reason_surface_id}_evidence_refs_missing"
+            )
+            continue
+        for ref in artifact_refs:
+            path = Path(ref.removeprefix("artifact:"))
+            if not path.exists():
+                failures.append(
+                    f"clean_install_surface_{reason_surface_id}_artifact_missing"
+                )
+                continue
+            if not _path_is_within(path, workspace_root / "build"):
+                failures.append(
+                    "clean_install_surface_"
+                    f"{reason_surface_id}_artifact_outside_workspace_build"
+                )
+            if output_root is not None and not _path_is_within(path, output_root):
+                failures.append(
+                    "clean_install_surface_"
+                    f"{reason_surface_id}_artifact_outside_output_root"
+                )
+
+
+def _validate_release_report_path(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    report_id: str,
+    field_name: str,
+    workspace_root: Path,
+    require_under_build: bool,
+) -> None:
+    if report is None:
+        return
+    raw_path = report.get(field_name)
+    if not isinstance(raw_path, str) or not raw_path:
+        failures.append(f"{report_id}_{field_name}_missing")
+        return
+    path = Path(raw_path)
+    if not path.exists():
+        failures.append(f"{report_id}_{field_name}_missing")
+        return
+    if require_under_build and not _path_is_within(path, workspace_root / "build"):
+        failures.append(f"{report_id}_{field_name}_outside_workspace_build")
+
+
+def _validate_release_report_file_digest(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    report_id: str,
+    path_field_name: str,
+    digest_field_name: str,
+) -> None:
+    if report is None:
+        return
+    raw_path = report.get(path_field_name)
+    if not isinstance(raw_path, str) or not raw_path:
+        return
+    path = Path(raw_path)
+    if not path.is_file():
+        failures.append(f"{report_id}_{path_field_name}_not_file")
+        return
+    expected_digest = report.get(digest_field_name)
+    if not isinstance(expected_digest, str) or not expected_digest:
+        failures.append(f"{report_id}_{digest_field_name}_missing")
+        return
+    actual_digest = f"runtime_sha256:{_sha256_file(path)}"
+    if expected_digest != actual_digest:
+        failures.append(f"{report_id}_{digest_field_name}_mismatch")
+
+
+def _validate_release_report_directory(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    report_id: str,
+    field_name: str,
+) -> None:
+    if report is None:
+        return
+    raw_path = report.get(field_name)
+    if not isinstance(raw_path, str) or not raw_path:
+        return
+    path = Path(raw_path)
+    if path.exists() and not path.is_dir():
+        failures.append(f"{report_id}_{field_name}_not_directory")
+
+
+def _validate_operator_report_identity(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any] | None,
+    report_id: str,
+    expected_report_id: str,
+    expected_scope_id: str,
+) -> None:
+    if report is None:
+        return
+    if str(report.get("report_id", "")) != expected_report_id:
+        failures.append(f"{report_id}_report_id_mismatch")
+    if str(report.get("scope_id", "")) != expected_scope_id:
+        failures.append(f"{report_id}_scope_mismatch")
+
+
+def _validate_operator_run_replay_binding(
+    *,
+    failures: list[str],
+    operator_run_report: Mapping[str, Any] | None,
+    operator_replay_report: Mapping[str, Any] | None,
+    workspace_root: Path,
+) -> None:
+    if operator_run_report is None or operator_replay_report is None:
+        return
+
+    if operator_replay_report.get("replay_verification_status") != "verified":
+        failures.append("full_vision_operator_replay_not_verified")
+
+    _validate_operator_report_run_summary_binding(
+        failures=failures,
+        report=operator_run_report,
+        report_id="full_vision_operator_run",
+        expected_run_id_field="request_id",
+    )
+    _validate_operator_report_run_summary_binding(
+        failures=failures,
+        report=operator_replay_report,
+        report_id="full_vision_operator_replay",
+        expected_run_id_field="requested_run_id",
+    )
+    _validate_operator_replay_digest_binding(
+        failures=failures,
+        operator_replay_report=operator_replay_report,
+    )
+
+    for field_name in ("run_id", "run_summary_path", "output_root"):
+        run_value = operator_run_report.get(field_name)
+        replay_value = operator_replay_report.get(field_name)
+        if not isinstance(run_value, str) or not run_value:
+            failures.append(f"full_vision_operator_run_{field_name}_missing")
+            continue
+        if not isinstance(replay_value, str) or not replay_value:
+            failures.append(f"full_vision_operator_replay_{field_name}_missing")
+            continue
+        if field_name.endswith("_path") or field_name == "output_root":
+            if Path(run_value).resolve() != Path(replay_value).resolve():
+                failures.append(f"full_vision_operator_replay_{field_name}_mismatch")
+        elif run_value != replay_value:
+            failures.append(f"full_vision_operator_replay_{field_name}_mismatch")
+
+    for field_name in ("run_result_ref", "bundle_ref"):
+        run_value = operator_run_report.get(field_name)
+        replay_value = operator_replay_report.get(field_name)
+        if not isinstance(run_value, Mapping):
+            failures.append(f"full_vision_operator_run_{field_name}_missing")
+            continue
+        if not isinstance(replay_value, Mapping):
+            failures.append(f"full_vision_operator_replay_{field_name}_missing")
+            continue
+        if _sha256_payload(run_value) != _sha256_payload(replay_value):
+            failures.append(f"full_vision_operator_replay_{field_name}_mismatch")
+
+    run_summary_digest = operator_run_report.get("run_summary_sha256")
+    replay_summary_digest = operator_replay_report.get("run_summary_sha256")
+    if (
+        isinstance(run_summary_digest, str)
+        and isinstance(replay_summary_digest, str)
+        and run_summary_digest
+        and replay_summary_digest
+        and run_summary_digest != replay_summary_digest
+    ):
+        failures.append("full_vision_operator_replay_run_summary_sha256_mismatch")
+
+    run_evidence_path = operator_replay_report.get("operator_run_evidence_report_path")
+    run_evidence_digest = operator_replay_report.get(
+        "operator_run_evidence_report_sha256"
+    )
+    if not isinstance(run_evidence_digest, str) or not run_evidence_digest:
+        failures.append(
+            "full_vision_operator_replay_operator_run_evidence_report_sha256_missing"
+        )
+    if isinstance(run_evidence_path, str) and run_evidence_path:
+        expected_path = workspace_root / _FULL_VISION_OPERATOR_RUN_EVIDENCE_PATH
+        if Path(run_evidence_path).resolve() != expected_path.resolve():
+            failures.append(
+                "full_vision_operator_replay_operator_run_evidence_report_path_mismatch"
+            )
+
+
+def _validate_operator_report_run_summary_binding(
+    *,
+    failures: list[str],
+    report: Mapping[str, Any],
+    report_id: str,
+    expected_run_id_field: str,
+) -> None:
+    run_id = report.get("run_id")
+    if not isinstance(run_id, str) or not run_id:
+        return
+
+    binding = report.get("run_id_binding")
+    if not isinstance(binding, Mapping):
+        failures.append(f"{report_id}_run_id_binding_missing")
+        return
+    binding_run_id = binding.get(expected_run_id_field)
+    if binding_run_id != run_id:
+        failures.append(f"{report_id}_run_id_binding_mismatch")
+
+    run_result_ref = report.get("run_result_ref")
+    expected_object_id = (
+        run_result_ref.get("object_id") if isinstance(run_result_ref, Mapping) else None
+    )
+    if binding.get("run_result_object_id") != expected_object_id:
+        failures.append(f"{report_id}_run_result_ref_binding_mismatch")
+
+    raw_summary_path = report.get("run_summary_path")
+    if not isinstance(raw_summary_path, str) or not raw_summary_path:
+        return
+    summary_path = Path(raw_summary_path)
+    if not summary_path.is_file():
+        return
+    summary_payload = _load_json_if_present(summary_path) or {}
+    summary_request_id = summary_payload.get("request_id")
+    if summary_request_id != run_id:
+        failures.append(f"{report_id}_run_summary_request_id_mismatch")
+    if binding.get("run_summary_request_id") != summary_request_id:
+        failures.append(f"{report_id}_run_id_binding_summary_mismatch")
+
+
+def _validate_operator_replay_digest_binding(
+    *,
+    failures: list[str],
+    operator_replay_report: Mapping[str, Any],
+) -> None:
+    replay_digest = operator_replay_report.get("replay_result_sha256")
+    if not isinstance(replay_digest, str) or not replay_digest:
+        failures.append("full_vision_operator_replay_replay_result_sha256_missing")
+    run_evidence_binding = operator_replay_report.get(
+        "operator_run_evidence_report_binding"
+    )
+    if not isinstance(run_evidence_binding, Mapping):
+        failures.append(
+            "full_vision_operator_replay_operator_run_evidence_report_binding_missing"
+        )
+        return
+    if (
+        run_evidence_binding.get("path")
+        != operator_replay_report.get("operator_run_evidence_report_path")
+    ):
+        failures.append(
+            "full_vision_operator_replay_operator_run_evidence_report_binding_path_mismatch"
+        )
+    if (
+        run_evidence_binding.get("sha256")
+        != operator_replay_report.get("operator_run_evidence_report_sha256")
+    ):
+        failures.append(
+            "full_vision_operator_replay_operator_run_evidence_report_binding_digest_mismatch"
+        )
+    if run_evidence_binding.get("run_id") != operator_replay_report.get("run_id"):
+        failures.append(
+            "full_vision_operator_replay_operator_run_evidence_report_binding_run_id_mismatch"
+        )
+
+
+def _build_release_evidence_freshness_gate(
+    *,
+    workspace_root: Path,
+    asset_root: Path,
+    repo_test_matrix_report: Mapping[str, Any] | None,
+    current_suite_report: Mapping[str, Any] | None,
+    full_suite_report: Mapping[str, Any] | None,
+    clean_install_report: Mapping[str, Any],
+    operator_run_report: Mapping[str, Any] | None,
+    operator_replay_report: Mapping[str, Any] | None,
+) -> ReadinessGateResult:
+    failures = _release_evidence_freshness_failures(
+        workspace_root=workspace_root,
+        asset_root=asset_root,
+        repo_test_matrix_report=repo_test_matrix_report,
+        current_suite_report=current_suite_report,
+        full_suite_report=full_suite_report,
+        clean_install_report=clean_install_report,
+        operator_run_report=operator_run_report,
+        operator_replay_report=operator_replay_report,
+    )
+    return ReadinessGateResult(
+        gate_id="release.evidence_freshness",
+        status="passed" if not failures else "failed",
+        required=True,
+        summary=(
+            "Release evidence reports match the current source digest and "
+            "canonical artifact roots."
+            if not failures
+            else "Release evidence reports are stale or point outside canonical roots."
+        ),
+        evidence={
+            "reason_codes": list(failures),
+            "source_tree_digest_or_wheel_digest": _release_source_digest_ref(
+                _release_evidence_digest_root(workspace_root, asset_root=asset_root)
+            ),
+        },
+    )
 
 
 def _suite_task_result_payloads(
@@ -870,13 +1842,23 @@ def get_release_status(
         benchmark_root=full_vision_benchmark_root,
         project_root=asset_root,
     )
-    write_suite_evidence_bundle(
+    current_suite_evidence_path = write_suite_evidence_bundle(
         suite_result=current_release_suite,
         workspace_root=workspace_root,
     )
-    write_suite_evidence_bundle(
+    full_suite_evidence_path = write_suite_evidence_bundle(
         suite_result=full_vision_suite,
         workspace_root=workspace_root,
+    )
+    current_suite_report = (
+        _load_json_report_if_present(current_suite_evidence_path)
+        if current_suite_evidence_path is not None
+        else None
+    )
+    full_suite_report = (
+        _load_json_report_if_present(full_suite_evidence_path)
+        if full_suite_evidence_path is not None
+        else None
     )
     notebook_smoke = (
         _notebook_smoke_from_clean_install_report(
@@ -911,6 +1893,17 @@ def get_release_status(
             notebook_smoke=notebook_smoke,
             clean_install_report=clean_install_report,
         )
+    ) + (
+        _build_release_evidence_freshness_gate(
+            workspace_root=workspace_root,
+            asset_root=asset_root,
+            repo_test_matrix_report=repo_test_matrix_report,
+            current_suite_report=current_suite_report,
+            full_suite_report=full_suite_report,
+            clean_install_report=clean_install_report,
+            operator_run_report=operator_run_report,
+            operator_replay_report=operator_replay_report,
+        ),
     ) + tuple(supplemental_gate_results)
     current_release_suite_judgment = judge_benchmark_suite_readiness(
         judgment_id="euclid_current_release_status_v1",
@@ -1366,6 +2359,46 @@ def _clean_install_work_root(workspace_root: Path) -> Path:
     return workspace_root / "build" / "clean-install-certification"
 
 
+def _validate_clean_install_work_root_for_run(
+    *,
+    work_root: Path,
+    workspace_root: Path,
+) -> None:
+    failure = _clean_install_work_root_dedication_failure(
+        work_root=work_root,
+        workspace_root=workspace_root,
+    )
+    if failure == "outside_workspace_build":
+        raise ValueError(
+            "clean-install output root must be under the workspace build directory"
+        )
+    if failure == "not_dedicated":
+        raise ValueError(
+            "clean-install output root must be a dedicated clean-install output root"
+        )
+
+
+def _clean_install_work_root_dedication_failure(
+    *,
+    work_root: Path,
+    workspace_root: Path,
+) -> str | None:
+    build_root = (workspace_root / "build").resolve()
+    if not _path_is_within(work_root, build_root):
+        return "outside_workspace_build"
+    relative_root = work_root.resolve().relative_to(build_root)
+    if (
+        not relative_root.parts
+        or relative_root.parts[0] in _CLEAN_INSTALL_RESERVED_OUTPUT_ROOT_NAMES
+        or not any(
+            "clean-install" in part.replace("_", "-")
+            for part in relative_root.parts
+        )
+    ):
+        return "not_dedicated"
+    return None
+
+
 def _clean_install_report_placeholder() -> dict[str, Any]:
     return {
         "report_path": "",
@@ -1568,8 +2601,10 @@ def _build_clean_install_surface_result(
     stderr_path: Path,
     extra_refs: tuple[str, ...] = (),
 ) -> CleanInstallCertificationSurfaceResult:
-    status = "passed" if result.returncode == 0 else "failed"
-    reason_codes = () if status == "passed" else (f"clean_install.{surface_id}_failed",)
+    status, reason_codes = _clean_install_surface_status(
+        surface_id=surface_id,
+        result=result,
+    )
     return CleanInstallCertificationSurfaceResult(
         surface_id=surface_id,
         status=status,
@@ -1584,6 +2619,89 @@ def _build_clean_install_surface_result(
             )
         ),
     )
+
+
+_RELEASE_STATUS_POLICY_OUTPUT_LINES = (
+    ("current_release_v1", "Current release"),
+    ("full_vision_v1", "Full vision"),
+    ("shipped_releasable_v1", "Shipped or releasable"),
+)
+_RELEASE_STATUS_ALLOWED_VERDICTS = frozenset({"ready", "review_required", "blocked"})
+
+
+def _release_status_line_value(stdout: str, label: str) -> str | None:
+    prefix = f"{label}: "
+    matches = [
+        line.removeprefix(prefix).strip()
+        for line in stdout.splitlines()
+        if line.startswith(prefix)
+    ]
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def _release_status_policy_snapshot(
+    stdout: str,
+) -> tuple[dict[str, str], dict[str, str]] | None:
+    verdicts: dict[str, str] = {}
+    reason_code_lines: dict[str, str] = {}
+    for policy_id, label in _RELEASE_STATUS_POLICY_OUTPUT_LINES:
+        verdict_value = _release_status_line_value(stdout, f"{label} verdict")
+        reason_codes_value = _release_status_line_value(
+            stdout,
+            f"{label} reason codes",
+        )
+        if verdict_value is None or reason_codes_value is None:
+            return None
+        expected_suffix = f" ({policy_id})"
+        if not verdict_value.endswith(expected_suffix):
+            return None
+        verdict = verdict_value.removesuffix(expected_suffix).strip()
+        if verdict not in _RELEASE_STATUS_ALLOWED_VERDICTS:
+            return None
+        verdicts[policy_id] = verdict
+        reason_code_lines[policy_id] = reason_codes_value
+    return verdicts, reason_code_lines
+
+
+def _clean_install_surface_status(
+    *,
+    surface_id: str,
+    result: subprocess.CompletedProcess[str],
+) -> tuple[str, tuple[str, ...]]:
+    if result.returncode != 0:
+        return "failed", (f"clean_install.{surface_id}_failed",)
+    if surface_id != "release_status":
+        return "passed", ()
+
+    stdout = result.stdout
+    target_ready = _release_status_line_value(stdout, "Target ready")
+    if target_ready not in {"yes", "no"}:
+        return "failed", ("clean_install.release_status_target_not_ready",)
+    policy_snapshot = _release_status_policy_snapshot(stdout)
+    if policy_snapshot is None:
+        return "failed", ("clean_install.release_status_policy_verdict_malformed",)
+    verdicts, reason_code_lines = policy_snapshot
+
+    if target_ready == "yes" and any(
+        verdict != "ready" for verdict in verdicts.values()
+    ):
+        return "failed", ("clean_install.release_status_policy_not_ready",)
+    if target_ready == "no" and verdicts["shipped_releasable_v1"] == "ready":
+        return "failed", ("clean_install.release_status_target_not_ready",)
+    missing_blocked_reason_lines = tuple(
+        policy_id
+        for policy_id, verdict in verdicts.items()
+        if verdict != "ready"
+        and (
+            not reason_code_lines[policy_id]
+            or reason_code_lines[policy_id].lower() == "none"
+        )
+    )
+    if missing_blocked_reason_lines:
+        return "failed", ("clean_install.release_status_policy_reason_codes_missing",)
+    return "passed", ()
 
 
 def run_clean_install_certification(
@@ -1604,6 +2722,10 @@ def run_clean_install_certification(
         if output_root is not None
         else _clean_install_work_root(workspace_root)
     ).resolve()
+    _validate_clean_install_work_root_for_run(
+        work_root=work_root,
+        workspace_root=workspace_root,
+    )
     build_backend, build_toolchain_requirements = _declared_build_toolchain(
         checkout_root
     )
@@ -1616,6 +2738,8 @@ def run_clean_install_certification(
     dist_dir = (
         Path(wheel_dir) if wheel_dir is not None else work_root / "dist"
     ).resolve()
+    if not _path_is_within(dist_dir, work_root):
+        raise ValueError("clean-install wheel directory must be under output root")
     venv_dir = (work_root / "venv").resolve()
     outside_repo = (work_root / "outside-repo").resolve()
     artifact_root = (work_root / "artifacts").resolve()
@@ -1642,9 +2766,11 @@ def run_clean_install_certification(
     if build_result.returncode != 0:
         raise RuntimeError(build_result.stderr)
     wheels = sorted(dist_dir.glob("euclid-*.whl"))
-    if not wheels:
-        raise FileNotFoundError("expected clean-install certification to build a wheel")
-    wheel_path = wheels[-1]
+    if len(wheels) != 1:
+        raise ValueError(
+            "expected clean-install certification to build exactly one project wheel"
+        )
+    wheel_path = wheels[0]
     wheel_digest = _sha256_file(wheel_path)
     runtime_distributions = _build_runtime_dependency_wheelhouse(
         checkout_root=checkout_root,
@@ -1889,6 +3015,7 @@ def run_clean_install_certification(
                 str(dist_dir): f"runtime_directory_digest:{_directory_digest(dist_dir)}",
             }
         ],
+        "source_tree_digest_at_build": _release_source_digest_ref(checkout_root),
         "source_tree_digest_or_wheel_digest": f"wheel_digest:{wheel_digest}",
         "dirty_state_or_build_toolchain": (
             "build_frontend:build;"
@@ -1949,6 +3076,8 @@ def write_suite_evidence_bundle(
     suite_metadata = _suite_scope_and_command(suite_result.suite_manifest.suite_id)
     if suite_metadata is None:
         return None
+    if not _path_is_within(suite_result.summary_path, workspace_root / "build"):
+        return None
     scope_id, producer_command_id, report_relative_path = suite_metadata
     bundle_template = _bundle_by_scope_id()[scope_id]
     manifest_digests = [
@@ -1977,11 +3106,19 @@ def write_suite_evidence_bundle(
         "generated_at_utc": _now_utc_timestamp(),
         "input_manifest_digests": manifest_digests,
         "source_tree_digest_or_wheel_digest": (
-            f"repo_checkout_digest:{_sha256_payload(manifest_digests)}"
+            _release_source_digest_ref(
+                _release_evidence_digest_root(
+                    workspace_root,
+                    asset_root=_release_source_root_for_path(
+                        suite_result.suite_manifest.source_path
+                    ),
+                )
+            )
         ),
         "dirty_state_or_build_toolchain": "repo_checkout_dirty_state:unavailable",
         "suite_id": suite_result.suite_manifest.suite_id,
         "summary_path": str(suite_result.summary_path),
+        "summary_sha256": f"runtime_sha256:{_sha256_file(suite_result.summary_path)}",
         "surface_statuses": [
             {
                 "surface_id": surface.surface_id,
@@ -2007,6 +3144,8 @@ def write_operator_run_evidence_report(
     report_path: Path,
     scope_id: str,
 ) -> Path:
+    workspace_root = _workspace_root_for_report_path(report_path)
+    asset_root = _release_source_root_for_path(result.request.manifest_path)
     payload = {
         "report_id": "operator_run_evidence_v1",
         "command_id": "full_vision_operator_run",
@@ -2018,9 +3157,22 @@ def write_operator_run_evidence_report(
         "run_id": result.request.request_id,
         "manifest_path": str(result.request.manifest_path),
         "run_summary_path": str(result.paths.run_summary_path),
+        "run_summary_sha256": (
+            f"runtime_sha256:{_sha256_file(result.paths.run_summary_path)}"
+        ),
         "output_root": str(result.paths.output_root),
         "run_result_ref": result.summary.run_result_ref.as_dict(),
         "bundle_ref": result.summary.bundle_ref.as_dict(),
+        "input_manifest_digests": [
+            {
+                str(result.request.manifest_path): (
+                    f"runtime_sha256:{_sha256_file(result.request.manifest_path)}"
+                )
+            }
+        ],
+        "source_tree_digest_or_wheel_digest": _release_source_digest_ref(
+            _release_evidence_digest_root(workspace_root, asset_root=asset_root)
+        ),
         "generated_at_utc": _now_utc_timestamp(),
     }
     return _write_json(report_path, payload)
@@ -2032,7 +3184,14 @@ def write_operator_replay_evidence_report(
     result,
     report_path: Path,
     scope_id: str,
+    operator_run_evidence_report_path: Path | None = None,
 ) -> Path:
+    workspace_root = _workspace_root_for_report_path(report_path)
+    run_evidence_report_path = operator_run_evidence_report_path
+    if run_evidence_report_path is None:
+        run_evidence_report_path = (
+            report_path.parent / "full_vision_operator_run_evidence.json"
+        )
     payload = {
         "report_id": "operator_replay_evidence_v1",
         "command_id": "full_vision_operator_replay",
@@ -2043,16 +3202,34 @@ def write_operator_replay_evidence_report(
         "command_contract_id": _load_packaged_command_contract()["command_contract_id"],
         "run_id": run_id,
         "run_summary_path": str(result.paths.run_summary_path),
+        "run_summary_sha256": (
+            f"runtime_sha256:{_sha256_file(result.paths.run_summary_path)}"
+        ),
         "output_root": str(result.paths.output_root),
         "replay_verification_status": result.summary.replay_verification_status,
         "run_result_ref": result.summary.run_result_ref.as_dict(),
         "bundle_ref": result.summary.bundle_ref.as_dict(),
+        "operator_run_evidence_report_path": str(run_evidence_report_path),
+        "input_manifest_digests": [
+            {
+                str(result.paths.run_summary_path): (
+                    f"runtime_sha256:{_sha256_file(result.paths.run_summary_path)}"
+                )
+            }
+        ],
+        "source_tree_digest_or_wheel_digest": _release_source_digest_ref(
+            _release_evidence_digest_root(workspace_root)
+        ),
         "generated_at_utc": _now_utc_timestamp(),
     }
+    if run_evidence_report_path.is_file():
+        payload["operator_run_evidence_report_sha256"] = (
+            f"runtime_sha256:{_sha256_file(run_evidence_report_path)}"
+        )
     return _write_json(report_path, payload)
 
 
-def _parse_pytest_summary_counts(stdout: str) -> tuple[dict[str, int], str]:
+def _parse_pytest_summary_counts(stdout: str) -> tuple[dict[str, int], str, bool]:
     summary_line = ""
     for line in reversed(stdout.splitlines()):
         stripped = line.strip()
@@ -2069,9 +3246,28 @@ def _parse_pytest_summary_counts(stdout: str) -> tuple[dict[str, int], str]:
         "xfailed": 0,
         "xpassed": 0,
     }
+    parsed_counts = False
     for match in _SUMMARY_TOKEN_PATTERN.finditer(summary_line):
+        parsed_counts = True
         counts[match.group("label")] = int(match.group("count"))
-    return counts, summary_line
+    return counts, summary_line, parsed_counts
+
+
+def _repo_test_matrix_report_passed(report: Mapping[str, Any] | None) -> bool:
+    if report is None or report.get("passed") is not True:
+        return False
+    if report.get("summary_counts_parsed") is not True:
+        return False
+    counts = report.get("counts")
+    if not isinstance(counts, Mapping):
+        return False
+    return (
+        int(counts.get("passed", 0)) > 0
+        and int(counts.get("failed", 0)) == 0
+        and int(counts.get("skipped", 0)) == 0
+        and int(counts.get("xfailed", 0)) == 0
+        and int(counts.get("xpassed", 0)) == 0
+    )
 
 
 def run_repo_test_matrix(
@@ -2103,9 +3299,13 @@ def run_repo_test_matrix(
         capture_output=True,
         check=False,
     )
-    counts, summary_line = _parse_pytest_summary_counts(result.stdout)
+    counts, summary_line, summary_counts_parsed = _parse_pytest_summary_counts(
+        result.stdout
+    )
     passed = (
         result.returncode == 0
+        and summary_counts_parsed
+        and counts.get("passed", 0) > 0
         and counts.get("failed", 0) == 0
         and counts.get("skipped", 0) == 0
         and counts.get("xfailed", 0) == 0
@@ -2117,11 +3317,17 @@ def run_repo_test_matrix(
             "authority_snapshot_id"
         ],
         "command_contract_id": _load_packaged_command_contract()["command_contract_id"],
+        "producer_command_id": "repo_test_matrix",
         "command": " ".join(command),
         "generated_at_utc": _now_utc_timestamp(),
+        "source_tree_digest_or_wheel_digest": _release_source_digest_ref(checkout_root),
         "passed": passed,
         "exit_code": result.returncode,
         "summary_line": summary_line,
+        "summary_counts_parsed": summary_counts_parsed,
+        "summary_parse_status": (
+            "parsed" if summary_counts_parsed else "missing_or_unparsed_summary"
+        ),
         "counts": counts,
         "stdout": result.stdout,
         "stderr": result.stderr,
@@ -2147,6 +3353,7 @@ def certify_research_readiness(
     project_root: Path | str | None = None,
 ) -> ResearchReadinessCertificationResult:
     workspace_root = _resolve_workspace_root(project_root)
+    asset_root = _resolve_asset_root(project_root)
     completion_report = _load_json(
         _report_path(workspace_root, "build/reports/completion-report.json")
     )
@@ -2168,7 +3375,7 @@ def certify_research_readiness(
     clean_install = _load_clean_install_report(workspace_root=workspace_root)
 
     reason_codes: list[str] = []
-    if repo_test_matrix is None or repo_test_matrix.get("passed") is not True:
+    if not _repo_test_matrix_report_passed(repo_test_matrix):
         reason_codes.append("repo_test_matrix_missing_or_failed")
     if full_run is None:
         reason_codes.append("full_vision_operator_run_evidence_missing")
@@ -2176,6 +3383,19 @@ def certify_research_readiness(
         reason_codes.append("full_vision_operator_replay_missing_or_failed")
     if any(surface.get("status") != "passed" for surface in clean_install.get("surfaces", ())):
         reason_codes.append("clean_install_certification_incomplete")
+    freshness_failures = _release_evidence_freshness_failures(
+        workspace_root=workspace_root,
+        asset_root=asset_root,
+        repo_test_matrix_report=repo_test_matrix,
+        current_suite_report=current_suite,
+        full_suite_report=full_suite,
+        clean_install_report=clean_install,
+        operator_run_report=full_run,
+        operator_replay_report=full_replay,
+    )
+    reason_codes.extend(
+        f"evidence_freshness.{failure}" for failure in freshness_failures
+    )
 
     verdicts = {
         str(entry["policy_id"]): str(entry["verdict"])
@@ -2197,6 +3417,7 @@ def certify_research_readiness(
         "retained_core_release",
         "probabilistic_forecast_surface",
         "algorithmic_backend",
+        "search_class_honesty",
         "composition_operator_semantics",
         "shared_plus_local_decomposition",
         "mechanistic_lane",
@@ -2204,15 +3425,34 @@ def certify_research_readiness(
         "robustness_lane",
         "portfolio_orchestration",
     ]
+    full_vision_surface_status_failures: list[dict[str, str]] = []
     if full_suite is None:
         reason_codes.append("full_vision_suite_evidence_missing")
     else:
-        surfaced = {
-            str(entry["surface_id"])
+        full_vision_surface_rows = {
+            str(entry["surface_id"]): entry
             for entry in full_suite.get("surface_statuses", ())
+            if isinstance(entry, Mapping) and isinstance(entry.get("surface_id"), str)
         }
+        surfaced = set(full_vision_surface_rows)
         if set(required_surface_ids) - surfaced:
             reason_codes.append("full_vision_surface_coverage_incomplete")
+        for surface_id in required_surface_ids:
+            row = full_vision_surface_rows.get(surface_id)
+            if row is None:
+                continue
+            benchmark_status = str(row.get("benchmark_status", ""))
+            replay_status = str(row.get("replay_status", ""))
+            if benchmark_status != "passed" or replay_status != "passed":
+                full_vision_surface_status_failures.append(
+                    {
+                        "surface_id": surface_id,
+                        "benchmark_status": benchmark_status,
+                        "replay_status": replay_status,
+                    }
+                )
+        if full_vision_surface_status_failures:
+            reason_codes.append("full_vision_surface_status_failed")
 
     if current_suite is None:
         reason_codes.append("current_release_suite_evidence_missing")
@@ -2227,7 +3467,9 @@ def certify_research_readiness(
         "generated_at_utc": _now_utc_timestamp(),
         "status": status,
         "reason_codes": reason_codes,
+        "evidence_freshness_failures": list(freshness_failures),
         "required_surface_ids": required_surface_ids,
+        "full_vision_surface_status_failures": full_vision_surface_status_failures,
         "policy_verdicts": verdicts,
     }
     report_path = _write_json(
@@ -2414,12 +3656,42 @@ def _build_completion_report(
         full_policy=policies["full_vision_v1"],
         shipped_policy=policies["shipped_releasable_v1"],
         clean_install_report=clean_install_report,
+        policy_judgments=policy_judgments,
     )
     authority_snapshot = _load_packaged_authority_snapshot()
     command_contract = _load_packaged_command_contract()
     closure_map = _load_packaged_closure_map()
     traceability = _load_packaged_traceability()
     fixture_spec = _load_packaged_fixture_spec()
+    policy_verdicts = [
+        _build_policy_verdict_payload(
+            policy=policies[policy_id],
+            judgment=policy_judgments[policy_id],
+        )
+        for policy_id in (
+            "current_release_v1",
+            "full_vision_v1",
+            "shipped_releasable_v1",
+        )
+    ]
+    unresolved_blockers = [
+        *_policy_blocker_payloads(policy_judgments),
+        *[
+            {
+                "capability_row_id": row.row_id,
+                "proof_status": row.proof_status,
+                "reason_codes": list(row.reason_codes),
+                "evidence_refs": list(row.evidence_refs),
+            }
+            for row in completion_rows
+            if row.proof_status is not None
+        ],
+    ]
+    confidence = _build_completion_report_confidence(
+        completion_rows=completion_rows,
+        completion_values=completion_values,
+        policy_judgments=policy_judgments,
+    )
     payload = {
         "report_id": "euclid_completion_report_v1",
         "authority_snapshot_id": authority_snapshot["authority_snapshot_id"],
@@ -2428,22 +3700,18 @@ def _build_completion_report(
         "traceability_id": traceability["traceability_id"],
         "fixture_spec_id": fixture_spec["fixture_spec_id"],
         "generated_at": _now_utc_timestamp(),
-        "policy_verdicts": [
-            _build_policy_verdict_payload(
-                policy=policies[policy_id],
-                judgment=policy_judgments[policy_id],
-            )
-            for policy_id in (
-                "current_release_v1",
-                "full_vision_v1",
-                "shipped_releasable_v1",
-            )
-        ],
+        "policy_verdicts": policy_verdicts,
         "scope_evidence_bundles": [
             scope_evidence_bundles[scope_id]
             for scope_id in ("current_release", "full_vision", "shipped_releasable")
             if scope_id in scope_evidence_bundles
         ],
+        "claim_truth_summary": _build_claim_truth_summary(
+            policy_verdicts=policy_verdicts,
+            unresolved_blockers=unresolved_blockers,
+            completion_values=completion_values,
+            confidence=confidence,
+        ),
         "completion_values": completion_values,
         "clean_install_certification": {
             "surface_completion": float(clean_install_report["surface_completion"]),
@@ -2487,20 +3755,8 @@ def _build_completion_report(
             completion_rows=completion_rows,
             policy_judgments=policy_judgments,
         ),
-        "unresolved_blockers": [
-            {
-                "capability_row_id": row.row_id,
-                "proof_status": row.proof_status,
-                "reason_codes": list(row.reason_codes),
-                "evidence_refs": list(row.evidence_refs),
-            }
-            for row in completion_rows
-            if row.proof_status is not None
-        ],
-        "confidence": _build_completion_report_confidence(
-            completion_rows=completion_rows,
-            completion_values=completion_values,
-        ),
+        "unresolved_blockers": unresolved_blockers,
+        "confidence": confidence,
     }
     _validate_completion_report_payload(payload)
     return payload
@@ -2601,6 +3857,7 @@ def _build_completion_values(
     full_policy: Mapping[str, Any],
     shipped_policy: Mapping[str, Any],
     clean_install_report: Mapping[str, Any],
+    policy_judgments: Mapping[str, ReadinessJudgment],
 ) -> dict[str, float]:
     current_row_ids = tuple(
         str(row_id) for row_id in current_policy.get("required_row_ids", ())
@@ -2621,19 +3878,41 @@ def _build_completion_values(
         + shipped_surface_completion[0]
     )
     shipped_total = len(shipped_row_ids) + shipped_surface_completion[1]
+    full_vision_completion = _completion_ratio(
+        row_ids=full_row_ids,
+        rows_by_id=rows_by_id,
+    )
+    current_gate_completion = _completion_ratio(
+        row_ids=current_row_ids,
+        rows_by_id=rows_by_id,
+    )
+    shipped_releasable_completion = round(
+        shipped_completed / max(shipped_total, 1),
+        6,
+    )
     return {
-        "full_vision_completion": _completion_ratio(
-            row_ids=full_row_ids,
-            rows_by_id=rows_by_id,
+        "full_vision_completion": _policy_capped_completion(
+            full_vision_completion,
+            policy_judgments.get("full_vision_v1"),
         ),
-        "current_gate_completion": _completion_ratio(
-            row_ids=current_row_ids,
-            rows_by_id=rows_by_id,
+        "current_gate_completion": _policy_capped_completion(
+            current_gate_completion,
+            policy_judgments.get("current_release_v1"),
         ),
-        "shipped_releasable_completion": round(
-            shipped_completed / max(shipped_total, 1), 6
+        "shipped_releasable_completion": _policy_capped_completion(
+            shipped_releasable_completion,
+            policy_judgments.get("shipped_releasable_v1"),
         ),
     }
+
+
+def _policy_capped_completion(
+    value: float,
+    judgment: ReadinessJudgment | None,
+) -> float:
+    if judgment is not None and judgment.final_verdict != "ready":
+        return min(float(value), 0.999999)
+    return float(value)
 
 
 def _clean_install_surface_completion(
@@ -2711,10 +3990,92 @@ def _build_residual_risk_codes(
     return sorted(set(codes))
 
 
+def _policy_blocker_payloads(
+    policy_judgments: Mapping[str, ReadinessJudgment],
+) -> list[dict[str, Any]]:
+    blockers: list[dict[str, Any]] = []
+    for policy_id, judgment in policy_judgments.items():
+        if judgment.final_verdict == "ready":
+            continue
+        failed_or_missing_gates = tuple(
+            gate
+            for gate in judgment.gate_results
+            if gate.required and gate.status in {"failed", "missing"}
+        )
+        blockers.append(
+            {
+                "capability_row_id": f"policy:{policy_id}",
+                "proof_status": "policy_blocked",
+                "reason_codes": list(judgment.reason_codes),
+                "evidence_refs": [
+                    f"gate:{gate.gate_id}" for gate in failed_or_missing_gates
+                ],
+            }
+        )
+    return blockers
+
+
+def _build_claim_truth_summary(
+    *,
+    policy_verdicts: Sequence[Mapping[str, Any]],
+    unresolved_blockers: Sequence[Mapping[str, Any]],
+    completion_values: Mapping[str, float],
+    confidence: Mapping[str, Any],
+) -> dict[str, Any]:
+    blocked_policy_verdicts = [
+        {
+            "policy_id": str(verdict["policy_id"]),
+            "verdict": str(verdict["verdict"]),
+            "reason_codes": list(verdict.get("reason_codes", ())),
+            "evidence_refs": list(verdict.get("evidence_refs", ())),
+        }
+        for verdict in policy_verdicts
+        if str(verdict.get("verdict")) == "blocked"
+    ]
+    blocker_summaries = [
+        {
+            "capability_row_id": str(blocker["capability_row_id"]),
+            "proof_status": str(blocker["proof_status"]),
+            "reason_codes": list(blocker.get("reason_codes", ())),
+        }
+        for blocker in unresolved_blockers
+    ]
+    proof_status_counts = {
+        proof_status: sum(
+            1
+            for blocker in unresolved_blockers
+            if str(blocker.get("proof_status")) == proof_status
+        )
+        for proof_status in ("policy_blocked", "missing_proof", "failed_proof")
+    }
+    policy_verdict_values = {
+        str(verdict.get("verdict", "")) for verdict in policy_verdicts
+    }
+    if blocked_policy_verdicts or blocker_summaries:
+        truth_status = "blocked"
+    elif "review_required" in policy_verdict_values:
+        truth_status = "review_required"
+    else:
+        truth_status = "ready"
+    return {
+        "truth_status": truth_status,
+        "ready": truth_status == "ready",
+        "blocked_policy_verdicts": blocked_policy_verdicts,
+        "unresolved_blockers": blocker_summaries,
+        "proof_status_counts": proof_status_counts,
+        "secondary_progress_evidence": {
+            "completion_values": dict(completion_values),
+            "confidence": dict(confidence),
+        },
+        "secondary_progress_evidence_role": _SECONDARY_PROGRESS_EVIDENCE_ROLE,
+    }
+
+
 def _build_completion_report_confidence(
     *,
     completion_rows: tuple[_CompletionLedgerRow, ...],
     completion_values: Mapping[str, float],
+    policy_judgments: Mapping[str, ReadinessJudgment] | None = None,
 ) -> dict[str, Any]:
     total_required_slots = sum(
         len(row.required_closing_classes) for row in completion_rows
@@ -2738,6 +4099,12 @@ def _build_completion_report_confidence(
         reason_codes.append("failed_proof_present")
     if any(row.proof_status == "missing_proof" for row in completion_rows):
         reason_codes.append("missing_proof_present")
+    resolved_policy_judgments = policy_judgments or {}
+    if any(
+        judgment.final_verdict != "ready"
+        for judgment in resolved_policy_judgments.values()
+    ):
+        reason_codes.append("policy_blocked")
     return {
         "score": score,
         "reason_codes": reason_codes,
@@ -2748,6 +4115,9 @@ def _validate_completion_report_payload(payload: Mapping[str, Any]) -> None:
     schema = _load_packaged_completion_report_schema()
     required_fields = set(schema["required_fields"])
     policy_verdict_required_fields = set(schema["policy_verdict_required_fields"])
+    claim_truth_summary_required_fields = set(
+        schema["claim_truth_summary_required_fields"]
+    )
     scope_evidence_bundle_required_fields = set(
         schema["scope_evidence_bundle_required_fields"]
     )
@@ -2757,6 +4127,34 @@ def _validate_completion_report_payload(payload: Mapping[str, Any]) -> None:
         raise ValueError(
             "completion report is missing required fields: " + ", ".join(missing_fields)
         )
+    claim_truth_summary = payload["claim_truth_summary"]
+    if not claim_truth_summary_required_fields <= set(claim_truth_summary):
+        missing_fields = sorted(
+            claim_truth_summary_required_fields - set(claim_truth_summary)
+        )
+        raise ValueError(
+            "completion report claim truth summary is missing required fields: "
+            + ", ".join(missing_fields)
+        )
+    if claim_truth_summary["truth_status"] not in set(
+        schema["claim_truth_status_values"]
+    ):
+        raise ValueError(
+            "unsupported claim truth status: "
+            f"{claim_truth_summary['truth_status']!r}"
+        )
+    if not isinstance(claim_truth_summary["ready"], bool):
+        raise ValueError("completion report claim truth ready flag must be boolean")
+    if claim_truth_summary["secondary_progress_evidence_role"] != (
+        _SECONDARY_PROGRESS_EVIDENCE_ROLE
+    ):
+        raise ValueError("completion report must mark numeric progress as secondary")
+    if not isinstance(claim_truth_summary["blocked_policy_verdicts"], list):
+        raise ValueError("completion report blocked policy verdicts must be a list")
+    if not isinstance(claim_truth_summary["unresolved_blockers"], list):
+        raise ValueError("completion report unresolved blockers summary must be a list")
+    if not isinstance(claim_truth_summary["proof_status_counts"], Mapping):
+        raise ValueError("completion report proof status counts must be a mapping")
     for verdict in payload["policy_verdicts"]:
         if not policy_verdict_required_fields <= set(verdict):
             missing_fields = sorted(policy_verdict_required_fields - set(verdict))
@@ -2997,7 +4395,9 @@ def _judge_current_release_gate_readiness(
     suite_readiness_judgment: ReadinessJudgment,
 ) -> ReadinessJudgment:
     schema = _load_packaged_readiness_schema()
-    required_gate_ids = tuple(
+    required_gate_ids = (
+        "release.evidence_freshness",
+    ) + tuple(
         str(item["gate_id"])
         for item in schema["retained_core_release"]["required_gates"]
     )
@@ -3020,7 +4420,9 @@ def _judge_full_vision_gate_readiness(
     suite_readiness_judgment: ReadinessJudgment,
 ) -> ReadinessJudgment:
     schema = _load_packaged_readiness_schema()
-    required_gate_ids = tuple(
+    required_gate_ids = (
+        "release.evidence_freshness",
+    ) + tuple(
         str(item["gate_id"]) for item in schema["full_vision"]["required_gates"]
     )
     gate_results = tuple(
@@ -3243,9 +4645,7 @@ def _row_evidence_payload(
         if value
     }
     clean_install_surfaces = _clean_install_surfaces_by_id(clean_install_report)
-    repo_matrix_passed = repo_test_matrix_report is not None and (
-        repo_test_matrix_report.get("passed") is True
-    )
+    repo_matrix_passed = _repo_test_matrix_report_passed(repo_test_matrix_report)
     suite_task_replay_verified = bool(task_rows) and all(
         row.get("replay_verification") == "verified" for row in task_rows
     )
@@ -3711,9 +5111,44 @@ def verify_completion_report(
     ]
     if len(bundle_ids) != len(set(bundle_ids)):
         failures.append("scope evidence bundles are not unique")
+    repo_test_matrix = _load_json_if_present(
+        _report_path(workspace_root, _REPO_TEST_MATRIX_REPORT_PATH)
+    )
+    current_suite = _load_json_if_present(
+        _report_path(workspace_root, _CURRENT_RELEASE_SUITE_EVIDENCE_PATH)
+    )
+    full_suite = _load_json_if_present(
+        _report_path(workspace_root, _FULL_VISION_SUITE_EVIDENCE_PATH)
+    )
+    operator_run = _load_json_if_present(
+        _report_path(workspace_root, _FULL_VISION_OPERATOR_RUN_EVIDENCE_PATH)
+    )
+    operator_replay = _load_json_if_present(
+        _report_path(workspace_root, _FULL_VISION_OPERATOR_REPLAY_EVIDENCE_PATH)
+    )
+    freshness_failures = _release_evidence_freshness_failures(
+        workspace_root=workspace_root,
+        asset_root=asset_root,
+        repo_test_matrix_report=repo_test_matrix,
+        current_suite_report=current_suite,
+        full_suite_report=full_suite,
+        clean_install_report=_load_clean_install_report(workspace_root=workspace_root),
+        operator_run_report=operator_run,
+        operator_replay_report=operator_replay,
+    )
+    if freshness_failures:
+        failures.append(
+            "release evidence freshness failures: "
+            + ", ".join(freshness_failures)
+        )
 
+    verification_report_path = _verify_completion_output_path(
+        workspace_root=workspace_root,
+        report_path=resolved_report_path,
+        policy_path=resolved_policy_path,
+    )
     _write_json(
-        _report_path(workspace_root, _VERIFY_COMPLETION_REPORT_PATH),
+        verification_report_path,
         {
             "report_id": "verify_completion_v1",
             "authority_snapshot_id": _load_packaged_authority_snapshot()[
@@ -3737,6 +5172,21 @@ def verify_completion_report(
         passed=not failures,
         failure_messages=tuple(failures),
     )
+
+
+def _verify_completion_output_path(
+    *,
+    workspace_root: Path,
+    report_path: Path,
+    policy_path: Path,
+) -> Path:
+    canonical_report_path = workspace_root / "build" / "reports" / "completion-report.json"
+    canonical_policy_path = _resolve_asset_root(workspace_root) / _COMPLETION_REGRESSION_POLICY_PATH
+    if report_path.resolve() == canonical_report_path.resolve() and (
+        policy_path.resolve() == canonical_policy_path.resolve()
+    ):
+        return _report_path(workspace_root, _VERIFY_COMPLETION_REPORT_PATH)
+    return report_path.parent / "verify-completion.json"
 
 
 def get_release_candidate_workflow(

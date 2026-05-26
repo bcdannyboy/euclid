@@ -1,21 +1,34 @@
 from __future__ import annotations
 
+import math
+from pathlib import Path
+
+import pytest
+
+from euclid.contracts.errors import ContractValidationError
+from euclid.contracts.loader import load_contract_catalog
+from euclid.contracts.refs import TypedRef
 from euclid.math.codelength import (
     CodelengthComparisonKey,
+    build_codelength_policy_manifest,
     codelength_terms,
     data_code_length,
+    data_code_diagnostics,
     float_lattice_code_length,
     float_lattice_index,
     literal_code_length,
     natural_integer_code_length,
     parameter_code_length,
     prequential_laplace_residual_bin_code,
+    signed_integer_code_length,
     state_code_length,
     strict_single_class_law_eligibility,
     string_literal_code_length,
     zigzag_signed_index,
 )
 from euclid.math.quantization import FixedStepMidTreadQuantizer
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_natural_integer_and_zigzag_signed_code_laws_are_stable() -> None:
@@ -148,3 +161,118 @@ def test_prequential_laplace_residual_bin_code_uses_prefix_only_evidence() -> No
     assert [row["future_count_used"] for row in result.rows] == [0, 0, 0, 0]
     assert result.rows[1]["symbol_count_before"] == 1
     assert result.rows[2]["symbol_count_before"] == 0
+
+
+def test_escape_residual_code_charges_escape_before_new_symbol_identity() -> None:
+    from euclid.math.residual_coding import (
+        ResidualAlphabetPolicy,
+        prequential_escape_residual_bin_code_v1,
+    )
+
+    result = prequential_escape_residual_bin_code_v1(
+        (0, 1, 0),
+        alphabet_policy=ResidualAlphabetPolicy(
+            alphabet=(0,),
+            escape_policy="explicit_escape_then_symbol_identity",
+        ),
+    )
+
+    assert [event.event_type for event in result.events[:3]] == [
+        "symbol",
+        "ESC",
+        "symbol_identity",
+    ]
+    assert result.events[1].symbol == "ESC"
+    assert result.events[2].symbol == 1
+    assert result.events[1].incremental_bits > 0
+    assert result.events[2].incremental_bits == signed_integer_code_length(1)
+
+
+def test_escape_residual_code_does_not_charge_escape_for_seen_symbol() -> None:
+    from euclid.math.residual_coding import (
+        ResidualAlphabetPolicy,
+        prequential_escape_residual_bin_code_v1,
+    )
+
+    result = prequential_escape_residual_bin_code_v1(
+        (0, 1, 1),
+        alphabet_policy=ResidualAlphabetPolicy(
+            alphabet=(0,),
+            escape_policy="explicit_escape_then_symbol_identity",
+        ),
+    )
+
+    row_two_events = [
+        event for event in result.events if event.residual_index == 1 and event.row_index == 2
+    ]
+    assert [event.event_type for event in row_two_events] == ["symbol"]
+    assert row_two_events[0].symbol == 1
+
+
+def test_escape_residual_diagnostics_are_prefix_only_and_sum_to_data_bits() -> None:
+    residuals = (0, 1, 1, -1)
+    diagnostics = data_code_diagnostics(
+        residuals,
+        data_code_family="prequential_escape_residual_bin_v1",
+        alphabet_policy={
+            "alphabet": (0,),
+            "escape_policy": "explicit_escape_then_symbol_identity",
+        },
+    )
+
+    event_bits = sum(event["incremental_bits"] for event in diagnostics["events"])
+    sequence_length_bits = diagnostics["sequence_length_bits"]
+
+    assert {event["future_count_used"] for event in diagnostics["events"]} == {0}
+    assert math.isclose(
+        diagnostics["total_bits"],
+        sequence_length_bits + event_bits,
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    )
+
+
+def test_fixed_residual_alphabet_rejects_unseen_symbol_without_escape_policy() -> None:
+    from euclid.math.residual_coding import (
+        ResidualAlphabetPolicy,
+        prequential_escape_residual_bin_code_v1,
+    )
+
+    with pytest.raises(ContractValidationError) as exc_info:
+        prequential_escape_residual_bin_code_v1(
+            (0, 2),
+            alphabet_policy=ResidualAlphabetPolicy(
+                alphabet=(0, 1),
+                escape_policy="none",
+            ),
+        )
+
+    assert exc_info.value.code == "residual_symbol_outside_fixed_alphabet"
+
+
+def test_legacy_fixed_step_raw_reference_policy_declares_proxy_claim_tier() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    manifest = build_codelength_policy_manifest(
+        catalog,
+        quantizer=FixedStepMidTreadQuantizer.from_string("0.5"),
+        target_transform_ref=TypedRef(
+            "target_transform_manifest@1.0.0",
+            "target-transform",
+        ),
+        base_measure_policy_ref=TypedRef(
+            "base_measure_policy_manifest@1.0.0",
+            "base-measure",
+        ),
+        reference_description_policy_ref=TypedRef(
+            "reference_description_policy_manifest@1.1.0",
+            "raw-reference",
+        ),
+    )
+
+    assert manifest.body["compatibility_policy_label"] == (
+        "legacy_fixed_step_raw_reference_mdl"
+    )
+    assert manifest.body["coding_claim_tier"] == "mdl_inspired_proxy_score"
+    assert manifest.body["coding_claim_tier_reason_code"] == (
+        "legacy_fixed_step_raw_reference_policy_is_proxy_score"
+    )

@@ -6,11 +6,11 @@ regime_tags:
 - multi_family_multi_backend
 - seasonal
 - trend
-dataset_ref: fixtures/runtime/full_vision_certification/portfolio_comparison/portfolio-comparison-series.csv
+dataset_ref: fixtures/runtime/full_vision_certification/single_entity_predictive/seasonal-trend-series.csv
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-04-14T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:

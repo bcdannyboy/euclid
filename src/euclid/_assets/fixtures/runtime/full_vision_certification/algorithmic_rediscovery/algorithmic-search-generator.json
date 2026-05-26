@@ -1,0 +1,21 @@
+{
+  "law_id": "full_vision_algorithmic_running_half_average",
+  "family": "algorithmic_running_half_average",
+  "description": "Alternating two-state certification fixture for the canonical running-half-average algorithmic program.",
+  "canonical_program": "(program (state (lit 0)) (next (div (add (state 0) (obs 0)) (lit 2))) (emit (state 0)))",
+  "source_request_ref": "fixtures/runtime/full_vision_certification/algorithmic_rediscovery/algorithmic-search-demo.yaml",
+  "parameters": {
+    "alternating_low": 10.0,
+    "alternating_high": 12.0,
+    "initial_state": 0.0,
+    "row_count": 24
+  },
+  "variants": {
+    "medium": {
+      "recovery_class": "canonical_algorithmic_program",
+      "baseline_comparison": "last_observation_carried_forward",
+      "minimum_margin_vs_last_observation_mae": 0.01,
+      "max_predictive_mae": 2.0
+    }
+  }
+}

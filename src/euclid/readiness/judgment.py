@@ -85,11 +85,9 @@ def judge_readiness(
     else:
         final_verdict = "ready"
 
-    reason_codes = tuple(
-        f"{gate.gate_id}_{gate.status}"
-        for gate in ordered_gates
-        if gate.status in {"failed", "missing"}
-        and (gate.required or final_verdict == "review_required")
+    reason_codes = _readiness_reason_codes(
+        ordered_gates=ordered_gates,
+        final_verdict=final_verdict,
     )
     if final_verdict == "ready":
         verdict_summary = "All required readiness gates passed."
@@ -151,6 +149,41 @@ def gate_results_by_id(
     gate_results: Sequence[ReadinessGateResult],
 ) -> dict[str, ReadinessGateResult]:
     return {gate.gate_id: gate for gate in gate_results}
+
+
+def _readiness_reason_codes(
+    *,
+    ordered_gates: Sequence[ReadinessGateResult],
+    final_verdict: str,
+) -> tuple[str, ...]:
+    reason_codes: list[str] = []
+    for gate in ordered_gates:
+        if gate.status not in {"failed", "missing"}:
+            continue
+        if not gate.required and final_verdict != "review_required":
+            continue
+        gate_reason_codes = _gate_evidence_reason_codes(gate)
+        if gate_reason_codes:
+            reason_codes.extend(
+                f"{gate.gate_id}_{reason_code}"
+                for reason_code in gate_reason_codes
+            )
+            continue
+        reason_codes.append(f"{gate.gate_id}_{gate.status}")
+    return tuple(reason_codes)
+
+
+def _gate_evidence_reason_codes(gate: ReadinessGateResult) -> tuple[str, ...]:
+    raw_reason_codes = gate.evidence.get("reason_codes")
+    if not isinstance(raw_reason_codes, Sequence) or isinstance(
+        raw_reason_codes, (str, bytes, bytearray)
+    ):
+        return ()
+    return tuple(
+        str(reason_code).strip()
+        for reason_code in raw_reason_codes
+        if isinstance(reason_code, str) and reason_code.strip()
+    )
 
 
 def judge_benchmark_suite_readiness(
@@ -249,12 +282,19 @@ def _surface_gate(
         else {}
     )
     missing_surface_diagnostics = _missing_surface_diagnostics(summary_evidence)
+    replay_findings = _surface_replay_artifact_findings(summary_evidence)
+    reason_codes = _surface_gate_reason_codes(
+        surface=surface,
+        summary_evidence=summary_evidence,
+        replay_findings=replay_findings,
+    )
     return ReadinessGateResult(
         gate_id=f"surface.{surface.surface_id}",
         status=(
             "passed"
             if surface.benchmark_status == "passed"
             and surface.replay_status == "passed"
+            and _surface_replay_verified(summary_evidence)
             and not missing_surface_diagnostics
             else "failed"
         ),
@@ -266,8 +306,113 @@ def _surface_gate(
         evidence={
             **summary_evidence,
             "missing_surface_diagnostics": missing_surface_diagnostics,
+            "missing_replay_artifacts": replay_findings["missing"],
+            "unverified_replay_artifacts": replay_findings["unverified"],
+            "replay_verification_status": _surface_replay_verification_status(
+                summary_evidence
+            ),
+            "reason_codes": reason_codes,
         },
     )
+
+
+def _surface_gate_reason_codes(
+    *,
+    surface,
+    summary_evidence: Mapping[str, Any],
+    replay_findings: Mapping[str, list[str]],
+) -> tuple[str, ...]:
+    surface_reason_codes = _sequence_reason_codes(summary_evidence.get("reason_codes"))
+    if surface.benchmark_status != "passed":
+        return surface_reason_codes or ("semantic_assertion_failed",)
+    if surface.replay_status == "passed" and _surface_replay_verified(
+        summary_evidence
+    ):
+        return ()
+    if replay_findings["missing"]:
+        return ("replay_artifact_missing",)
+    if replay_findings["unverified"]:
+        return ("replay_unverified",)
+    raw_reason_codes = summary_evidence.get("replay_reason_codes")
+    if isinstance(raw_reason_codes, Sequence) and not isinstance(
+        raw_reason_codes, (str, bytes, bytearray)
+    ):
+        reason_codes = tuple(
+            str(reason_code).strip()
+            for reason_code in raw_reason_codes
+            if isinstance(reason_code, str) and reason_code.strip()
+        )
+        if reason_codes:
+            return reason_codes
+    replay_status = summary_evidence.get("replay_verification")
+    if replay_status == "missing":
+        return ("replay_artifact_missing",)
+    if (
+        isinstance(replay_status, str)
+        and replay_status.strip()
+        and replay_status != "verified"
+    ):
+        return ("replay_unverified",)
+    return ()
+
+
+def _sequence_reason_codes(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, Sequence) or isinstance(
+        value, (str, bytes, bytearray)
+    ):
+        return ()
+    return tuple(
+        str(reason_code).strip()
+        for reason_code in value
+        if isinstance(reason_code, str) and reason_code.strip()
+    )
+
+
+def _surface_replay_verified(summary_evidence: Mapping[str, Any]) -> bool:
+    return _surface_replay_verification_status(summary_evidence) in {
+        "not_required",
+        "verified",
+    }
+
+
+def _surface_replay_verification_status(
+    summary_evidence: Mapping[str, Any],
+) -> str:
+    status = summary_evidence.get("replay_verification_status")
+    if isinstance(status, str) and status.strip():
+        return status.strip()
+    replay_verification = summary_evidence.get("replay_verification")
+    if isinstance(replay_verification, str) and replay_verification in {
+        "failed",
+        "missing",
+        "not_required",
+        "unverified",
+        "verified",
+    }:
+        return replay_verification
+    artifact_paths = summary_evidence.get("replay_artifact_paths")
+    if isinstance(artifact_paths, Sequence) and not isinstance(
+        artifact_paths, (str, bytes, bytearray)
+    ):
+        if any(isinstance(path, str) and path.strip() for path in artifact_paths):
+            return "unverified"
+    return "unverified"
+
+
+def _surface_replay_artifact_findings(
+    summary_evidence: Mapping[str, Any],
+) -> dict[str, list[str]]:
+    artifact_paths = [
+        str(path)
+        for path in summary_evidence.get("replay_artifact_paths", ())
+        if isinstance(path, str) and path.strip()
+    ]
+    status = _surface_replay_verification_status(summary_evidence)
+    missing = [path for path in artifact_paths if not Path(path).is_file()]
+    unverified: list[str] = []
+    if status not in {"missing", "not_required", "verified"}:
+        unverified = [path for path in artifact_paths if Path(path).is_file()]
+    return {"missing": missing, "unverified": unverified}
 
 
 def _load_suite_summary_payload(summary_path: Path) -> Mapping[str, Any] | None:

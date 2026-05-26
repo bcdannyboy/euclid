@@ -9,3 +9,17 @@ evidence_bundle_refs:
 diversity_axes:
 - portfolio_selection
 - comparator_universe
+fixture_provenance:
+  source_kind: synthetic
+  source_ref: fixtures/runtime/full_vision_certification/portfolio_comparison/fixture-set.yaml
+  license: repo-internal
+  edge_cases:
+  - declared_comparison_universe
+  - multi_backend_portfolio_selection
+  regression_reason: Exercise portfolio comparison proof without accepting a golden selected portfolio.
+  shortcut_disclosure:
+    fixture_only: true
+    forbidden_uses:
+    - golden_acceptance
+    - real_world_claim
+    - undeclared_portfolio_oracle

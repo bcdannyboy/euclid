@@ -10,6 +10,7 @@ from euclid.manifests.runtime_models import (
     PublicationRecordManifest,
     RunResultManifest,
 )
+from euclid.modules.claims import assert_claim_scope_publication
 
 
 @dataclass(frozen=True)
@@ -292,6 +293,7 @@ def build_publication_record_manifest(
     schema_lifecycle_integration_closure_ref: TypedRef,
     catalog_scope: str,
     published_at: str,
+    claim_card_manifest: ManifestEnvelope | Mapping[str, Any] | None = None,
 ) -> PublicationRecordManifest:
     publication_mode = str(run_result_manifest.body["result_mode"])
     replay_verification_status = str(
@@ -316,6 +318,11 @@ def build_publication_record_manifest(
         publication_mode=publication_mode,
         run_result_manifest=run_result_manifest,
         comparison_universe_manifest=comparison_universe_manifest,
+    )
+    _validate_publication_claim_card(
+        publication_mode=publication_mode,
+        run_result_manifest=run_result_manifest,
+        claim_card_manifest=claim_card_manifest,
     )
     return PublicationRecordManifest(
         object_id=object_id,
@@ -517,6 +524,49 @@ def _resolve_comparator_exposure_status(
             field_path="comparison_universe_manifest",
         )
     return "satisfied"
+
+
+def _validate_publication_claim_card(
+    *,
+    publication_mode: str,
+    run_result_manifest: ManifestEnvelope,
+    claim_card_manifest: ManifestEnvelope | Mapping[str, Any] | None,
+) -> None:
+    if claim_card_manifest is None:
+        return
+    if publication_mode != "candidate_publication":
+        raise ContractValidationError(
+            code="abstention_publication_forbids_claim_card_body",
+            message="abstention-only publication may not carry a claim-card body",
+            field_path="claim_card_manifest",
+        )
+    expected_ref = _required_typed_ref(
+        run_result_manifest.body,
+        "primary_claim_card_ref",
+    )
+    if isinstance(claim_card_manifest, ManifestEnvelope):
+        claim_card_ref = claim_card_manifest.ref
+        claim_card_body = claim_card_manifest.body
+    else:
+        claim_card_ref = _optional_typed_ref(claim_card_manifest, "ref")
+        claim_card_body = claim_card_manifest.get("body", claim_card_manifest)
+        if not isinstance(claim_card_body, Mapping):
+            raise ContractValidationError(
+                code="publication_claim_card_body_required",
+                message="claim-card manifest must expose a mapping body",
+                field_path="claim_card_manifest.body",
+            )
+    if claim_card_ref is not None and claim_card_ref != expected_ref:
+        raise ContractValidationError(
+            code="publication_claim_card_ref_mismatch",
+            message="claim-card body must match the run result claim-card ref",
+            field_path="claim_card_manifest.ref",
+            details={
+                "expected": expected_ref.as_dict(),
+                "actual": claim_card_ref.as_dict(),
+            },
+        )
+    assert_claim_scope_publication(claim_card_body)
 
 
 def _required_string(payload: Mapping[str, object], key: str) -> str:

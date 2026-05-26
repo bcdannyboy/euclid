@@ -8,7 +8,7 @@ dataset_ref: fixtures/runtime/phase06/probabilistic-trend-series.csv
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-04-12T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:

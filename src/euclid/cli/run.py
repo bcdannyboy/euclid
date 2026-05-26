@@ -5,6 +5,10 @@ from typing import Optional
 
 import typer
 
+from euclid.operator_runtime.evidence import (
+    bind_operator_run_evidence_report,
+    write_operator_run_result_artifact,
+)
 from euclid.operator_runtime.run import format_operator_run_summary, run_operator
 from euclid.release import write_operator_run_evidence_report
 
@@ -34,7 +38,7 @@ def run_command(
         output_root=output_root,
     )
     if evidence_report is not None:
-        write_operator_run_evidence_report(
+        report_path = write_operator_run_evidence_report(
             result=result,
             report_path=evidence_report,
             scope_id=(
@@ -43,6 +47,8 @@ def run_command(
                 else "current_release"
             ),
         )
+        bind_operator_run_evidence_report(result=result, report_path=report_path)
+    write_operator_run_result_artifact(result=result)
     typer.echo(format_operator_run_summary(result))
 
 

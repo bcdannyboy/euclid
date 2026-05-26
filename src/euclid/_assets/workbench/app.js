@@ -563,6 +563,7 @@ function renderAnalystBriefing() {
   const evidenceSummary =
     summarizeProbabilisticEvidence(state.analysis.probabilistic) ||
     "No thin-evidence warning is active for the probabilistic bundle.";
+  const pointPublicationStatus = pointPublicationStatusForDisplay(state.analysis);
 
   analystBriefing.innerHTML = `
     <div class="briefing-head">
@@ -571,7 +572,7 @@ function renderAnalystBriefing() {
         <h3>${escapeHtml(dataset.symbol)} / ${escapeHtml(dataset.target.label)}</h3>
       </div>
       <div class="pill-row">
-        ${pill(humanizePhrase(point?.publication?.status || point?.status || "unknown"), point?.publication?.status === "abstained" ? "warn" : "ok")}
+        ${pill(humanizePhrase(pointPublicationStatus), pointPublicationStatus === "abstained" ? "warn" : "ok")}
         ${pill(`h${state.selectedHorizon}`, "warn")}
         ${selectedLaneEntry ? pill(humanizeKey(selectedLaneEntry[0]), "ok") : ""}
       </div>
@@ -579,7 +580,7 @@ function renderAnalystBriefing() {
     <div class="analysis-brief-grid briefing-grid" data-run-summary>
       ${renderBriefCard({
         title: "Publication",
-        value: humanizePhrase(point?.publication?.status || point?.status || "unknown"),
+        value: humanizePhrase(pointPublicationStatus),
         note:
           pointPublicationHeadlineForDisplay(
             state.analysis,
@@ -663,11 +664,11 @@ function claimSurfaceSummary(analysis) {
   const claim = analysis?.evidence_studio?.claim_surface || {};
   const point = analysis?.operator_point || {};
   const publication = point.publication || {};
+  const descriptiveOnly = isDescriptiveOnlyAnalysis(analysis);
   const publicationStatus =
-    claim.publication_status ||
-    publication.status ||
-    point.status ||
-    "unknown";
+    descriptiveOnly
+      ? pointPublicationStatusForDisplay(analysis)
+      : claim.publication_status || pointPublicationStatusForDisplay(analysis);
   const rootClaimClass = analysis?.claim_class || "";
   const strongest = strongestEquationCard(analysis);
   const claimCeiling =
@@ -677,10 +678,14 @@ function claimSurfaceSummary(analysis) {
     (publicationStatus === "abstained"
       ? "abstention"
       : strongest?.title || "candidate only");
+  const claimPublishable = claim.publishable ?? analysis?.publishable;
   const publishable =
-    claim.publishable ??
-    analysis?.publishable ??
-    ["publishable", "published"].includes(String(publicationStatus));
+    descriptiveOnly
+      ? false
+      : claimPublishable ??
+        ["publishable", "published"].includes(
+          String(rawPointPublicationStatus(analysis) || publicationStatus),
+        );
   const reasonCodes = [
     ...(Array.isArray(claim.abstention_reason_codes)
       ? claim.abstention_reason_codes
@@ -1050,6 +1055,7 @@ function renderWorkspaceEquationStage({ analysis, activeOverlay, selectedLaneEnt
 function renderWorkspaceEvidenceRail({ analysis, activeOverlay, selectedLaneEntry }) {
   const benchmark = analysis?.benchmark;
   const outcome = benchmarkOutcomeDetails(benchmark);
+  const pointPublicationStatus = pointPublicationStatusForDisplay(analysis);
   return `
     <section class="panel diagnostic-chart evidence-rail workspace-evidence-rail" data-workspace-region="evidence-rail">
       <div class="panel-head">
@@ -1062,7 +1068,7 @@ function renderWorkspaceEvidenceRail({ analysis, activeOverlay, selectedLaneEntr
       <p>The canvas keeps the object itself central. This rail holds the active selectors, benchmark context, and thin-evidence caveats in one narrow reference surface.</p>
       <div class="detail-grid">
         ${detail("Active overlay", activeOverlay?.label || "n/a")}
-        ${detail("Operator publication", humanizePhrase(analysis?.operator_point?.publication?.status || analysis?.operator_point?.status || "n/a"))}
+        ${detail("Operator publication", humanizePhrase(pointPublicationStatus))}
         ${detail("Selected lane", selectedLaneEntry ? humanizeKey(selectedLaneEntry[0]) : "n/a")}
         ${detail("Benchmark winner", outcome.winner)}
         ${detail("Runner-up", outcome.runnerUp)}
@@ -1125,18 +1131,19 @@ function renderStatusMatrix(analysis) {
   const benchmark = analysis.benchmark;
   const descriptiveFit = analysis.descriptive_fit;
   const selectedLaneEntry = selectedProbabilisticLane(analysis);
+  const pointPublicationStatus = pointPublicationStatusForDisplay(analysis);
   const hasWinner = hasBenchmarkWinner(benchmark);
   const items = [
     {
       title: "Operator lane",
-      value: humanizePhrase(point?.publication?.status || point?.status || "unknown"),
+      value: humanizePhrase(pointPublicationStatus),
       note:
         pointPublicationHeadlineForDisplay(
           analysis,
           "Point-lane publication status governs the operator publication path.",
         ) ||
         "Point-lane publication status governs the operator publication path.",
-      tone: point?.publication?.status === "abstained" ? "accent" : "sea",
+      tone: pointPublicationStatus === "abstained" ? "accent" : "sea",
       tab: "point",
     },
     {
@@ -1411,6 +1418,7 @@ function renderHero() {
   const contextLine = `${dataset.rows} rows · ${dataset.date_range.start.slice(0, 10)} → ${dataset.date_range.end.slice(0, 10)}`;
   const summaryLine = buildHeroSummary(state.analysis);
   const claim = claimSurfaceSummary(state.analysis);
+  const pointPublicationStatus = pointPublicationStatusForDisplay(state.analysis);
 
   hero.innerHTML = `
     <div class="run-header run-header-loaded" data-analysis-header>
@@ -1422,7 +1430,7 @@ function renderHero() {
         </div>
         <div class="run-header-pills pill-row">
           ${pill(`Claim ceiling: ${humanizePhrase(claim.claimCeiling)}`, claim.publishable ? "ok" : "warn")}
-          ${pill(humanizePhrase(point?.publication?.status || point?.status || "unknown"), point?.publication?.status === "abstained" ? "warn" : "ok")}
+          ${pill(humanizePhrase(pointPublicationStatus), pointPublicationStatus === "abstained" ? "warn" : "ok")}
           ${selectedLaneEntry ? pill(humanizeKey(selectedLaneEntry[0]), "sea") : ""}
           ${pill(`h${state.selectedHorizon}`, "warn")}
         </div>
@@ -1435,7 +1443,7 @@ function renderHero() {
         })}
         ${renderHeaderStat({
           label: "Operator",
-          value: humanizePhrase(point?.publication?.status || point?.status || "unknown"),
+          value: humanizePhrase(pointPublicationStatus),
           note: point?.selected_family || "No point family selected",
         })}
         ${renderHeaderStat({
@@ -2351,7 +2359,9 @@ function renderEquationRibbon(analysis) {
     entries.push({
       kicker: "Point lane",
       label: analysis.operator_point.equation?.label || "n/a",
-      note: analysis.operator_point.equation?.delta_form_label || analysis.operator_point.publication?.status || "",
+      note:
+        analysis.operator_point.equation?.delta_form_label ||
+        humanizePhrase(pointPublicationStatusForDisplay(analysis)),
       tone: "sea",
       jump: "atlas-observed-path",
     });
@@ -2885,6 +2895,7 @@ function renderAtlas() {
   const quantileRow = rowForSelectedHorizon(state.analysis.probabilistic?.quantile);
   const intervalRow = rowForSelectedHorizon(state.analysis.probabilistic?.interval);
   const eventRow = rowForSelectedHorizon(state.analysis.probabilistic?.event_probability);
+  const pointPublicationStatus = pointPublicationStatusForDisplay(state.analysis);
 
   const equationCards = [];
   if (hasHolisticClaim(state.analysis)) {
@@ -3004,7 +3015,7 @@ function renderAtlas() {
         equation: point.equation,
         parameters: point.equation?.parameter_summary || {},
         badges: [
-          { label: humanizePhrase(point.publication?.status || point.status || "unknown"), tone: point.publication?.status === "abstained" ? "warn" : "ok" },
+          { label: humanizePhrase(pointPublicationStatus), tone: pointPublicationStatus === "abstained" ? "warn" : "ok" },
           { label: point.selected_family || "unknown", tone: "ok" },
         ],
         honesty: pointPublicationHeadlineForDisplay(state.analysis) || "",
@@ -3049,7 +3060,7 @@ function renderAtlas() {
             <h3>Analytical workspace for equation, path, residuals, and uncertainty</h3>
           </div>
           <div class="pill-row">
-            ${pill(point?.publication?.status || point?.status || "unknown", point?.publication?.status === "abstained" ? "warn" : "ok")}
+            ${pill(humanizePhrase(pointPublicationStatus), pointPublicationStatus === "abstained" ? "warn" : "ok")}
             ${pill(`h${state.selectedHorizon}`, "warn")}
             ${selectedLaneEntry ? pill(humanizeKey(selectedLaneEntry[0]), "sea") : ""}
           </div>
@@ -3059,7 +3070,7 @@ function renderAtlas() {
         <div class="detail-grid">
           ${detail("Symbol", dataset.symbol)}
           ${detail("Range", `${dataset.date_range.start.slice(0, 10)} → ${dataset.date_range.end.slice(0, 10)}`)}
-          ${detail("Operator publication", humanizePhrase(point?.publication?.status || point?.status || "unknown"))}
+          ${detail("Operator publication", humanizePhrase(pointPublicationStatus))}
           ${detail("Benchmark winner", benchmark?.portfolio_selection?.winner_submitter_id || "n/a")}
           ${detail("Probabilistic lanes", String(probabilisticLanes.length))}
           ${detail("Active overlay", activeOverlay?.label || "n/a")}
@@ -3186,6 +3197,7 @@ function renderPoint() {
   const scorecardStatus = point.scorecard?.descriptive_status || point.scorecard?.status || "unknown";
   const predictionRows = point.prediction_rows || [];
   const lagDays = pointLagDays(point);
+  const pointPublicationStatus = pointPublicationStatusForDisplay(state.analysis);
   panel.innerHTML = `
     <div class="stack">
       <section class="panel">
@@ -3198,7 +3210,7 @@ function renderPoint() {
         ${renderSharedControls({ analysis: state.analysis, showHorizon: false })}
         <div class="detail-grid">
           ${detail("Residual basis", (activeOverlay?.label || "n/a").toLowerCase())}
-          ${detail("Publication", humanizePhrase(point.publication?.status || point.status || "unknown"))}
+          ${detail("Publication", humanizePhrase(pointPublicationStatus))}
           ${detail("Confirmatory score", nullableNumber(point.confirmatory_primary_score))}
           ${detail("Comparison status", point.comparison?.comparison_class_status || "n/a")}
           ${detail("Mean absolute residual", residualStats.mae)}
@@ -3213,7 +3225,7 @@ function renderPoint() {
           </div>
           <div class="pill-row">
             ${pill(`Lag ${lagDays}d`, "sea")}
-            ${pill(humanizePhrase(point.publication?.status || point.status || "unknown"), point.publication?.status === "abstained" ? "warn" : "ok")}
+            ${pill(humanizePhrase(pointPublicationStatus), pointPublicationStatus === "abstained" ? "warn" : "ok")}
           </div>
         </div>
         <p>The point lane is easiest to read as a copied-value rule: mark the source value at <code>t-${lagDays}</code>, compare it against the realized value at <code>t</code>, and read the gap as <code>observed(t) - y(t-${lagDays})</code>.</p>
@@ -3232,7 +3244,7 @@ function renderPoint() {
           equation: point.equation,
           parameters: point.equation?.parameter_summary || {},
           badges: [
-            { label: humanizePhrase(point.publication?.status || point.status || "unknown"), tone: point.publication?.status === "abstained" ? "warn" : "ok" },
+            { label: humanizePhrase(pointPublicationStatus), tone: pointPublicationStatus === "abstained" ? "warn" : "ok" },
             { label: point.selected_family || "unknown", tone: "ok" },
           ],
           honesty: pointPublicationHeadlineForDisplay(state.analysis) || "",
@@ -3624,7 +3636,7 @@ function renderBenchmark() {
           </div>
           <div class="detail-grid">
             ${detail("Operator point lane", state.analysis.operator_point?.selected_family || "n/a")}
-            ${detail("Operator publication", humanizePhrase(state.analysis.operator_point?.publication?.status || "n/a"))}
+            ${detail("Operator publication", humanizePhrase(pointPublicationStatusForDisplay(state.analysis)))}
             ${detail("Benchmark winner", hasWinner ? benchmark.portfolio_selection?.winner_submitter_id : NO_BENCHMARK_LOCAL_WINNER_LABEL)}
             ${detail("Winner candidate", hasWinner ? benchmark.portfolio_selection?.winner_candidate_id || "n/a" : "No admissible finalist selected")}
             ${detail("Runner-up", benchmark.portfolio_selection?.selection_explanation_raw?.runner_up?.submitter_id || "n/a")}
@@ -3958,7 +3970,8 @@ function buildBuiltInGuide(pageKey) {
   const activeOverlay = currentDeterministicOverlay(analysis);
   const selectedLaneEntry = selectedProbabilisticLane(analysis);
   const targetLabel = analysis.dataset?.target?.label || "target transform";
-  const pointStatus = point?.publication?.status || point?.status || "unknown";
+  const pointStatus = pointPublicationStatusForDisplay(analysis);
+  const descriptiveOnly = isDescriptiveOnlyAnalysis(analysis);
   const selectedLaneLabel = selectedLaneEntry ? humanizeKey(selectedLaneEntry[0]) : "no probabilistic lane";
   const selectedOverlayLabel = activeOverlay?.label || "active deterministic overlay";
   const commonTerms = [
@@ -3985,6 +3998,8 @@ function buildBuiltInGuide(pageKey) {
       summary:
         pointStatus === "abstained"
           ? "Read this run as an operator abstention first: benchmark-local and probabilistic evidence add context, but they do not upgrade the run into a publishable claim."
+          : descriptiveOnly
+            ? "Read this run as descriptive-only: the point-lane candidate is inspectable context, not a published top-level predictive claim."
           : "Read this run from the operator publication outward: benchmark-local and probabilistic evidence explain the claim, but they do not replace the point-lane decision.",
       narrative:
         mergeGuideText(
@@ -3997,7 +4012,7 @@ function buildBuiltInGuide(pageKey) {
           420,
         ),
       key_takeaways: [
-        `The operator lane is currently ${humanizePhrase(point?.publication?.status || point?.status || "unknown")}.`,
+        `The operator lane is currently ${humanizePhrase(pointStatus)}.`,
         descriptiveSurfaceText(
           descriptiveFit?.honesty_note,
           descriptiveFit?.semantic_audit?.headline,
@@ -5282,13 +5297,43 @@ function isDescriptiveOnlyAnalysis(analysis) {
   return Boolean(analysis) && !hasHolisticClaim(analysis) && !hasPredictiveLaw(analysis);
 }
 
+function rawPointPublicationStatus(analysis) {
+  return (
+    analysis?.operator_point?.publication?.status ||
+    analysis?.operator_point?.status ||
+    "unknown"
+  );
+}
+
+function pointPublicationStatusForDisplay(analysis) {
+  const rawStatus = rawPointPublicationStatus(analysis);
+  const normalized = String(rawStatus || "").trim().toLowerCase();
+  if (
+    isDescriptiveOnlyAnalysis(analysis) &&
+    (normalized === "publishable" || normalized === "published")
+  ) {
+    return "candidate_only";
+  }
+  return rawStatus;
+}
+
 function pointPublicationHeadlineForDisplay(analysis, fallback = "") {
   const point = analysis?.operator_point;
   const text = point?.publication?.headline || point?.search_scope?.headline || fallback;
   if (!text) return "";
-  return isDescriptiveOnlyAnalysis(analysis)
-    ? sanitizeDescriptiveSurfaceText(text)
-    : text;
+  const rawStatus = String(rawPointPublicationStatus(analysis) || "")
+    .trim()
+    .toLowerCase();
+  if (
+    isDescriptiveOnlyAnalysis(analysis) &&
+    (rawStatus === "publishable" || rawStatus === "published")
+  ) {
+    return (
+      "Point-lane candidate is inspectable, but this workbench surface is "
+      + "descriptive-only; no top-level predictive claim was published."
+    );
+  }
+  return isDescriptiveOnlyAnalysis(analysis) ? sanitizeDescriptiveSurfaceText(text) : text;
 }
 
 function claimSurfaceLabel(value) {

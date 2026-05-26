@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 
 import euclid
+import euclid.benchmarks.runtime as benchmark_runtime
 from euclid.benchmarks import load_benchmark_task_manifest
 from euclid.benchmarks.submitters import ALGORITHMIC_SEARCH_SUBMITTER_ID
 
@@ -20,6 +22,15 @@ EQUALITY_MANIFEST = (
 STOCHASTIC_MANIFEST = (
     PROJECT_ROOT
     / "benchmarks/tasks/predictive_generalization/search-class-stochastic-medium.yaml"
+)
+SEARCH_CLASS_MEDIUM_MANIFESTS = (
+    PROJECT_ROOT
+    / "benchmarks/tasks/predictive_generalization/"
+    "search-class-exact-enumeration-medium.yaml",
+    PROJECT_ROOT
+    / "benchmarks/tasks/predictive_generalization/search-class-bounded-medium.yaml",
+    EQUALITY_MANIFEST,
+    STOCHASTIC_MANIFEST,
 )
 
 
@@ -48,6 +59,27 @@ def test_search_class_manifest_exposes_declared_honesty_contract(
         "extractor_cost",
         "stop_rule",
     ]
+
+
+@pytest.mark.parametrize("manifest_path", SEARCH_CLASS_MEDIUM_MANIFESTS)
+def test_search_class_candidate_programs_are_manifest_declared(
+    manifest_path: Path,
+) -> None:
+    manifest = load_benchmark_task_manifest(manifest_path)
+
+    proposals = benchmark_runtime._benchmark_proposal_specs(
+        task_manifest=manifest,
+        entity_panel=(),
+    )
+
+    declared_candidate_ids = tuple(
+        program["candidate_id"]
+        for program in manifest.search_class_honesty["declared_candidate_programs"]
+    )
+    assert (
+        tuple(proposal.candidate_id for proposal in proposals)
+        == declared_candidate_ids
+    )
 
 
 def test_search_class_suite_summary_closes_rows_for_every_admitted_class(
@@ -123,6 +155,41 @@ def test_stochastic_tasks_use_stochastic_backend(tmp_path: Path) -> None:
         selected_candidate.evidence_layer.backend_origin_record.backend_family
         == "algorithmic"
     )
+
+
+@pytest.mark.parametrize("manifest_path", SEARCH_CLASS_MEDIUM_MANIFESTS)
+def test_search_class_medium_tasks_publish_declared_non_baseline_program_with_margin(
+    tmp_path: Path,
+    manifest_path: Path,
+) -> None:
+    result = euclid.profile_benchmark_task(
+        manifest_path=manifest_path,
+        benchmark_root=tmp_path / manifest_path.stem,
+        project_root=PROJECT_ROOT,
+        resume=False,
+    )
+
+    task_result = json.loads(
+        result.report_paths.task_result_path.read_text(encoding="utf-8")
+    )
+    threshold_rows = {
+        row["threshold_id"]: row
+        for row in task_result["semantic_assertions"]["metric_thresholds"][
+            "assertions"
+        ]
+    }
+    declared_candidate_ids = {
+        program["candidate_id"]
+        for program in result.task_manifest.search_class_honesty[
+            "declared_candidate_programs"
+        ]
+    }
+
+    assert task_result["semantic_assertions"]["overall_status"] == "passed"
+    assert task_result["local_winner_submitter_id"] == ALGORITHMIC_SEARCH_SUBMITTER_ID
+    assert task_result["local_winner_candidate_id"] == "algorithmic_lag_plus_two"
+    assert task_result["local_winner_candidate_id"] in declared_candidate_ids
+    assert threshold_rows["practical_significance_margin"]["status"] == "passed"
 
 
 def _search_class_contracts() -> dict[str, dict[str, Any]]:

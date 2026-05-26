@@ -140,6 +140,7 @@ def _shared_local_publication_snapshot() -> dict[str, Any]:
                 scored_origin_set_id=str(artifact.body["scored_origin_set_id"]),
             )
         },
+        practical_significance_margin=0.1,
     )
     claim = resolve_claim_publication(
         scorecard_body={

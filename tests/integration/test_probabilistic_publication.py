@@ -48,11 +48,16 @@ def test_probabilistic_publication_surfaces_support_replay_and_catalog_without_r
     assert entry.primary_score_result_ref == result.summary.score_result_ref
     assert entry.primary_calibration_result_ref == result.summary.calibration_result_ref
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
+    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert (
         inspection.claim_card.manifest.body["predictive_support_status"]
-        == "confirmatory_supported"
+        == "blocked"
     )
+    assert inspection.scorecard is not None
+    assert inspection.scorecard.manifest.body["predictive_status"] == "blocked"
+    assert inspection.scorecard.manifest.body["predictive_reason_codes"] == [
+        "insufficient_paired_count"
+    ]
     assert inspection.replay_bundle.replay_verification_status == "verified"
     assert {
         _ref_string(result.summary.prediction_artifact_ref),

@@ -3,6 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
+from euclid.modules.evidence_contracts import (
+    EvidenceGateDecision,
+    build_evidence_gate_decision,
+)
+
 _NON_BLOCKING_CALIBRATION_STATUSES = {
     "not_applicable_for_forecast_type",
     "recorded_not_gating",
@@ -18,6 +23,51 @@ class ScorecardStatusDecision:
     predictive_reason_codes: tuple[str, ...]
     mechanistic_status: str = "not_requested"
     mechanistic_reason_codes: tuple[str, ...] = ()
+    descriptive_gate: EvidenceGateDecision | None = None
+    predictive_gate: EvidenceGateDecision | None = None
+    mechanistic_gate: EvidenceGateDecision | None = None
+
+    def __post_init__(self) -> None:
+        if self.descriptive_gate is None:
+            object.__setattr__(
+                self,
+                "descriptive_gate",
+                build_evidence_gate_decision(
+                    gate_id="descriptive",
+                    legacy_status=self.descriptive_status,
+                    reason_codes=self.descriptive_reason_codes,
+                ),
+            )
+        if self.predictive_gate is None:
+            object.__setattr__(
+                self,
+                "predictive_gate",
+                build_evidence_gate_decision(
+                    gate_id="predictive",
+                    legacy_status=self.predictive_status,
+                    reason_codes=self.predictive_reason_codes,
+                ),
+            )
+        if self.mechanistic_gate is None:
+            object.__setattr__(
+                self,
+                "mechanistic_gate",
+                build_evidence_gate_decision(
+                    gate_id="mechanistic",
+                    legacy_status=self.mechanistic_status,
+                    reason_codes=self.mechanistic_reason_codes,
+                ),
+            )
+
+    def as_manifest(self) -> dict[str, object]:
+        return {
+            "descriptive_status": self.descriptive_status,
+            "descriptive_reason_codes": list(self.descriptive_reason_codes),
+            "predictive_status": self.predictive_status,
+            "predictive_reason_codes": list(self.predictive_reason_codes),
+            "mechanistic_status": self.mechanistic_status,
+            "mechanistic_reason_codes": list(self.mechanistic_reason_codes),
+        }
 
 
 def resolve_scorecard_status(
@@ -70,6 +120,21 @@ def resolve_scorecard_status(
         predictive_reason_codes=predictive_reason_codes,
         mechanistic_status=resolved_mechanistic_status,
         mechanistic_reason_codes=resolved_mechanistic_reason_codes,
+        descriptive_gate=build_evidence_gate_decision(
+            gate_id="descriptive",
+            legacy_status=descriptive_status,
+            reason_codes=descriptive_reason_codes,
+        ),
+        predictive_gate=build_evidence_gate_decision(
+            gate_id="predictive",
+            legacy_status=predictive_status,
+            reason_codes=predictive_reason_codes,
+        ),
+        mechanistic_gate=build_evidence_gate_decision(
+            gate_id="mechanistic",
+            legacy_status=resolved_mechanistic_status,
+            reason_codes=resolved_mechanistic_reason_codes,
+        ),
     )
 
 

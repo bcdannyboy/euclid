@@ -5,6 +5,7 @@ from typing import Optional
 
 import typer
 
+from euclid.operator_runtime.evidence import bind_operator_replay_evidence_report
 from euclid.operator_runtime.replay import (
     format_operator_replay_summary,
     replay_operator,
@@ -34,13 +35,18 @@ def replay_command(
     """Replay a previously saved operator run from its run id."""
     result = replay_operator(output_root=output_root, run_id=run_id)
     if evidence_report is not None:
-        write_operator_replay_evidence_report(
+        report_path = write_operator_replay_evidence_report(
             run_id=run_id,
             result=result,
             report_path=evidence_report,
             scope_id=(
                 "full_vision" if run_id == "full-vision-run" else "current_release"
             ),
+        )
+        bind_operator_replay_evidence_report(
+            run_id=run_id,
+            result=result,
+            report_path=report_path,
         )
     typer.echo(format_operator_replay_summary(run_id=run_id, result=result))
 

@@ -53,6 +53,7 @@ from euclid.modules.evaluation_governance import (
     build_evaluation_governance,
     build_forecast_comparison_policy,
     build_predictive_gate_policy,
+    predictive_governance_reason_codes,
     resolve_confirmatory_promotion_allowed,
 )
 from euclid.modules.gate_lifecycle import resolve_scorecard_status
@@ -161,6 +162,7 @@ _PROBABILISTIC_PRIMARY_SCORES = {
     "event_probability": "brier_score",
 }
 _DEFAULT_QUANTILE_LEVELS = (0.1, 0.5, 0.9)
+_SHARED_LOCAL_PRACTICAL_SIGNIFICANCE_MARGIN = 0.1
 _PROBABILISTIC_BASELINE_FALLBACK_CANDIDATE_IDS = (
     "analytic_intercept",
     "recursive_running_mean",
@@ -1403,7 +1405,10 @@ def run_demo_probabilistic_evaluation(
             calibration_status=str(calibration_result.manifest.body["status"]),
             descriptive_failure_reason_codes=descriptive_failure_reason_codes,
             robustness_reason_codes=(),
-            predictive_governance_reason_codes=(),
+            predictive_governance_reason_codes=predictive_governance_reason_codes(
+                evaluation_governance_body=evaluation_governance.manifest.body,
+                comparison_universe_body=comparison_universe.manifest.body,
+            ),
         )
         scorecard = registry.register(
             ManifestEnvelope.build(
@@ -2118,6 +2123,7 @@ def _run_shared_local_point_workflow(
         comparator_prediction_artifacts={
             baseline_id: baseline_prediction_artifact.manifest,
         },
+        practical_significance_margin=_SHARED_LOCAL_PRACTICAL_SIGNIFICANCE_MARGIN,
     )
     point_score_result = registry.register(
         comparator_result.candidate_score_result,
@@ -2196,9 +2202,10 @@ def _run_shared_local_point_workflow(
         ),
     )
     predictive_gate_policy = registry.register(
-        build_predictive_gate_policy(
-            allowed_forecast_object_types=(request.forecast_object_type,),
-        ).to_manifest(catalog)
+        _build_shared_local_predictive_gate_policy_manifest(
+            catalog=catalog,
+            request=request,
+        )
     )
     evaluation_governance = registry.register(
         build_evaluation_governance(
@@ -2255,7 +2262,10 @@ def _run_shared_local_point_workflow(
         calibration_status=str(calibration_result.manifest.body["status"]),
         descriptive_failure_reason_codes=(),
         robustness_reason_codes=(),
-        predictive_governance_reason_codes=(),
+        predictive_governance_reason_codes=predictive_governance_reason_codes(
+            evaluation_governance_body=evaluation_governance.manifest.body,
+            comparison_universe_body=comparison_universe.manifest.body,
+        ),
     )
     scorecard = registry.register(
         ManifestEnvelope.build(
@@ -2712,6 +2722,33 @@ def _build_point_score_policy_manifest(
             "lower_is_better": True,
             "comparison_class_rule": "identical_score_policy_required",
         },
+        catalog=catalog,
+    )
+
+
+def _build_shared_local_predictive_gate_policy_manifest(
+    *,
+    catalog: ContractCatalog,
+    request: DemoRequest,
+) -> ManifestEnvelope:
+    base_policy = build_predictive_gate_policy(
+        allowed_forecast_object_types=(request.forecast_object_type,),
+    ).to_manifest(catalog)
+    body = dict(base_policy.body)
+    body.update(
+        {
+            "policy_id": f"{request.request_id}_shared_local_point_predictive_gate_v1",
+            "pairwise_confirmation_rule": (
+                "paired_stream_recorded_as_diagnostic_lifecycle_evidence"
+            ),
+            "requires_statistical_promotion": False,
+            "raw_metric_comparison_role": "diagnostic_only",
+        }
+    )
+    return ManifestEnvelope.build(
+        schema_name=base_policy.schema_name,
+        module_id=base_policy.module_id,
+        body=body,
         catalog=catalog,
     )
 
@@ -3233,6 +3270,15 @@ def _build_probabilistic_score_policy_manifest(
         body["interval_levels"] = list(request.interval_levels)
     if request.quantile_levels:
         body["quantile_levels"] = list(request.quantile_levels)
+    if request.forecast_object_type == "event_probability":
+        body["event_definition"] = {
+            "event_id": f"{request.request_id}_target_ge_zero",
+            "operator": "greater_than_or_equal",
+            "threshold": 0.0,
+            "threshold_source": "declared_literal",
+            "variable": "target",
+            "calibration_required": True,
+        }
     return ManifestEnvelope.build(
         schema_name=schema_name,
         module_id="scoring",

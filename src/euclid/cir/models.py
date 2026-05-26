@@ -246,6 +246,7 @@ class CIRModelCodeDecomposition:
     L_literals_bits: float
     L_params_bits: float
     L_state_bits: float
+    annotations: Mapping[str, Any] = field(default_factory=dict, compare=False)
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -264,14 +265,16 @@ class CIRModelCodeDecomposition:
                 )
             object.__setattr__(self, field_name, value)
 
-    def as_dict(self) -> dict[str, float]:
-        return {
+    def as_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
             "L_family_bits": self.L_family_bits,
             "L_structure_bits": self.L_structure_bits,
             "L_literals_bits": self.L_literals_bits,
             "L_params_bits": self.L_params_bits,
             "L_state_bits": self.L_state_bits,
         }
+        payload.update(dict(self.annotations))
+        return payload
 
 
 @dataclass(frozen=True)

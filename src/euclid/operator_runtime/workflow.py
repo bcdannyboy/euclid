@@ -40,6 +40,7 @@ from euclid.modules.evaluation_governance import (
     build_evaluation_governance,
     build_forecast_comparison_policy,
     build_predictive_gate_policy,
+    predictive_governance_reason_codes,
     resolve_confirmatory_promotion_allowed,
 )
 from euclid.modules.gate_lifecycle import resolve_scorecard_status
@@ -888,8 +889,9 @@ def run_operator_reducer_workflow(
         descriptive_failure_reason_codes=_gate_descriptive_reason_codes(
             forward_validation_candidate_runtime
         ),
-        predictive_governance_reason_codes=_predictive_governance_reason_codes(
-            evaluation_governance.manifest.body
+        predictive_governance_reason_codes=predictive_governance_reason_codes(
+            evaluation_governance_body=evaluation_governance.manifest.body,
+            comparison_universe_body=comparison_universe.manifest.body,
         ),
     )
     mechanistic_evidence = None
@@ -973,8 +975,9 @@ def run_operator_reducer_workflow(
             descriptive_failure_reason_codes=_gate_descriptive_reason_codes(
                 forward_validation_candidate_runtime
             ),
-            predictive_governance_reason_codes=_predictive_governance_reason_codes(
-                evaluation_governance.manifest.body
+            predictive_governance_reason_codes=predictive_governance_reason_codes(
+                evaluation_governance_body=evaluation_governance.manifest.body,
+                comparison_universe_body=comparison_universe.manifest.body,
             ),
             mechanistic_requested=True,
             mechanistic_evidence_status=str(
@@ -2037,6 +2040,9 @@ def replay_operator_run(
         )
     )
     point_score_result = resolve_replay_point_score_result(run_result, registry)
+    comparison_universe = registry.resolve(
+        _typed_ref(run_result.manifest.body["comparison_universe_ref"])
+    )
 
     codelength_policy = registry.resolve(
         _typed_ref(search_plan.manifest.body["codelength_policy_ref"])
@@ -2091,8 +2097,9 @@ def replay_operator_run(
         descriptive_failure_reason_codes=_gate_descriptive_reason_codes(
             replay_candidate
         ),
-        predictive_governance_reason_codes=_predictive_governance_reason_codes(
-            evaluation_governance.manifest.body
+        predictive_governance_reason_codes=predictive_governance_reason_codes(
+            evaluation_governance_body=evaluation_governance.manifest.body,
+            comparison_universe_body=comparison_universe.manifest.body,
         ),
     )
     scorecard_decision = _apply_residual_predictive_gate(
@@ -3612,14 +3619,6 @@ def _gate_descriptive_reason_codes(candidate: _CandidateEvaluation) -> tuple[str
     if candidate.admissible:
         return ()
     return ("descriptive_gate_failed", "no_candidate_survived_search")
-
-
-def _predictive_governance_reason_codes(
-    evaluation_governance_body: Mapping[str, Any],
-) -> tuple[str, ...]:
-    if bool(evaluation_governance_body.get("confirmatory_promotion_allowed")):
-        return ()
-    return ()
 
 
 def _robustness_reason_codes(

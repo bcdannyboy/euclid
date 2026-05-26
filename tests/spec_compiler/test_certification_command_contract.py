@@ -20,6 +20,12 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
+def _command_by_id(payload: dict[str, Any], command_id: str) -> dict[str, Any]:
+    return next(
+        command for command in payload["commands"] if command["command_id"] == command_id
+    )
+
+
 def test_every_required_certification_command_has_declared_inputs_outputs_and_scope(
 ) -> None:
     payload = _load_yaml(COMMAND_CONTRACT_PATH)
@@ -45,11 +51,7 @@ def test_clean_install_certification_declares_self_contained_build_toolchain() -
     assert payload["environment"]["clean_install_runtime_dependency_source"] == (
         "local_wheelhouse_no_index"
     )
-    clean_install = next(
-        command
-        for command in payload["commands"]
-        if command["command_id"] == "clean_install_certification"
-    )
+    clean_install = _command_by_id(payload, "clean_install_certification")
     assert set(clean_install["build_toolchain_requirements"]) >= {
         "python3.11",
         "build",
@@ -59,13 +61,28 @@ def test_clean_install_certification_declares_self_contained_build_toolchain() -
     assert any("no-index wheelhouse" in rule for rule in payload["rules"])
 
 
+def test_clean_install_certification_wheel_dir_is_under_output_root() -> None:
+    payload = _load_yaml(COMMAND_CONTRACT_PATH)
+    clean_install = _command_by_id(payload, "clean_install_certification")
+
+    assert (
+        "--wheel-dir build/certification/clean_install/wheels"
+        in clean_install["command"]
+    )
+    assert (
+        "--output-root build/certification/clean_install"
+        in clean_install["command"]
+    )
+    assert "build/certification/clean_install/wheels" in clean_install[
+        "output_artifact_ids"
+    ]
+    assert "build/certification/wheels" not in clean_install["output_artifact_ids"]
+    assert any("under the clean-install output root" in rule for rule in payload["rules"])
+
+
 def test_replay_certification_uses_declared_run_id_derivation() -> None:
     payload = _load_yaml(COMMAND_CONTRACT_PATH)
-    replay = next(
-        command
-        for command in payload["commands"]
-        if command["command_id"] == "full_vision_operator_replay"
-    )
+    replay = _command_by_id(payload, "full_vision_operator_replay")
     derivation = replay["run_id_derivation"]
     assert derivation["source_command_id"] == "full_vision_operator_run"
     assert derivation["input_artifact_id"] == (

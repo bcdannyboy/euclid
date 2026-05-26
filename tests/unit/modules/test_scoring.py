@@ -170,6 +170,9 @@ def test_evaluate_point_comparators_emits_paired_records_and_significance() -> N
     predictive_tests = [
         record.pop("paired_predictive_test_result") for record in paired_records
     ]
+    paired_streams = [
+        record.pop("paired_loss_differential_stream") for record in paired_records
+    ]
     assert paired_records == [
         {
             "comparator_id": "constant_baseline",
@@ -206,13 +209,168 @@ def test_evaluate_point_comparators_emits_paired_records_and_significance() -> N
             "score_result_ref": result.comparator_score_results[1].ref.as_dict(),
         },
     ]
+    assert [stream["raw_pair_count"] for stream in paired_streams] == [2, 2]
+    assert all(
+        stream["schema_name"] == "paired_loss_differential_stream@1.0.0"
+        for stream in paired_streams
+    )
     assert predictive_tests[0]["schema_name"] == "paired_predictive_test_result@1.0.0"
-    assert predictive_tests[0]["status"] == "passed"
-    assert predictive_tests[0]["promotion_allowed"] is True
+    assert predictive_tests[0]["status"] == "abstained"
+    assert predictive_tests[0]["promotion_allowed"] is False
+    assert predictive_tests[0]["reason_codes"] == [
+        "insufficient_effective_sample_size"
+    ]
     assert predictive_tests[0]["raw_metric_comparison_role"] == "diagnostic_only"
     assert predictive_tests[0]["replay_identity"].startswith("predictive-promotion:")
-    assert predictive_tests[1]["status"] == "downgraded"
+    assert predictive_tests[1]["status"] == "abstained"
     assert predictive_tests[1]["promotion_allowed"] is False
+
+
+def test_evaluate_point_comparators_emits_paired_loss_differential_stream_artifact() -> (
+    None
+):
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _score_policy_manifest(
+        catalog=catalog,
+        point_loss_id="absolute_error",
+        horizon_weights=((1, "1.0"),),
+    )
+    candidate_artifact = _prediction_artifact(
+        catalog=catalog,
+        candidate_id="candidate",
+        score_policy=score_policy,
+        rows=(
+            ("2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", 1, 10.0, 11.0),
+            ("2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z", 1, 12.0, 12.0),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="shared-origin-panel",
+    )
+    baseline_registry = _baseline_registry_manifest(
+        catalog=catalog,
+        score_policy=score_policy,
+        declarations=(("constant_baseline", "baseline", "constant"),),
+        primary_baseline_id="constant_baseline",
+    )
+
+    result = evaluate_point_comparators(
+        catalog=catalog,
+        score_policy_manifest=score_policy,
+        candidate_prediction_artifact=candidate_artifact,
+        baseline_registry_manifest=baseline_registry,
+        comparator_prediction_artifacts={
+            "constant_baseline": _prediction_artifact(
+                catalog=catalog,
+                candidate_id="constant_baseline",
+                score_policy=score_policy,
+                rows=(
+                    ("2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", 1, 9.0, 11.0),
+                    ("2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z", 1, 11.0, 12.0),
+                ),
+                horizon_weights=((1, "1.0"),),
+                scored_origin_set_id="shared-origin-panel",
+            ),
+        },
+        practical_significance_margin=0.5,
+    )
+
+    record = result.comparison_universe.body["paired_comparison_records"][0]
+    stream = record["paired_loss_differential_stream"]
+    assert stream["schema_name"] == "paired_loss_differential_stream@1.0.0"
+    assert stream["candidate_id"] == "candidate"
+    assert stream["comparator_id"] == "constant_baseline"
+    assert stream["loss_id"] == "absolute_error"
+    assert stream["row_set_id"] == "shared-origin-panel"
+    assert stream["raw_pair_count"] == 2
+    assert stream["effective_sample_size"] == 2
+    assert stream["effective_block_count"] == 2
+    assert stream["horizon_geometry"] == [{"horizon": 1, "weight": "1.0"}]
+    assert stream["pairs"] == [
+        {
+            "origin_id": "2026-01-01T00:00:00Z",
+            "horizon": 1,
+            "entity_id": None,
+            "candidate_loss": 1.0,
+            "comparator_loss": 2.0,
+            "loss_differential": 1.0,
+        },
+        {
+            "origin_id": "2026-01-02T00:00:00Z",
+            "horizon": 1,
+            "entity_id": None,
+            "candidate_loss": 0.0,
+            "comparator_loss": 1.0,
+            "loss_differential": 1.0,
+        },
+    ]
+    assert record["paired_predictive_test_result"]["paired_stream_ref"] == (
+        stream["stream_ref"]
+    )
+
+
+def test_evaluate_point_comparators_rejects_mismatched_paired_stream_identity() -> None:
+    catalog = load_contract_catalog(PROJECT_ROOT)
+    score_policy = _score_policy_manifest(
+        catalog=catalog,
+        point_loss_id="absolute_error",
+        horizon_weights=((1, "1.0"),),
+    )
+    candidate_artifact = _prediction_artifact(
+        catalog=catalog,
+        candidate_id="candidate",
+        score_policy=score_policy,
+        rows=(
+            ("2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", 1, 10.0, 11.0),
+            ("2026-01-02T00:00:00Z", "2026-01-03T00:00:00Z", 1, 12.0, 12.0),
+        ),
+        horizon_weights=((1, "1.0"),),
+        scored_origin_set_id="shared-origin-panel",
+    )
+    baseline_registry = _baseline_registry_manifest(
+        catalog=catalog,
+        score_policy=score_policy,
+        declarations=(("constant_baseline", "baseline", "constant"),),
+        primary_baseline_id="constant_baseline",
+    )
+
+    with pytest.raises(ContractValidationError) as exc_info:
+        evaluate_point_comparators(
+            catalog=catalog,
+            score_policy_manifest=score_policy,
+            candidate_prediction_artifact=candidate_artifact,
+            baseline_registry_manifest=baseline_registry,
+            comparator_prediction_artifacts={
+                "constant_baseline": _prediction_artifact(
+                    catalog=catalog,
+                    candidate_id="constant_baseline",
+                    score_policy=score_policy,
+                    rows=(
+                        (
+                            "2026-01-01T00:00:00Z",
+                            "2026-01-02T00:00:00Z",
+                            1,
+                            9.0,
+                            11.0,
+                        ),
+                        (
+                            "2026-01-03T00:00:00Z",
+                            "2026-01-04T00:00:00Z",
+                            1,
+                            11.0,
+                            12.0,
+                        ),
+                    ),
+                    horizon_weights=((1, "1.0"),),
+                    scored_origin_set_id="shared-origin-panel",
+                )
+            },
+            practical_significance_margin=0.0,
+        )
+
+    assert exc_info.value.code == "primary_comparator_not_comparable"
+    assert exc_info.value.details["failure_reason_code"] == (
+        "paired_loss_stream_identity_mismatch"
+    )
 
 
 def test_evaluate_point_comparators_rejects_mismatched_primary_baseline_geometry() -> (

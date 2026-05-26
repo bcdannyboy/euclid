@@ -1,61 +1,88 @@
 {
   "catalog_entry": {
     "abstention_ref": null,
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_182cae1b8388b45913b5",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_bcbcd73b5291c909bfd1",
     "comparator_exposure_status": "satisfied",
     "forecast_object_type": "distribution",
-    "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_53968a5768f3970267c8",
-    "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_5769338f3c07eaeb262d",
+    "primary_calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_c4f0526f207d1c51ec87",
+    "primary_score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_76b2d5ef0f73996efa55",
     "publication_mode": "candidate_publication",
-    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_afe9a10ffc0ada2f6957",
-    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_e2c2f7e648f8c522f913"
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "scorecard_ref": "scorecard_manifest@1.1.0:scorecard_manifest_c00981e5b08060b24957",
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_support_status": "production",
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_97554cea1b84356db72a"
   },
   "claim": {
     "allowed_interpretation_codes": [
       "historical_structure_summary"
     ],
     "claim_type": "descriptive_structure",
-    "predictive_support_status": "blocked"
+    "predictive_support_status": "blocked",
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "stochastic_evidence_status": "production",
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_support_status": "passed"
   },
   "comparison": {
     "baseline_id": "analytic_intercept",
-    "baseline_primary_score": 234.697244153655,
+    "baseline_primary_score": 287.359481463912,
     "candidate_beats_baseline": true,
-    "candidate_primary_score": 167.419594695841,
+    "candidate_primary_score": 191.90151788569,
     "comparison_class_status": "comparable",
     "paired_comparison_records": [
       {
-        "candidate_primary_score": 167.419594695841,
+        "candidate_primary_score": 191.90151788569,
         "comparator_id": "analytic_intercept",
         "comparator_kind": "baseline",
-        "comparator_primary_score": 234.697244153655,
+        "comparator_primary_score": 287.359481463912,
         "comparison_status": "comparable",
         "failure_reason_code": null,
-        "mean_loss_differential": 67.277649457814,
+        "mean_loss_differential": 95.457963578222,
         "paired_predictive_test_result": {
-          "confidence_interval": [
-            67.277649457814,
-            67.277649457814
-          ],
-          "mean_loss_differential": 67.277649457814,
+          "actual_test_id": "diebold_mariano_hln_v1",
+          "confidence_interval": null,
+          "confidence_interval_method": "not_applicable",
+          "declared_test_id": "diebold_mariano_hln_v1",
+          "effective_block_count": 1,
+          "effective_sample_size": 1.0,
+          "mean_loss_differential": 95.457963578222,
+          "minimum_pair_policy": {
+            "human_review_effective_sample_size": 50,
+            "minimum_effective_block_count": 8,
+            "minimum_effective_sample_size": 25
+          },
+          "p_value": null,
           "practical_margin": 0.0,
-          "promotion_allowed": true,
+          "promotion_allowed": false,
           "raw_metric_comparison_role": "diagnostic_only",
-          "reason_codes": [],
-          "replay_identity": "predictive-promotion:7dbd16c7f37b85cab5c2f2892af13a03e377b38898d73893be76df5598b82afb",
+          "raw_pair_count": 1,
+          "reason_codes": [
+            "insufficient_paired_count"
+          ],
+          "replay_identity": "predictive-promotion:edc9181bda7ba8826179da67028cf34065ca2f5e8f87e44d3f4589dea6adaacf",
           "schema_name": "paired_predictive_test_result@1.0.0",
-          "status": "passed"
+          "statistical_test_backend": "diebold_mariano_hln_v1",
+          "status": "abstained"
         },
         "practical_significance_margin": 0.0,
         "practical_significance_status": "candidate_better_than_margin",
-        "primary_score_delta": 67.277649457814,
+        "primary_score_delta": 95.457963578222,
         "score_result_ref": {
-          "object_id": "probabilistic_score_result_manifest_f02a082b5ad4ab9997eb",
+          "object_id": "probabilistic_score_result_manifest_57fa31be350b7a0a72c7",
           "schema_name": "probabilistic_score_result_manifest@1.0.0"
         }
       }
     ],
-    "score_delta": 67.277649457814
+    "score_delta": 95.457963578222
   },
   "forecast_object_type": "distribution",
   "publication_mode": "candidate_publication",
@@ -72,18 +99,22 @@
       "validation_scope",
       "robustness_report",
       "score_result",
-      "calibration_result"
+      "calibration_result",
+      "residual_history",
+      "stochastic_model"
     ],
     "bundle_ref": "reproducibility_bundle_manifest@1.0.0:phase06-probabilistic-distribution-calibration-failure-demo_bundle",
     "replay_verification_status": "verified",
     "required_manifest_refs": [
-      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_dc6b121ad5f3991d986e",
-      "scorecard_manifest@1.1.0:scorecard_manifest_afe9a10ffc0ada2f6957",
-      "claim_card_manifest@1.1.0:claim_card_manifest_182cae1b8388b45913b5",
-      "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_2c7334da708955c6a216",
-      "validation_scope_manifest@1.0.0:validation_scope_manifest_e2c2f7e648f8c522f913",
-      "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_5769338f3c07eaeb262d",
-      "calibration_result_manifest@1.0.0:calibration_result_manifest_53968a5768f3970267c8"
+      "reducer_artifact_manifest@1.0.0:reducer_artifact_manifest_ca60ab5b456f5147ef27",
+      "scorecard_manifest@1.1.0:scorecard_manifest_c00981e5b08060b24957",
+      "claim_card_manifest@1.1.0:claim_card_manifest_bcbcd73b5291c909bfd1",
+      "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_372720fc0ceda87b0903",
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2",
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936",
+      "validation_scope_manifest@1.0.0:validation_scope_manifest_97554cea1b84356db72a",
+      "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_76b2d5ef0f73996efa55",
+      "calibration_result_manifest@1.0.0:calibration_result_manifest_c4f0526f207d1c51ec87"
     ],
     "stage_order": [
       "dataset_snapshot_frozen",
@@ -97,22 +128,40 @@
       "publication_decision_resolved",
       "run_result_assembled"
     ],
-    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_e2c2f7e648f8c522f913"
+    "validation_scope_ref": "validation_scope_manifest@1.0.0:validation_scope_manifest_97554cea1b84356db72a"
   },
   "request_id": "phase06-probabilistic-distribution-calibration-failure-demo",
   "run_result_ref": "run_result_manifest@1.1.0:phase06-probabilistic-distribution-calibration-failure-demo_run_result",
+  "run_result_stochastic_evidence": {
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_support_reason_codes": [],
+    "stochastic_support_status": "production"
+  },
   "scorecard": {
     "descriptive_status": "passed",
     "predictive_reason_codes": [
       "calibration_failed"
     ],
-    "predictive_status": "blocked"
+    "predictive_status": "blocked",
+    "residual_history_refs": [
+      "residual_history_manifest@1.0.0:residual_history_manifest_d3dfc9b171e90bc99ac2"
+    ],
+    "stochastic_evidence_status": "production",
+    "stochastic_model_refs": [
+      "stochastic_model_manifest@1.0.0:stochastic-model_a7c7c43a0eaec41595f33af99c1982530f55ae3db76874791be09d6e75bae936"
+    ],
+    "stochastic_status": "passed"
   },
   "summary_refs": {
     "abstention_ref": null,
-    "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_53968a5768f3970267c8",
-    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_182cae1b8388b45913b5",
-    "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_2c7334da708955c6a216",
-    "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_5769338f3c07eaeb262d"
+    "calibration_result_ref": "calibration_result_manifest@1.0.0:calibration_result_manifest_c4f0526f207d1c51ec87",
+    "claim_card_ref": "claim_card_manifest@1.1.0:claim_card_manifest_bcbcd73b5291c909bfd1",
+    "prediction_artifact_ref": "prediction_artifact_manifest@1.1.0:prediction_artifact_manifest_372720fc0ceda87b0903",
+    "score_result_ref": "probabilistic_score_result_manifest@1.0.0:probabilistic_score_result_manifest_76b2d5ef0f73996efa55"
   }
 }

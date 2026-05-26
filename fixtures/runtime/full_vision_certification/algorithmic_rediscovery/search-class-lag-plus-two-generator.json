@@ -1,0 +1,19 @@
+{
+  "law_id": "full_vision_search_class_lag_plus_two",
+  "family": "algorithmic_lag_plus_two",
+  "description": "Certification fixture for declared search-class candidate programs where y(t+1) = y(t) + 2 beats last-observation by a material margin.",
+  "canonical_program": "(program (state (lit 0)) (next (add (obs 0) (lit 2))) (emit (state 0)))",
+  "parameters": {
+    "initial_value": 10.0,
+    "increment": 2.0,
+    "row_count": 24
+  },
+  "variants": {
+    "medium": {
+      "recovery_class": "manifest_declared_algorithmic_program",
+      "baseline_comparison": "last_observation_carried_forward",
+      "minimum_margin_vs_last_observation_mae": 0.01,
+      "max_predictive_mae": 0.000001
+    }
+  }
+}

@@ -118,11 +118,16 @@ def _assert_probabilistic_run_replays_and_publishes(
     assert entry.primary_score_result_ref == result.summary.score_result_ref
     assert entry.primary_calibration_result_ref == result.summary.calibration_result_ref
     assert inspection.claim_card is not None
-    assert inspection.claim_card.manifest.body["claim_type"] == "predictive_within_declared_scope"
+    assert inspection.claim_card.manifest.body["claim_type"] == "descriptive_structure"
     assert (
         inspection.claim_card.manifest.body["predictive_support_status"]
-        == "confirmatory_supported"
+        == "blocked"
     )
+    assert inspection.scorecard is not None
+    assert inspection.scorecard.manifest.body["predictive_status"] == "blocked"
+    assert inspection.scorecard.manifest.body["predictive_reason_codes"] == [
+        "insufficient_paired_count"
+    ]
     assert validation_scope.body["public_forecast_object_type"] == forecast_object_type
     assert validation_scope.body["scope_ledger_ref"] == scope_ledger.ref.as_dict()
     assert (

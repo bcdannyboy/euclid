@@ -2,7 +2,11 @@ fixture_family_id: single_entity_predictive
 fixture_spec_id: euclid-certification-fixtures-v1
 dataset_refs:
 - fixtures/runtime/full_vision_certification/single_entity_predictive/single-entity-forecast-series.csv
-series_count: 1
+- fixtures/runtime/full_vision_certification/single_entity_predictive/piecewise-composition-series.csv
+- fixtures/runtime/full_vision_certification/single_entity_predictive/seasonal-trend-series.csv
+- fixtures/runtime/full_vision_certification/single_entity_predictive/composition-operator-series.csv
+- fixtures/runtime/full_vision_certification/single_entity_predictive/probabilistic-calibrated-series.csv
+series_count: 5
 entity_count: 1
 evidence_bundle_refs:
 - fixtures/runtime/full_vision_certification/single_entity_predictive/probabilistic-distribution-demo.yaml
@@ -13,3 +17,18 @@ diversity_axes:
 - forecast_object_type
 - seasonality
 - abstention_mode
+fixture_provenance:
+  source_kind: synthetic
+  source_ref: fixtures/runtime/full_vision_certification/single_entity_predictive/fixture-set.yaml
+  license: repo-internal
+  edge_cases:
+  - probabilistic_calibration
+  - event_probability_abstention
+  - composition_operator_surface
+  regression_reason: Exercise predictive fixture breadth without accepting golden publication outputs.
+  shortcut_disclosure:
+    fixture_only: true
+    forbidden_uses:
+    - golden_acceptance
+    - real_world_claim
+    - hidden_target_threshold

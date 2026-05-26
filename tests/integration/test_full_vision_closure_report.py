@@ -4,11 +4,19 @@ import json
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from typer.testing import CliRunner
 
 from euclid.cli import app
 
 RUNNER = CliRunner()
+
+
+def _assert_clean_install_certifies_runtime_surface(result: Result) -> None:
+    assert result.exit_code == 0, result.stdout
+    assert "Scope: installed-runtime certification only" in result.stdout
+    assert "not final release readiness" in result.stdout
+    assert "Surface completion: 1.000000" in result.stdout
 
 
 def _load_report(project_root: Path) -> dict[str, object]:
@@ -25,7 +33,7 @@ def test_release_status_emits_closure_metadata_and_scope_evidence_bundles(
         app,
         ["release", "certify-clean-install", "--project-root", str(project_root)],
     )
-    assert clean_install.exit_code == 0, clean_install.stdout
+    _assert_clean_install_certifies_runtime_surface(clean_install)
 
     result = RUNNER.invoke(
         app,
@@ -62,7 +70,7 @@ def test_full_vision_only_rows_do_not_close_from_current_release_bundle(
         app,
         ["release", "certify-clean-install", "--project-root", str(project_root)],
     )
-    assert clean_install.exit_code == 0, clean_install.stdout
+    _assert_clean_install_certifies_runtime_surface(clean_install)
 
     result = RUNNER.invoke(
         app,

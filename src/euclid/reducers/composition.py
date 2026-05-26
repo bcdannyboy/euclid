@@ -19,6 +19,7 @@ ALL_COMPOSITION_OPERATORS: tuple[str, ...] = (
 PIECEWISE_BRANCH_ORDER = "ascending_split_literal"
 ADDITIVE_RESIDUAL_CHILD_ORDER = "base_then_residual"
 REGIME_SELECTION_MODES: tuple[str, ...] = ("hard_switch", "convex_weighting")
+REGIME_CONDITIONED_CLAIM_SCOPE = "valid_given_regime"
 
 
 def _require_identifier(value: str, *, code: str, field_path: str) -> str:
@@ -467,6 +468,7 @@ class RegimeConditionedComposition:
             "gating_law": self.gating_law.as_dict(),
             "branch_reducers": [branch.as_dict() for branch in self.branch_reducers],
             "regime_information_contract": list(self.regime_information_contract),
+            "claim_scope": REGIME_CONDITIONED_CLAIM_SCOPE,
         }
 
     def canonical_dict(self) -> dict[str, Any]:
@@ -477,6 +479,7 @@ class RegimeConditionedComposition:
                 branch.canonical_dict() for branch in normalized.branch_reducers
             ],
             "regime_information_contract": list(normalized.regime_information_contract),
+            "claim_scope": REGIME_CONDITIONED_CLAIM_SCOPE,
         }
 
 
@@ -1023,6 +1026,13 @@ def resolve_regime_weights(
                         "selection_mode": "hard_switch",
                         "gating_law_id": composition.gating_law.gating_law_id,
                         "signal_fields": [field_name],
+                        "claim_scope": REGIME_CONDITIONED_CLAIM_SCOPE,
+                        "valid_given_regime": {
+                            "gating_law_id": composition.gating_law.gating_law_id,
+                            "signal_fields": [field_name],
+                            "observed_regime_value": observed_value,
+                            "selected_branch_id": branch.reducer_id,
+                        },
                         "observed_regime_value": observed_value,
                         "selected_branch_id": branch.reducer_id,
                     },
@@ -1099,6 +1109,19 @@ def resolve_regime_weights(
             "selection_mode": "convex_weighting",
             "gating_law_id": composition.gating_law.gating_law_id,
             "signal_fields": list(contract_fields),
+            "claim_scope": REGIME_CONDITIONED_CLAIM_SCOPE,
+            "valid_given_regime": {
+                "gating_law_id": composition.gating_law.gating_law_id,
+                "signal_fields": list(contract_fields),
+                "branch_weights": [
+                    {
+                        "reducer_id": branch.reducer_id,
+                        "regime_value": branch.regime_value,
+                        "weight": normalized_weights[index],
+                    }
+                    for index, branch in enumerate(composition.branch_reducers)
+                ],
+            },
             "branch_weights": [
                 {
                     "reducer_id": branch.reducer_id,
@@ -1115,6 +1138,7 @@ __all__ = [
     "ALL_COMPOSITION_OPERATORS",
     "ADDITIVE_RESIDUAL_CHILD_ORDER",
     "PIECEWISE_BRANCH_ORDER",
+    "REGIME_CONDITIONED_CLAIM_SCOPE",
     "AdditiveResidualComposition",
     "PiecewiseComposition",
     "PiecewisePartitionSegment",

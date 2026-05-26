@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib
+import importlib.metadata as importlib_metadata
 import math
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
@@ -61,6 +63,7 @@ class _ProbabilisticScorePolicy:
     forecast_object_type: str
     score_law_id: str
     horizon_weights: tuple[dict[str, Any], ...]
+    event_definition: EventDefinition | None = None
 
 
 @dataclass(frozen=True)
@@ -98,6 +101,7 @@ def emit_probabilistic_prediction_artifact(
     student_t_degrees_of_freedom: float | None = None,
     interval_levels: Sequence[float] = (0.8,),
     quantile_levels: Sequence[float] = _QUANTILE_LEVELS,
+    calibration_method_metadata: Mapping[str, Any] | None = None,
     supporting_artifact_sink: list[ManifestEnvelope] | None = None,
 ) -> ManifestEnvelope:
     legal_feature_view = feature_view.require_stage_reuse("evaluation")
@@ -179,9 +183,7 @@ def emit_probabilistic_prediction_artifact(
                 supporting_artifact_sink=supporting_artifact_sink,
             )
             support_cache[support_key] = support_bundle
-            stochastic_support_statuses.append(
-                support_bundle.stochastic_support_status
-            )
+            stochastic_support_statuses.append(support_bundle.stochastic_support_status)
             stochastic_support_reason_codes.extend(
                 support_bundle.stochastic_support_reason_codes
             )
@@ -260,11 +262,25 @@ def emit_probabilistic_prediction_artifact(
                 support=support,
                 realized_observation=_stable_float(realized_observation),
                 origin_row=origin_row,
+                score_policy=score_policy,
                 entity=scored_origin.entity,
                 interval_levels=resolved_interval_levels,
                 quantile_levels=resolved_quantile_levels,
             )
         )
+
+    effective_probabilistic_config = {
+        "distribution_family": _distribution_family_from_stochastic_family(
+            stochastic_family_id
+        ),
+        "interval_levels": list(resolved_interval_levels),
+        "quantile_levels": list(resolved_quantile_levels),
+    }
+    calibration_method = _phase53_normalize_calibration_method_metadata(
+        calibration_method_metadata
+    )
+    if calibration_method is not None:
+        effective_probabilistic_config["calibration_method"] = calibration_method
 
     prediction_artifact = PredictionArtifactManifest(
         prediction_artifact_id=(
@@ -315,15 +331,42 @@ def emit_probabilistic_prediction_artifact(
         ),
         residual_history_refs=_unique_refs(residual_history_refs),
         stochastic_model_refs=_unique_refs(stochastic_model_refs),
-        effective_probabilistic_config={
-            "distribution_family": _distribution_family_from_stochastic_family(
-                stochastic_family_id
-            ),
-            "interval_levels": list(resolved_interval_levels),
-            "quantile_levels": list(resolved_quantile_levels),
-        },
+        effective_probabilistic_config=effective_probabilistic_config,
     )
     return prediction_artifact.to_manifest(catalog)
+
+
+def build_mapie_calibration_method_metadata(
+    *,
+    method_id: str,
+    guarantee_tier: str,
+    assumption_ids: Sequence[str] = (),
+    assumptions: Mapping[str, Any] | None = None,
+    assumption_scope: str | None = None,
+    calibration_partition_id: str | None = None,
+    calibration_partition_ids: Sequence[str] = (),
+    horizon_ids: Sequence[int] = (),
+    calibration_indices: Sequence[int] = (),
+) -> dict[str, Any]:
+    backend = _phase53_mapie_backend_metadata()
+    return _phase53_normalize_calibration_method_metadata(
+        {
+            "method_id": method_id,
+            "status": (
+                "unavailable" if backend["status"] == "unavailable" else "available"
+            ),
+            "reason_codes": backend["reason_codes"],
+            "guarantee_tier": guarantee_tier,
+            "assumption_ids": assumption_ids,
+            "assumptions": dict(assumptions or {}),
+            "assumption_scope": assumption_scope,
+            "calibration_partition_id": calibration_partition_id,
+            "calibration_partition_ids": calibration_partition_ids,
+            "horizon_ids": horizon_ids,
+            "calibration_indices": calibration_indices,
+            "backend": backend,
+        }
+    )
 
 
 def _resolve_probabilistic_score_policy(
@@ -372,11 +415,165 @@ def _resolve_probabilistic_score_policy(
                 ),
             },
         )
+    event_definition = None
+    if forecast_object_type == "event_probability":
+        event_definition_payload = score_policy_manifest.body.get("event_definition")
+        if not isinstance(event_definition_payload, Mapping):
+            raise ContractValidationError(
+                code="missing_event_probability_definition",
+                message=(
+                    "event-probability score policies must carry a declared "
+                    "event_definition"
+                ),
+                field_path="score_policy_manifest.body.event_definition",
+            )
+        event_definition = EventDefinition.from_manifest(event_definition_payload)
     return _ProbabilisticScorePolicy(
         forecast_object_type=forecast_object_type,
         score_law_id=str(score_policy_manifest.body["primary_score"]),
         horizon_weights=_horizon_weights(score_policy_manifest),
+        event_definition=event_definition,
     )
+
+
+def _phase53_mapie_backend_metadata() -> dict[str, Any]:
+    try:
+        version = importlib_metadata.version("mapie")
+        importlib.import_module("mapie")
+    except Exception:
+        return {
+            "backend_id": "mapie",
+            "status": "unavailable",
+            "reason_codes": ["calibration_backend_unavailable"],
+            "version": None,
+            "provenance": {
+                "package_name": "mapie",
+                "import_status": "unavailable",
+            },
+        }
+    return {
+        "backend_id": "mapie",
+        "status": "available",
+        "reason_codes": [],
+        "version": str(version),
+        "provenance": {
+            "package_name": "mapie",
+            "import_status": "available",
+        },
+    }
+
+
+def _phase53_normalize_calibration_method_metadata(
+    metadata: Mapping[str, Any] | None,
+) -> dict[str, Any] | None:
+    if metadata is None:
+        return None
+    method_id = str(metadata.get("method_id", "")).strip()
+    if not method_id:
+        raise ContractValidationError(
+            code="missing_calibration_method_id",
+            message="calibration method metadata requires a method_id",
+            field_path="calibration_method_metadata.method_id",
+        )
+    partition_ids = _metadata_string_values(metadata.get("calibration_partition_ids"))
+    partition_ids = [
+        *(
+            _metadata_string_values(metadata.get("calibration_partition_id"))
+            or _metadata_string_values(metadata.get("partition_id"))
+            or _metadata_string_values(metadata.get("calibration_split_id"))
+        ),
+        *partition_ids,
+        *_metadata_string_values(metadata.get("partition_ids")),
+        *_metadata_string_values(metadata.get("calibration_split_ids")),
+    ]
+    resolved_partition_ids = list(_unique_strings(partition_ids))
+    assumptions = metadata.get("assumptions", {})
+    return {
+        "method_id": method_id,
+        "status": str(metadata.get("status", "not_evaluated")),
+        "reason_codes": list(
+            _unique_strings(_metadata_string_values(metadata.get("reason_codes")))
+        ),
+        "guarantee_tier": str(metadata.get("guarantee_tier", "diagnostic_only")),
+        "assumption_ids": list(
+            _unique_strings(_metadata_string_values(metadata.get("assumption_ids")))
+        ),
+        "assumptions": _stable_mapping(
+            assumptions if isinstance(assumptions, Mapping) else {}
+        ),
+        "assumption_scope": str(metadata.get("assumption_scope", "unspecified")),
+        "calibration_partition_id": (
+            resolved_partition_ids[0] if resolved_partition_ids else None
+        ),
+        "calibration_partition_ids": resolved_partition_ids,
+        "horizon_ids": _metadata_int_values(metadata.get("horizon_ids")),
+        "calibration_indices": _metadata_int_values(
+            metadata.get("calibration_indices")
+        ),
+        "backend": _normalize_calibration_backend_metadata(metadata),
+    }
+
+
+def _mapie_backend_metadata() -> dict[str, Any]:
+    return _phase53_mapie_backend_metadata()
+
+
+def _normalize_calibration_method_metadata(
+    metadata: Mapping[str, Any] | None,
+) -> dict[str, Any] | None:
+    return _phase53_normalize_calibration_method_metadata(metadata)
+
+
+def _normalize_calibration_backend_metadata(
+    metadata: Mapping[str, Any],
+) -> dict[str, Any]:
+    backend = metadata.get("backend")
+    backend_mapping = backend if isinstance(backend, Mapping) else {}
+    version = backend_mapping.get("version", metadata.get("backend_version"))
+    provenance = backend_mapping.get("provenance", metadata.get("provenance", {}))
+    return {
+        "backend_id": str(
+            backend_mapping.get("backend_id", metadata.get("backend_id", "unknown"))
+        ),
+        "status": str(
+            backend_mapping.get("status", metadata.get("backend_status", "unknown"))
+        ),
+        "reason_codes": list(
+            _unique_strings(
+                _metadata_string_values(
+                    backend_mapping.get(
+                        "reason_codes",
+                        metadata.get("backend_reason_codes"),
+                    )
+                )
+            )
+        ),
+        "version": None if version is None else str(version),
+        "provenance": _stable_mapping(
+            provenance if isinstance(provenance, Mapping) else {}
+        ),
+    }
+
+
+def _metadata_string_values(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, Mapping):
+        return [str(key) for key in sorted(value)]
+    return [str(item) for item in value]
+
+
+def _metadata_int_values(value: Any) -> list[int]:
+    seen: dict[int, None] = {}
+    for item in () if value is None else value:
+        seen.setdefault(int(item), None)
+    return list(seen)
+
+
+def _stable_mapping(mapping: Mapping[str, Any]) -> dict[str, Any]:
+    return {str(key): mapping[key] for key in sorted(mapping)}
 
 
 def _probabilistic_support_path(
@@ -557,6 +754,7 @@ def _build_row(
     support: _StochasticPredictiveSupport,
     realized_observation: float,
     origin_row: Mapping[str, Any],
+    score_policy: _ProbabilisticScorePolicy,
     entity: str | None = None,
     interval_levels: Sequence[float] = (0.8,),
     quantile_levels: Sequence[float] = _QUANTILE_LEVELS,
@@ -611,23 +809,25 @@ def _build_row(
             **row_kwargs,
         )
     if forecast_object_type == "event_probability":
-        threshold = _stable_float(float(origin_row["target"]))
-        event_definition = EventDefinition.from_manifest(
-            {
-                "event_id": "declared_target_threshold",
-                "operator": "greater_than_or_equal",
-                "threshold": threshold,
-                "threshold_source": "declared_literal",
-                "variable": "target",
-                "calibration_required": True,
-            }
-        )
+        del origin_row
+        event_definition = score_policy.event_definition
+        if event_definition is None:
+            raise ContractValidationError(
+                code="missing_event_probability_definition",
+                message=(
+                    "event-probability score policies must declare the event "
+                    "definition used by prediction rows"
+                ),
+                field_path="score_policy_manifest.body.event_definition",
+            )
         observation_model = get_observation_model(
             _observation_family_id(support.distribution_family)
         ).bind(
             _support_parameters(support),
         )
-        event_probability = _stable_float(event_definition.probability(observation_model))
+        event_probability = _stable_float(
+            event_definition.probability(observation_model)
+        )
         realized_event = event_definition.evaluate(realized_observation)
         return EventProbabilityPredictionRow(
             event_definition=event_definition.as_manifest(),
@@ -804,7 +1004,9 @@ def _base_scale(fit_result: CandidateWindowFitResult) -> float:
     return _stable_float(max(rmse, 0.25 + (0.05 * parameter_scale)))
 
 
-def _stochastic_residual_proxy(fit_result: CandidateWindowFitResult) -> tuple[float, ...]:
+def _stochastic_residual_proxy(
+    fit_result: CandidateWindowFitResult,
+) -> tuple[float, ...]:
     base_scale = _base_scale(fit_result)
     return (-base_scale, base_scale)
 
@@ -834,4 +1036,7 @@ def _unique_refs(refs):
     return tuple(ordered)
 
 
-__all__ = ["emit_probabilistic_prediction_artifact"]
+__all__ = [
+    "build_mapie_calibration_method_metadata",
+    "emit_probabilistic_prediction_artifact",
+]

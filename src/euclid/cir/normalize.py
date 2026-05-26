@@ -73,8 +73,8 @@ def normalize_cir_candidate(
         "structural_layer": structural_layer.as_dict(),
         "execution_layer": execution_layer.as_dict(),
         "evidence_layer": {
-            "model_code_decomposition": (
-                candidate.evidence_layer.model_code_decomposition.as_dict()
+            "model_code_decomposition": _canonical_model_code_decomposition(
+                candidate.evidence_layer.model_code_decomposition,
             ),
         },
     }
@@ -95,6 +95,18 @@ def normalize_cir_candidate(
         execution_layer=execution_layer,
         evidence_layer=evidence_layer,
     )
+
+
+def _canonical_model_code_decomposition(
+    decomposition: CIRModelCodeDecomposition,
+) -> dict[str, float]:
+    return {
+        "L_family_bits": float(decomposition.L_family_bits),
+        "L_structure_bits": float(decomposition.L_structure_bits),
+        "L_literals_bits": float(decomposition.L_literals_bits),
+        "L_params_bits": float(decomposition.L_params_bits),
+        "L_state_bits": float(decomposition.L_state_bits),
+    }
 
 
 def build_cir_candidate_from_reducer(

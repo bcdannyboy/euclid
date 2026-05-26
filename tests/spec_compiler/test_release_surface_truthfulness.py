@@ -34,7 +34,12 @@ def test_release_smoke_covers_public_release_story() -> None:
     assert "run --config" in script
     assert "full_vision_run.yaml" in script
     assert "replay --run-id" in script
-    assert "full-vision-run" in script
+    assert "run-result.json" in script
+    assert "FULL_VISION_RUN_ID" in script
+    assert "--run-id \"${FULL_VISION_RUN_ID}\"" in script
+    assert '--run-id "full-vision-run"' not in script
+    assert "--wheel-dir \"${PROJECT_ROOT}/build/certification/clean_install/wheels\"" in script
+    assert "--wheel-dir \"${PROJECT_ROOT}/build/certification/wheels\"" not in script
     assert "release certify-clean-install" in script
     assert "release status" in script
     assert "release verify-completion" in script

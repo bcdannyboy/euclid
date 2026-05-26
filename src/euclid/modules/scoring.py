@@ -801,7 +801,37 @@ def _build_paired_comparison_record(
         prediction_artifact_manifest=comparator_prediction_artifact,
         point_loss_id=point_loss_id,
     )
-    origin_keys = tuple(sorted(candidate_losses))
+    if _loss_panel_signature(candidate_losses) != _loss_panel_signature(
+        comparator_losses
+    ):
+        return {
+            "comparator_id": comparator_id,
+            "comparator_kind": comparator_kind,
+            "comparison_status": "not_comparable",
+            "failure_reason_code": "paired_loss_stream_identity_mismatch",
+            "score_result_ref": comparator_score_result.ref.as_dict(),
+            "predictive_promotion_eligible": False,
+            "candidate_paired_loss_identity": _paired_loss_identity(
+                prediction_artifact_manifest=candidate_prediction_artifact,
+                losses=candidate_losses,
+            ),
+            "comparator_paired_loss_identity": _paired_loss_identity(
+                prediction_artifact_manifest=comparator_prediction_artifact,
+                losses=comparator_losses,
+            ),
+        }
+
+    origin_keys = _ordered_origin_keys(candidate_losses)
+    paired_loss_differential_stream = _paired_loss_differential_stream(
+        candidate_prediction_artifact=candidate_prediction_artifact,
+        comparator_prediction_artifact=comparator_prediction_artifact,
+        comparator_id=comparator_id,
+        point_loss_id=point_loss_id,
+        horizon_weights=horizon_weights,
+        candidate_losses=candidate_losses,
+        comparator_losses=comparator_losses,
+        origin_keys=origin_keys,
+    )
 
     per_horizon_mean_loss_differentials: list[dict[str, Any]] = []
     for horizon, _ in horizon_weights:
@@ -853,14 +883,39 @@ def _build_paired_comparison_record(
         mean_loss_differential=mean_loss_differential,
         margin=practical_significance_margin,
     )
-    predictive_test = evaluate_predictive_promotion(
-        candidate_losses=candidate_origin_losses,
-        baseline_losses=comparator_origin_losses,
-        split_protocol_id="declared_confirmatory_holdout",
-        baseline_id=comparator_id,
-        practical_margin=practical_significance_margin,
-        calibration_status="not_applicable_for_forecast_type",
-        leakage_status="passed",
+    if len(origin_keys) <= 1:
+        predictive_test_manifest = _insufficient_paired_count_result_manifest(
+            mean_loss_differential=mean_loss_differential,
+            practical_margin=practical_significance_margin,
+        )
+    else:
+        predictive_test = evaluate_predictive_promotion(
+            candidate_losses=candidate_origin_losses,
+            baseline_losses=comparator_origin_losses,
+            split_protocol_id="declared_confirmatory_holdout",
+            baseline_id=comparator_id,
+            practical_margin=practical_significance_margin,
+            calibration_status="not_applicable_for_forecast_type",
+            leakage_status="passed",
+            declared_test_id="diebold_mariano_hln_v1",
+            paired_stream_identity={
+                "row_set_id": paired_loss_differential_stream["stream_id"],
+                "origin_ids": [origin for _, origin in origin_keys],
+                "horizons": [1],
+                "entity_ids": [
+                    entity if entity is not None else "__single_entity__"
+                    for entity, _ in origin_keys
+                ],
+            },
+            effective_sample_size=len(origin_keys),
+            effective_block_count=len(origin_keys),
+        )
+        predictive_test_manifest = predictive_test.as_manifest()
+    predictive_test_manifest["paired_stream_ref"] = paired_loss_differential_stream[
+        "stream_ref"
+    ]
+    predictive_test_manifest["paired_loss_differential_stream"] = (
+        paired_loss_differential_stream
     )
     return {
         "comparator_id": comparator_id,
@@ -879,8 +934,221 @@ def _build_paired_comparison_record(
         "per_horizon_mean_loss_differentials": per_horizon_mean_loss_differentials,
         "practical_significance_margin": _stable_float(practical_significance_margin),
         "practical_significance_status": practical_significance_status,
-        "paired_predictive_test_result": predictive_test.as_manifest(),
+        "paired_loss_differential_stream": paired_loss_differential_stream,
+        "paired_predictive_test_result": predictive_test_manifest,
         "score_result_ref": comparator_score_result.ref.as_dict(),
+    }
+
+
+def _loss_panel_signature(
+    losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+) -> tuple[tuple[str | None, str, int], ...]:
+    return tuple(
+        (*origin_key, horizon)
+        for origin_key in _ordered_origin_keys(losses)
+        for horizon in sorted(losses[origin_key])
+    )
+
+
+def _ordered_origin_keys(
+    losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+) -> tuple[tuple[str | None, str], ...]:
+    return tuple(
+        sorted(
+            losses,
+            key=lambda origin_key: (
+                origin_key[1],
+                "" if origin_key[0] is None else origin_key[0],
+            ),
+        )
+    )
+
+
+def _paired_loss_identity(
+    *,
+    prediction_artifact_manifest: ManifestEnvelope,
+    losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+) -> dict[str, Any]:
+    return {
+        "row_set_id": str(prediction_artifact_manifest.body["scored_origin_set_id"]),
+        "origin_ids": _origin_ids(losses),
+        "entity_ids": _entity_ids(losses),
+        "panel_signature": [
+            {"entity_id": entity, "origin_id": origin, "horizon": horizon}
+            for entity, origin, horizon in _loss_panel_signature(losses)
+        ],
+    }
+
+
+def _paired_loss_differential_stream(
+    *,
+    candidate_prediction_artifact: ManifestEnvelope,
+    comparator_prediction_artifact: ManifestEnvelope,
+    comparator_id: str,
+    point_loss_id: str,
+    horizon_weights: tuple[tuple[int, float], ...],
+    candidate_losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+    comparator_losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+    origin_keys: tuple[tuple[str | None, str], ...],
+) -> dict[str, Any]:
+    pairs: list[dict[str, Any]] = []
+    for origin_key in origin_keys:
+        horizon_loss_rows: list[dict[str, Any]] = []
+        candidate_primary_loss = 0.0
+        comparator_primary_loss = 0.0
+        for horizon, weight in horizon_weights:
+            candidate_loss = float(candidate_losses[origin_key][horizon])
+            comparator_loss = float(comparator_losses[origin_key][horizon])
+            candidate_primary_loss += weight * candidate_loss
+            comparator_primary_loss += weight * comparator_loss
+            horizon_loss_rows.append(
+                {
+                    "horizon": horizon,
+                    "candidate_loss": _stable_float(candidate_loss),
+                    "baseline_loss": _stable_float(comparator_loss),
+                    "loss_differential": _stable_float(
+                        comparator_loss - candidate_loss
+                    ),
+                }
+            )
+        pairs.append(
+            _paired_stream_pair(
+                origin_key=origin_key,
+                horizon_loss_rows=horizon_loss_rows,
+                candidate_primary_loss=candidate_primary_loss,
+                comparator_primary_loss=comparator_primary_loss,
+            )
+        )
+
+    stream_id = (
+        f"{candidate_prediction_artifact.body['prediction_artifact_id']}__"
+        f"{comparator_prediction_artifact.body['prediction_artifact_id']}__"
+        f"{point_loss_id}__paired_loss_differential"
+    )
+    stream_ref = {
+        "schema_name": "paired_loss_differential_stream@1.0.0",
+        "object_id": stream_id,
+    }
+    return {
+        "schema_name": "paired_loss_differential_stream@1.0.0",
+        "stream_id": stream_id,
+        "stream_ref": stream_ref,
+        "candidate_id": str(candidate_prediction_artifact.body["candidate_id"]),
+        "baseline_id": comparator_id,
+        "comparator_id": comparator_id,
+        "candidate_prediction_artifact_ref": (
+            candidate_prediction_artifact.ref.as_dict()
+        ),
+        "baseline_prediction_artifact_ref": (
+            comparator_prediction_artifact.ref.as_dict()
+        ),
+        "candidate_row_set_id": str(
+            candidate_prediction_artifact.body["scored_origin_set_id"]
+        ),
+        "baseline_row_set_id": str(
+            comparator_prediction_artifact.body["scored_origin_set_id"]
+        ),
+        "row_set_id": str(candidate_prediction_artifact.body["scored_origin_set_id"]),
+        "origin_ids": _origin_ids(candidate_losses),
+        "entity_ids": _entity_ids(candidate_losses),
+        "raw_pair_count": len(origin_keys),
+        "effective_sample_size": len(origin_keys),
+        "block_count": len(origin_keys),
+        "effective_block_count": len(origin_keys),
+        "horizon_geometry": _paired_stream_horizon_geometry(horizon_weights),
+        "loss_id": point_loss_id,
+        "pairs": pairs,
+    }
+
+
+def _paired_stream_pair(
+    *,
+    origin_key: tuple[str | None, str],
+    horizon_loss_rows: list[dict[str, Any]],
+    candidate_primary_loss: float,
+    comparator_primary_loss: float,
+) -> dict[str, Any]:
+    if len(horizon_loss_rows) == 1:
+        horizon_row = horizon_loss_rows[0]
+        return {
+            "origin_id": origin_key[1],
+            "horizon": horizon_row["horizon"],
+            "entity_id": origin_key[0],
+            "candidate_loss": horizon_row["candidate_loss"],
+            "comparator_loss": horizon_row["baseline_loss"],
+            "loss_differential": horizon_row["loss_differential"],
+        }
+    return {
+        "origin_id": origin_key[1],
+        "entity_id": origin_key[0],
+        "horizon_losses": horizon_loss_rows,
+        "candidate_primary_loss": _stable_float(candidate_primary_loss),
+        "baseline_primary_loss": _stable_float(comparator_primary_loss),
+        "loss_differential": _stable_float(
+            comparator_primary_loss - candidate_primary_loss
+        ),
+    }
+
+
+def _paired_stream_horizon_geometry(
+    horizon_weights: tuple[tuple[int, float], ...],
+) -> list[dict[str, Any]] | dict[str, Any]:
+    if len(horizon_weights) == 1:
+        return [
+            {
+                "horizon": horizon,
+                "weight": str(_stable_float(weight)),
+            }
+            for horizon, weight in horizon_weights
+        ]
+    return {
+        "mode": "per_origin_complete_horizon_simplex_weighted_sum",
+        "horizons": [horizon for horizon, _ in horizon_weights],
+        "horizon_weights": [
+            {"horizon": horizon, "weight": _stable_float(weight)}
+            for horizon, weight in horizon_weights
+        ],
+    }
+
+
+def _origin_ids(
+    losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+) -> list[str]:
+    return sorted({origin for _, origin in losses})
+
+
+def _entity_ids(
+    losses: Mapping[tuple[str | None, str], Mapping[int, float]],
+) -> list[str]:
+    return sorted({entity for entity, _ in losses if entity is not None})
+
+
+def _insufficient_paired_count_result_manifest(
+    *,
+    mean_loss_differential: float,
+    practical_margin: float,
+) -> dict[str, Any]:
+    return {
+        "schema_name": "paired_predictive_test_result@1.0.0",
+        "status": "abstained",
+        "promotion_allowed": False,
+        "reason_codes": ["insufficient_paired_count"],
+        "mean_loss_differential": _stable_float(mean_loss_differential),
+        "confidence_interval": None,
+        "confidence_interval_method": "not_applicable",
+        "practical_margin": _stable_float(practical_margin),
+        "raw_metric_comparison_role": "diagnostic_only",
+        "statistical_test_backend": "not_run_insufficient_paired_count",
+        "declared_test_id": "diebold_mariano_hln_v1",
+        "actual_test_id": "diebold_mariano_hln_v1",
+        "raw_pair_count": 1,
+        "effective_sample_size": 1,
+        "effective_block_count": 1,
+        "replay_identity": (
+            "predictive-promotion:insufficient-paired-count:"
+            f"{_stable_float(mean_loss_differential)}:"
+            f"{_stable_float(practical_margin)}"
+        ),
     }
 
 

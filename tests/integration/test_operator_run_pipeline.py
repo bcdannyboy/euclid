@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
 
 import euclid.operator_runtime._compat_runtime as compat_runtime
+from euclid.cli.run import run_command as cli_run_command
 from euclid.cir.models import (
     CandidateIntermediateRepresentation,
     CIRBackendOriginRecord,
@@ -25,6 +28,10 @@ from euclid.reducers.models import ReducerStateObject
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CURRENT_RELEASE_MANIFEST = PROJECT_ROOT / "examples" / "current_release_run.yaml"
 FULL_VISION_MANIFEST = PROJECT_ROOT / "examples" / "full_vision_run.yaml"
+
+
+def _runtime_sha256(path: Path) -> str:
+    return f"runtime_sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
 
 
 def test_operator_run_no_longer_depends_on_demo(tmp_path: Path) -> None:
@@ -64,6 +71,67 @@ def test_operator_run_supports_extension_lane_manifest(tmp_path: Path) -> None:
     assert result.summary.forecast_object_type == "distribution"
     assert "distribution" in result.summary.extension_lane_ids
     assert "algorithmic_last_observation" in result.summary.extension_lane_ids
+
+
+def test_operator_run_evidence_report_emits_digest_and_run_id_binding(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "operator-run"
+    report_path = tmp_path / "reports" / "full_vision_operator_run_evidence.json"
+    report_path.parent.mkdir(parents=True)
+
+    cli_run_command(
+        config=FULL_VISION_MANIFEST,
+        output_root=output_root,
+        evidence_report=report_path,
+    )
+
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    run_summary_path = Path(payload["run_summary_path"])
+    assert payload["run_id"] == "full-vision-run"
+    assert payload["source_tree_digest_or_wheel_digest"]
+    assert payload["run_summary_sha256"] == _runtime_sha256(run_summary_path)
+    assert payload["run_id_binding"] == {
+        "request_id": "full-vision-run",
+        "run_result_object_id": "full-vision-run_run_result",
+        "run_summary_request_id": "full-vision-run",
+    }
+
+
+def test_operator_run_with_evidence_report_writes_declared_run_result_artifact(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "operator-run"
+    report_path = tmp_path / "reports" / "full_vision_operator_run_evidence.json"
+    report_path.parent.mkdir(parents=True)
+
+    cli_run_command(
+        config=FULL_VISION_MANIFEST,
+        output_root=output_root,
+        evidence_report=report_path,
+    )
+
+    run_result_path = output_root / "run-result.json"
+    assert run_result_path.is_file()
+
+    payload = json.loads(run_result_path.read_text(encoding="utf-8"))
+    evidence_payload = json.loads(report_path.read_text(encoding="utf-8"))
+    run_summary_path = Path(payload["run_summary_path"])
+    run_summary = json.loads(run_summary_path.read_text(encoding="utf-8"))
+
+    assert run_summary_path == (
+        output_root / "sealed-runs" / "full-vision-run" / "run-summary.json"
+    )
+    assert payload["run_id"] == "full-vision-run"
+    assert payload["run_summary_path"] == evidence_payload["run_summary_path"]
+    assert payload["run_summary_sha256"] == _runtime_sha256(run_summary_path)
+    assert payload["run_summary_sha256"] == evidence_payload["run_summary_sha256"]
+    assert payload["run_result_ref"] == run_summary["run_result_ref"]
+    assert payload["run_result_ref"] == evidence_payload["run_result_ref"]
+    assert payload["bundle_ref"] == run_summary["bundle_ref"]
+    assert payload["bundle_ref"] == evidence_payload["bundle_ref"]
+    assert payload["output_root"] == str(output_root)
+    assert payload["output_root"] == evidence_payload["output_root"]
 
 
 def test_operator_run_rejects_non_cir_candidate(

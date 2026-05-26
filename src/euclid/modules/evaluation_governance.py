@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
@@ -11,6 +12,9 @@ from euclid.modules.split_planning import EvaluationPlan
 
 _SCOPE_ID = "euclid_v1_binding_scope@1.0.0"
 _OWNER_PROMPT_ID = "prompt.predictive-validation-v1"
+_DEFAULT_MINIMUM_EFFECTIVE_SAMPLE_SIZE = 25.0
+_DEFAULT_HUMAN_REVIEW_EFFECTIVE_SAMPLE_SIZE = 50.0
+_DEFAULT_MINIMUM_EFFECTIVE_BLOCK_COUNT = 8.0
 
 
 @dataclass(frozen=True)
@@ -710,12 +714,177 @@ def resolve_confirmatory_promotion_allowed(
     )
     if predictive_test_body is None:
         return False
-    return (
-        predictive_test_body.get("promotion_allowed") is True
-        and predictive_test_body.get("status") == "passed"
-        and predictive_test_body.get("raw_metric_comparison_role") == "diagnostic_only"
-        and not predictive_test_body.get("reason_codes")
+    return _predictive_test_body_allows_promotion(predictive_test_body)
+
+
+def predictive_governance_reason_codes(
+    *,
+    evaluation_governance_body: Mapping[str, Any],
+    comparison_universe_body: Mapping[str, Any] | None = None,
+    predictive_test_result_manifest: (
+        ManifestEnvelope | Mapping[str, Any] | None
+    ) = None,
+) -> tuple[str, ...]:
+    if bool(evaluation_governance_body.get("confirmatory_promotion_allowed")):
+        return ()
+    predictive_test_body = _predictive_test_result_body_from_body(
+        predictive_test_result_manifest=predictive_test_result_manifest,
+        comparison_universe_body=comparison_universe_body,
     )
+    if predictive_test_body is None:
+        return ("predictive_governance_blocked",)
+    return _reason_codes_from_predictive_test_body(predictive_test_body) or (
+        "predictive_governance_blocked",
+    )
+
+
+def _predictive_test_body_allows_promotion(
+    predictive_test_body: Mapping[str, Any],
+) -> bool:
+    if predictive_test_body.get("promotion_allowed") is not True:
+        return False
+    if predictive_test_body.get("status") != "passed":
+        return False
+    if predictive_test_body.get("raw_metric_comparison_role") != "diagnostic_only":
+        return False
+    if predictive_test_body.get("reason_codes"):
+        return False
+
+    declared_test_id = str(predictive_test_body.get("declared_test_id", ""))
+    actual_test_id = str(predictive_test_body.get("actual_test_id", declared_test_id))
+    statistical_test_backend = str(
+        predictive_test_body.get("statistical_test_backend", "")
+    )
+    allowed_declared_test_ids = {
+        "diebold_mariano_hln_v1",
+        "paired_stationary_block_bootstrap_v1",
+        "giacomini_white_conditional_predictive_ability_v1",
+    }
+    allowed_actual_test_ids = {
+        "diebold_mariano_hln_v1",
+        "paired_stationary_block_bootstrap_v1",
+        "giacomini_white_v1",
+    }
+    if declared_test_id not in allowed_declared_test_ids:
+        return False
+    if actual_test_id not in allowed_actual_test_ids:
+        return False
+    if statistical_test_backend not in {
+        declared_test_id,
+        actual_test_id,
+        "diebold_mariano_hln_v1",
+        "paired_stationary_block_bootstrap_v1",
+        "giacomini_white_v1",
+    }:
+        return False
+    if statistical_test_backend in {
+        "raw_averaged_metric_delta",
+        "statsmodels_hac_mean_loss_differential",
+    }:
+        return False
+    if predictive_test_body.get("confidence_interval_method") in {
+        "not_declared",
+        "newey_west_hac_t_interval",
+    }:
+        return False
+    if not _predictive_test_body_has_uncertainty_and_effect_evidence(
+        predictive_test_body
+    ):
+        return False
+    if not _predictive_test_body_has_sufficient_information(
+        predictive_test_body,
+        declared_test_id=declared_test_id,
+    ):
+        return False
+    if declared_test_id == "giacomini_white_conditional_predictive_ability_v1":
+        if not predictive_test_body.get("conditional_instrument_declarations"):
+            return False
+    return True
+
+
+def _predictive_test_body_has_uncertainty_and_effect_evidence(
+    predictive_test_body: Mapping[str, Any],
+) -> bool:
+    practical_margin = _optional_float(predictive_test_body.get("practical_margin"))
+    if practical_margin is None or practical_margin <= 0:
+        return False
+
+    mean_loss_differential = _optional_float(
+        predictive_test_body.get("mean_loss_differential")
+    )
+    if mean_loss_differential is None:
+        return False
+    if mean_loss_differential <= practical_margin:
+        return False
+
+    confidence_interval = predictive_test_body.get("confidence_interval")
+    if isinstance(confidence_interval, Sequence) and len(confidence_interval) >= 2:
+        interval_lower = _optional_float(confidence_interval[0])
+        if interval_lower is not None and interval_lower > practical_margin:
+            return True
+
+    p_value = _optional_float(predictive_test_body.get("p_value"))
+    if p_value is not None and p_value <= 0.05:
+        return True
+    return False
+
+
+def _predictive_test_body_has_sufficient_information(
+    predictive_test_body: Mapping[str, Any],
+    *,
+    declared_test_id: str,
+) -> bool:
+    raw_pair_count = _optional_float(predictive_test_body.get("raw_pair_count"))
+    if raw_pair_count is None or raw_pair_count < 2:
+        return False
+
+    policy = predictive_test_body.get("minimum_pair_policy")
+    policy_body = policy if isinstance(policy, Mapping) else {}
+    minimum_effective_sample_size = _optional_float(
+        policy_body.get("minimum_effective_sample_size")
+    )
+    if minimum_effective_sample_size is None:
+        minimum_effective_sample_size = _DEFAULT_MINIMUM_EFFECTIVE_SAMPLE_SIZE
+    human_review_effective_sample_size = _optional_float(
+        policy_body.get("human_review_effective_sample_size")
+    )
+    if human_review_effective_sample_size is None:
+        human_review_effective_sample_size = (
+            _DEFAULT_HUMAN_REVIEW_EFFECTIVE_SAMPLE_SIZE
+        )
+    effective_sample_size = _optional_float(
+        predictive_test_body.get("effective_sample_size")
+    )
+    if effective_sample_size is None:
+        return False
+    if effective_sample_size < minimum_effective_sample_size:
+        return False
+    if effective_sample_size < human_review_effective_sample_size:
+        return False
+
+    if declared_test_id == "paired_stationary_block_bootstrap_v1":
+        minimum_effective_block_count = _optional_float(
+            policy_body.get("minimum_effective_block_count")
+        )
+        if minimum_effective_block_count is None:
+            minimum_effective_block_count = _DEFAULT_MINIMUM_EFFECTIVE_BLOCK_COUNT
+        effective_block_count = _optional_float(
+            predictive_test_body.get("effective_block_count")
+        )
+        if effective_block_count is None:
+            return False
+        if effective_block_count < minimum_effective_block_count:
+            return False
+    return True
+
+
+def _optional_float(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _predictive_test_result_body(
@@ -730,13 +899,49 @@ def _predictive_test_result_body(
     if comparison_universe_manifest is None:
         return None
     primary_baseline_id = str(comparison_universe_manifest.body.get("baseline_id", ""))
-    for record in comparison_universe_manifest.body.get("paired_comparison_records", []):
+    paired_records = comparison_universe_manifest.body.get(
+        "paired_comparison_records", []
+    )
+    for record in paired_records:
         if str(record.get("comparator_id", "")) != primary_baseline_id:
             continue
         result = record.get("paired_predictive_test_result")
         if isinstance(result, Mapping):
             return result
     return None
+
+
+def _predictive_test_result_body_from_body(
+    *,
+    predictive_test_result_manifest: ManifestEnvelope | Mapping[str, Any] | None,
+    comparison_universe_body: Mapping[str, Any] | None,
+) -> Mapping[str, Any] | None:
+    if isinstance(predictive_test_result_manifest, ManifestEnvelope):
+        return predictive_test_result_manifest.body
+    if isinstance(predictive_test_result_manifest, Mapping):
+        return predictive_test_result_manifest
+    if comparison_universe_body is None:
+        return None
+    primary_baseline_id = str(comparison_universe_body.get("baseline_id", ""))
+    for record in comparison_universe_body.get("paired_comparison_records", []):
+        comparator_id = str(record.get("comparator_id", ""))
+        if primary_baseline_id and comparator_id != primary_baseline_id:
+            continue
+        result = record.get("paired_predictive_test_result")
+        if isinstance(result, Mapping):
+            return result
+    return None
+
+
+def _reason_codes_from_predictive_test_body(
+    predictive_test_body: Mapping[str, Any],
+) -> tuple[str, ...]:
+    seen: dict[str, None] = {}
+    for reason_code in predictive_test_body.get("reason_codes", ()):
+        text = str(reason_code)
+        if text:
+            seen.setdefault(text, None)
+    return tuple(seen)
 
 
 def _require_matching_comparison_keys(

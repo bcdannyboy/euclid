@@ -6,11 +6,11 @@ composition_operators:
 regime_tags:
 - composition_surface
 - regime_conditioned
-dataset_ref: fixtures/runtime/full_vision_certification/single_entity_predictive/single-entity-forecast-series.csv
+dataset_ref: fixtures/runtime/full_vision_certification/single_entity_predictive/composition-operator-series.csv
 snapshot_policy:
   freeze_mode: content_addressed_copy
-  availability_cutoff: '2026-04-14T00:00:00Z'
-generator_status: unknown_real_world
+  availability_cutoff: '2026-05-11T00:00:00Z'
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:
@@ -19,7 +19,7 @@ observation_model_policy:
   model_id: gaussian_point
 split_policy:
   policy_id: rolling_origin
-  initial_window: 12
+  initial_window: 25
   step: 1
 forecast_object_type: point
 score_policy:

@@ -9,7 +9,7 @@ dataset_ref: fixtures/runtime/full_vision_certification/panel_shared_local/panel
 snapshot_policy:
   freeze_mode: content_addressed_copy
   availability_cutoff: '2026-04-14T00:00:00Z'
-generator_status: unknown_real_world
+generator_status: known_generator
 target_transform_policy:
   transform_id: identity
 quantization_policy:
@@ -44,6 +44,7 @@ adversarial_tags:
 abstention_policy:
   allow_abstention: true
   expected_mode: structural_miss
+expected_safe_outcome: abstain
 forbidden_shortcuts:
 - raw_test_set_fit
 origin_policy:

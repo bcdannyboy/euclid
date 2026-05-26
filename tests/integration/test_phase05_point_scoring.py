@@ -97,6 +97,9 @@ def test_search_fit_handoff_scores_candidate_against_declared_constant_baseline(
     predictive_tests = [
         record.pop("paired_predictive_test_result") for record in paired_records
     ]
+    paired_streams = [
+        record.pop("paired_loss_differential_stream") for record in paired_records
+    ]
     assert paired_records == [
         {
             "comparator_id": "constant_baseline",
@@ -132,8 +135,23 @@ def test_search_fit_handoff_scores_candidate_against_declared_constant_baseline(
             "score_result_ref": result.comparator_score_results[0].ref.as_dict(),
         }
     ]
+    assert paired_streams[0]["schema_name"] == "paired_loss_differential_stream@1.0.0"
+    assert paired_streams[0]["raw_pair_count"] == 1
+    assert paired_streams[0]["effective_sample_size"] == 1
+    assert paired_streams[0]["pairs"] == [
+        {
+            "candidate_loss": 0.0,
+            "comparator_loss": 7.0,
+            "entity_id": None,
+            "horizon": 1,
+            "loss_differential": 7.0,
+            "origin_id": "2026-01-07T00:00:00Z",
+        }
+    ]
     assert predictive_tests[0]["schema_name"] == "paired_predictive_test_result@1.0.0"
-    assert predictive_tests[0]["promotion_allowed"] is True
+    assert predictive_tests[0]["status"] == "abstained"
+    assert predictive_tests[0]["promotion_allowed"] is False
+    assert predictive_tests[0]["reason_codes"] == ["insufficient_paired_count"]
     assert predictive_tests[0]["raw_metric_comparison_role"] == "diagnostic_only"
     assert predictive_tests[0]["replay_identity"].startswith("predictive-promotion:")
 

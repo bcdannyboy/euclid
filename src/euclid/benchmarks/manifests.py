@@ -253,6 +253,7 @@ class BenchmarkTaskManifest:
     semantic_readiness_row_ids: tuple[str, ...]
     fixture_spec_id: str | None
     fixture_family_id: str | None
+    expected_safe_outcome: str | None
     source_path: Path
 
     @property
@@ -321,7 +322,6 @@ class PredictiveGeneralizationTaskManifest(BenchmarkTaskManifest):
 @dataclass(frozen=True)
 class AdversarialHonestyTaskManifest(BenchmarkTaskManifest):
     trap_class: str
-    expected_safe_outcome: str
     failure_severity: str
 
 
@@ -608,6 +608,10 @@ def _build_common_fields(
             payload.get("fixture_family_id"),
             field_path="fixture_family_id",
         ),
+        "expected_safe_outcome": _optional_string(
+            payload.get("expected_safe_outcome"),
+            field_path="expected_safe_outcome",
+        ),
         "source_path": source_path,
     }
 
@@ -621,8 +625,6 @@ def _semantic_metric_thresholds(
         payload.get("metric_thresholds"),
         field_path="metric_thresholds",
     )
-    if explicit is not None:
-        return explicit
     thresholds: dict[str, Any] = {
         "practical_significance_margin": {
             "metric_id": "practical_significance_margin",
@@ -644,6 +646,8 @@ def _semantic_metric_thresholds(
                     "comparator": "<=",
                     "threshold": float(value),
                 }
+    if explicit is not None:
+        thresholds.update(explicit)
     return thresholds
 
 
@@ -801,13 +805,16 @@ def load_benchmark_task_manifest(
             ),
         )
 
+    if common_fields["expected_safe_outcome"] is None:
+        _raise_validation_error(
+            code="invalid_benchmark_manifest_field",
+            message="adversarial honesty tasks require expected_safe_outcome",
+            field_path="expected_safe_outcome",
+        )
+
     return AdversarialHonestyTaskManifest(
         **common_fields,
         trap_class=_require_string(payload.get("trap_class"), field_path="trap_class"),
-        expected_safe_outcome=_require_string(
-            payload.get("expected_safe_outcome"),
-            field_path="expected_safe_outcome",
-        ),
         failure_severity=_require_string(
             payload.get("failure_severity"),
             field_path="failure_severity",

@@ -9,9 +9,23 @@ from euclid.contracts.loader import ContractCatalog
 from euclid.contracts.refs import TypedRef
 from euclid.manifests.base import ManifestEnvelope
 from euclid.math.quantization import FixedStepMidTreadQuantizer
+from euclid.math.residual_coding import (
+    ResidualAlphabetPolicy,
+    ResidualCodeEvent,
+    prequential_escape_residual_bin_code_v1,
+)
 from euclid.runtime.hashing import sha256_digest
 
 _DEFAULT_DATA_CODE_FAMILY = "residual_signed_integer_elias_delta_v1"
+_LEGACY_CODELENGTH_POLICY_CLAIM_TIER = "mdl_inspired_proxy_score"
+_LEGACY_CODELENGTH_POLICY_CLAIM_TIER_REASON_CODE = (
+    "legacy_fixed_step_raw_reference_policy_is_proxy_score"
+)
+_PREQUENTIAL_ESCAPE_DATA_CODE_FAMILY = "prequential_escape_residual_bin_code_v1"
+_PREQUENTIAL_ESCAPE_DATA_CODE_FAMILIES = {
+    _PREQUENTIAL_ESCAPE_DATA_CODE_FAMILY,
+    "prequential_escape_residual_bin_v1",
+}
 
 
 @dataclass(frozen=True)
@@ -23,6 +37,8 @@ class CodelengthPolicy:
     data_code_family: str = _DEFAULT_DATA_CODE_FAMILY
     parameter_lattice_step: str | None = None
     state_lattice_step: str | None = None
+    parameter_lattice_reason: str | None = None
+    state_lattice_reason: str | None = None
 
     def __post_init__(self) -> None:
         if self.parameter_lattice_step is None:
@@ -31,8 +47,41 @@ class CodelengthPolicy:
                 "parameter_lattice_step",
                 self.quantization_step,
             )
+            object.__setattr__(
+                self,
+                "parameter_lattice_reason",
+                "parameter_lattice_defaulted_to_quantization_step",
+            )
+        elif self.parameter_lattice_reason is None:
+            object.__setattr__(
+                self,
+                "parameter_lattice_reason",
+                "explicit_parameter_lattice_step",
+            )
         if self.state_lattice_step is None:
             object.__setattr__(self, "state_lattice_step", self.quantization_step)
+            object.__setattr__(
+                self,
+                "state_lattice_reason",
+                "state_lattice_defaulted_to_quantization_step",
+            )
+        elif self.state_lattice_reason is None:
+            object.__setattr__(
+                self,
+                "state_lattice_reason",
+                "explicit_state_lattice_step",
+            )
+
+    @property
+    def lattice_fallback_reason_codes(self) -> dict[str, str]:
+        reason_codes: dict[str, str] = {}
+        if self.parameter_lattice_reason == (
+            "parameter_lattice_defaulted_to_quantization_step"
+        ):
+            reason_codes["parameter_lattice_step"] = self.parameter_lattice_reason
+        if self.state_lattice_reason == "state_lattice_defaulted_to_quantization_step":
+            reason_codes["state_lattice_step"] = self.state_lattice_reason
+        return reason_codes
 
 
 @dataclass(frozen=True)
@@ -60,6 +109,8 @@ class CodelengthComparisonKey:
     residual_history_construction: str
     parameter_lattice_step: str
     state_lattice_step: str
+    reference_scope: str = "raw_observation_reference"
+    reference_family_id: str = "raw_quantized_transformed_sequence"
     runtime_signature: str = "none"
 
     def with_update(self, **updates: Any) -> "CodelengthComparisonKey":
@@ -70,6 +121,8 @@ class CodelengthComparisonKey:
             "quantization_mode": self.quantization_mode,
             "quantization_step": self.quantization_step,
             "reference_policy_id": self.reference_policy_id,
+            "reference_scope": self.reference_scope,
+            "reference_family_id": self.reference_family_id,
             "data_code_family": self.data_code_family,
             "support_kind": self.support_kind,
             "horizon_geometry": list(self.horizon_geometry),
@@ -174,6 +227,7 @@ def data_code_length(
     residual_indices: Sequence[int],
     *,
     data_code_family: str = _DEFAULT_DATA_CODE_FAMILY,
+    alphabet_policy: ResidualAlphabetPolicy | Mapping[str, Any] | None = None,
 ) -> float:
     if data_code_family == _DEFAULT_DATA_CODE_FAMILY:
         return float(natural_integer_code_length(len(residual_indices))) + float(
@@ -183,6 +237,11 @@ def data_code_length(
         return float(natural_integer_code_length(len(residual_indices))) + (
             prequential_laplace_residual_bin_code(residual_indices).total_bits
         )
+    if data_code_family in _PREQUENTIAL_ESCAPE_DATA_CODE_FAMILIES:
+        return prequential_escape_residual_bin_code_v1(
+            residual_indices,
+            alphabet_policy=_coerce_residual_alphabet_policy(alphabet_policy),
+        ).total_bits
     raise ContractValidationError(
         code="unsupported_data_code_family",
         message="data code family is not supported",
@@ -231,6 +290,7 @@ def data_code_diagnostics(
     residual_indices: Sequence[int],
     *,
     data_code_family: str = _DEFAULT_DATA_CODE_FAMILY,
+    alphabet_policy: ResidualAlphabetPolicy | Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if data_code_family == "prequential_laplace_residual_bin_v1":
         result = prequential_laplace_residual_bin_code(residual_indices)
@@ -238,8 +298,52 @@ def data_code_diagnostics(
             "code_family": data_code_family,
             "rows": [dict(row) for row in result.rows],
             "prequential_bits": result.total_bits,
+            "coding_claim_tier": "mdl_inspired_proxy_score",
+            "coding_claim_tier_reason_code": (
+                "legacy_laplace_residual_bin_lacks_explicit_escape_identity_code"
+            ),
+        }
+    if data_code_family in _PREQUENTIAL_ESCAPE_DATA_CODE_FAMILIES:
+        resolved_alphabet_policy = _coerce_residual_alphabet_policy(alphabet_policy)
+        result = prequential_escape_residual_bin_code_v1(
+            residual_indices,
+            alphabet_policy=resolved_alphabet_policy,
+        )
+        rows = [dict(row) for row in result.rows]
+        return {
+            "code_family": data_code_family,
+            "rows": rows,
+            "events": rows,
+            "sequence_length_bits": result.sequence_length_bits,
+            "event_bits": round(
+                sum(row["incremental_bits"] for row in rows),
+                12,
+            ),
+            "total_bits": result.total_bits,
+            "prequential_bits": result.total_bits,
+            "coding_claim_tier": "exact_prequential_symbol_code",
+            "unseen_symbol_behavior": (
+                "explicit_escape_then_symbol_identity"
+                if resolved_alphabet_policy.escape_policy is not None
+                else "fixed_finite_alphabet_without_escape"
+            ),
+            "alphabet_mode": resolved_alphabet_policy.alphabet_mode,
+            "escape_policy": resolved_alphabet_policy.escape_policy,
+            "innovation_code_family": (
+                resolved_alphabet_policy.innovation_code_family
+            ),
         }
     return {"code_family": data_code_family}
+
+
+def _coerce_residual_alphabet_policy(
+    alphabet_policy: ResidualAlphabetPolicy | Mapping[str, Any] | None,
+) -> ResidualAlphabetPolicy:
+    if alphabet_policy is None:
+        return ResidualAlphabetPolicy.open_prequential()
+    if isinstance(alphabet_policy, ResidualAlphabetPolicy):
+        return alphabet_policy
+    return ResidualAlphabetPolicy(**dict(alphabet_policy))
 
 
 def codelength_terms(
@@ -357,6 +461,8 @@ def strict_single_class_law_eligibility(
     field_order = (
         "quantization_mode",
         "quantization_step",
+        "reference_scope",
+        "reference_family_id",
         "reference_policy_id",
         "data_code_family",
         "support_kind",
@@ -406,9 +512,15 @@ def build_codelength_policy_manifest(
             "literal_lattice_step": quantizer.step_string,
             "parameter_code_family": "float_lattice_zigzag_elias_delta_v1",
             "parameter_lattice_step": quantizer.step_string,
+            "parameter_lattice_reason": "explicit_parameter_lattice_step",
             "state_code_family": "float_lattice_zigzag_elias_delta_v1",
             "state_lattice_step": quantizer.step_string,
+            "state_lattice_reason": "explicit_state_lattice_step",
             "data_code_family": _DEFAULT_DATA_CODE_FAMILY,
+            "coding_claim_tier": _LEGACY_CODELENGTH_POLICY_CLAIM_TIER,
+            "coding_claim_tier_reason_code": (
+                _LEGACY_CODELENGTH_POLICY_CLAIM_TIER_REASON_CODE
+            ),
             "reference_description_policy_ref": (
                 reference_description_policy_ref.as_dict()
             ),
@@ -423,6 +535,8 @@ __all__ = [
     "CodelengthComparisonKey",
     "CodelengthPolicy",
     "PrequentialCodeResult",
+    "ResidualAlphabetPolicy",
+    "ResidualCodeEvent",
     "StrictComparabilityResult",
     "build_codelength_policy_manifest",
     "codelength_terms",
@@ -435,6 +549,7 @@ __all__ = [
     "literal_code_length",
     "natural_integer_code_length",
     "parameter_code_length",
+    "prequential_escape_residual_bin_code_v1",
     "prequential_laplace_residual_bin_code",
     "signed_integer_code_length",
     "state_code_length",

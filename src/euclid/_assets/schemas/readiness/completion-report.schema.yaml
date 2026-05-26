@@ -10,12 +10,25 @@ required_fields:
   - generated_at
   - policy_verdicts
   - scope_evidence_bundles
+  - claim_truth_summary
   - completion_values
   - clean_install_certification
   - capability_rows
   - residual_risk_codes
   - unresolved_blockers
   - confidence
+claim_truth_summary_required_fields:
+  - truth_status
+  - ready
+  - blocked_policy_verdicts
+  - unresolved_blockers
+  - proof_status_counts
+  - secondary_progress_evidence
+  - secondary_progress_evidence_role
+claim_truth_status_values:
+  - ready
+  - review_required
+  - blocked
 policy_verdict_required_fields:
   - policy_id
   - verdict
@@ -61,3 +74,4 @@ capability_row_required_fields:
 proof_status_values:
   - missing_proof
   - failed_proof
+  - policy_blocked

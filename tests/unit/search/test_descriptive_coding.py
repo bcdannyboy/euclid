@@ -288,6 +288,148 @@ def test_prequential_data_code_records_prefix_only_evidence() -> None:
     ]
 
 
+def test_parameter_lattice_policy_is_serialized_in_candidate_model_code() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.0, 10.0))
+    candidate = _analytic_intercept_candidate(intercept=10.0)
+
+    result = evaluate_descriptive_candidates(
+        (candidate,),
+        feature_view=feature_view,
+        parameter_lattice_step="0.25",
+    )
+
+    decomposition = result.accepted_candidates[
+        0
+    ].evidence_layer.model_code_decomposition.as_dict()
+    assert decomposition["parameter_lattice_step"] == "0.25"
+    assert decomposition["parameter_lattice_policy_id"] == "fixed_step_mid_tread:0.25"
+
+
+def test_state_lattice_policy_is_serialized_when_state_is_encoded() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.0, 10.0))
+    candidate = _analytic_intercept_candidate(intercept=10.0)
+    object.__setattr__(
+        candidate.evidence_layer.model_code_decomposition,
+        "L_state_bits",
+        1.0,
+    )
+
+    result = evaluate_descriptive_candidates(
+        (candidate,),
+        feature_view=feature_view,
+        state_lattice_step="0.125",
+    )
+
+    decomposition = result.accepted_candidates[
+        0
+    ].evidence_layer.model_code_decomposition.as_dict()
+    assert decomposition["state_lattice_step"] == "0.125"
+    assert decomposition["state_lattice_policy_id"] == "fixed_step_mid_tread:0.125"
+
+
+def test_descriptive_candidates_with_different_parameter_lattices_are_not_comparable() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.0, 10.0))
+    left = _analytic_intercept_candidate(intercept=10.0)
+    right = _analytic_intercept_candidate(
+        intercept=10.0,
+        candidate_id="analytic_intercept_finer_lattice",
+    )
+    base_key = CodelengthComparisonKey(
+        quantization_mode="fixed_step_mid_tread",
+        quantization_step="0.5",
+        reference_policy_id="raw_quantized_transformed_sequence_v1",
+        data_code_family="residual_signed_integer_elias_delta_v1",
+        support_kind="all_real",
+        horizon_geometry=(1,),
+        coding_row_set_id="rows:a",
+        residual_history_construction="none",
+        parameter_lattice_step="0.5",
+        state_lattice_step="0.5",
+    )
+
+    result = evaluate_descriptive_candidates(
+        (left, right),
+        feature_view=feature_view,
+        comparison_key_overrides={
+            left.canonical_hash(): base_key,
+            right.canonical_hash(): base_key.with_update(
+                parameter_lattice_step="0.25"
+            ),
+        },
+    )
+
+    assert result.accepted_candidates == ()
+    assert {
+        diagnostic.details["comparison_failure_reason_code"]
+        for diagnostic in result.admissibility_diagnostics
+    } == {"parameter_lattice_step_mismatch"}
+
+
+def test_descriptive_coding_keeps_comparable_subgroup_when_mixed_keys_exist() -> None:
+    feature_view = _feature_view((10.0, 10.0, 10.0, 10.0))
+    left = _analytic_intercept_candidate(
+        intercept=10.0,
+        candidate_id="analytic_intercept_group_a",
+    )
+    peer = _analytic_intercept_candidate(
+        intercept=10.0,
+        candidate_id="analytic_intercept_group_b",
+    )
+    incompatible = _analytic_intercept_candidate(
+        intercept=10.0,
+        candidate_id="analytic_intercept_other_quantizer",
+    )
+    base_key = CodelengthComparisonKey(
+        quantization_mode="fixed_step_mid_tread",
+        quantization_step="0.5",
+        reference_policy_id="raw_quantized_transformed_sequence_v1",
+        data_code_family="residual_signed_integer_elias_delta_v1",
+        support_kind="all_real",
+        horizon_geometry=(1,),
+        coding_row_set_id="rows:a",
+        residual_history_construction="none",
+        parameter_lattice_step="0.5",
+        state_lattice_step="0.5",
+    )
+
+    result = evaluate_descriptive_candidates(
+        (left, peer, incompatible),
+        feature_view=feature_view,
+        comparison_key_overrides={
+            left.canonical_hash(): base_key,
+            peer.canonical_hash(): base_key,
+            incompatible.canonical_hash(): base_key.with_update(
+                quantization_step="0.25"
+            ),
+        },
+    )
+
+    assert [
+        candidate.evidence_layer.backend_origin_record.source_candidate_id
+        for candidate in result.accepted_candidates
+    ] == ["analytic_intercept_group_a", "analytic_intercept_group_b"]
+    assert [artifact.candidate_id for artifact in result.description_artifacts] == [
+        "analytic_intercept_group_a",
+        "analytic_intercept_group_b",
+    ]
+
+    diagnostics = {
+        diagnostic.candidate_id: diagnostic
+        for diagnostic in result.admissibility_diagnostics
+    }
+    assert diagnostics["analytic_intercept_group_a"].reason_codes == ()
+    assert diagnostics["analytic_intercept_group_b"].reason_codes == ()
+    assert diagnostics["analytic_intercept_other_quantizer"].reason_codes == (
+        "codelength_comparability_failed",
+    )
+    assert (
+        diagnostics["analytic_intercept_other_quantizer"].details[
+            "comparison_failure_reason_code"
+        ]
+        == "no_comparable_peer_in_batch"
+    )
+
+
 def _feature_view(values: tuple[float, ...]):
     snapshot = FrozenDatasetSnapshot(
         series_id="demo-series",

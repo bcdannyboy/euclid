@@ -135,6 +135,7 @@ def test_emit_probabilistic_prediction_artifact_preserves_forecast_object_typing
                 == "declared_literal"
             )
             assert row["event_definition"]["event_id"] != "target_ge_origin_target"
+            assert row["event_definition"]["threshold"] == 12.5
 
 
 def test_emit_probabilistic_prediction_artifact_rejects_wrong_policy_type() -> None:
@@ -659,23 +660,33 @@ def _probabilistic_score_policy_manifest(
         "quantile": "pinball_loss",
         "event_probability": "brier_score",
     }[forecast_object_type]
+    body = {
+        "score_policy_id": f"test_{forecast_object_type}_policy_v1",
+        "owner_prompt_id": "prompt.scoring-calibration-v1",
+        "scope_id": "euclid_v1_binding_scope@1.0.0",
+        "forecast_object_type": forecast_object_type,
+        "primary_score": primary_score,
+        "aggregation_mode": "per_horizon_mean_then_simplex_weighted_mean",
+        "horizon_weights": [
+            weight.as_dict() for weight in evaluation_plan.horizon_weights
+        ],
+        "entity_aggregation_mode": (
+            "single_entity_only_no_cross_entity_aggregation"
+        ),
+        "comparison_class_rule": "identical_score_policy_required",
+    }
+    if forecast_object_type == "event_probability":
+        body["event_definition"] = {
+            "event_id": "test_target_ge_declared_threshold",
+            "operator": "greater_than_or_equal",
+            "threshold": 12.5,
+            "threshold_source": "declared_literal",
+            "variable": "target",
+            "calibration_required": True,
+        }
     return ManifestEnvelope.build(
         schema_name=schema_name,
         module_id="scoring",
-        body={
-            "score_policy_id": f"test_{forecast_object_type}_policy_v1",
-            "owner_prompt_id": "prompt.scoring-calibration-v1",
-            "scope_id": "euclid_v1_binding_scope@1.0.0",
-            "forecast_object_type": forecast_object_type,
-            "primary_score": primary_score,
-            "aggregation_mode": "per_horizon_mean_then_simplex_weighted_mean",
-            "horizon_weights": [
-                weight.as_dict() for weight in evaluation_plan.horizon_weights
-            ],
-            "entity_aggregation_mode": (
-                "single_entity_only_no_cross_entity_aggregation"
-            ),
-            "comparison_class_rule": "identical_score_policy_required",
-        },
+        body=body,
         catalog=catalog,
     )

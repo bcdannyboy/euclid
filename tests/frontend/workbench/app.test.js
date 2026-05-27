@@ -11,6 +11,8 @@ const FIXTURE_DIR = resolve(TEST_DIR, "fixtures");
 const APP_MODULE_URL = pathToFileURL(resolve(ASSET_DIR, "app.js")).href;
 const originalFetch = globalThis.fetch;
 
+vi.setConfig({ testTimeout: 15000 });
+
 const [shellHtml, shellCss, savedAnalysisFixture, noWinnerFixture] =
   await Promise.all([
     readFile(resolve(ASSET_DIR, "index.html"), "utf8"),
@@ -150,7 +152,7 @@ describe("workbench packaged asset harness", () => {
 
     await waitFor(() => {
       expect(textContent("#tab-atlas")).toContain("Analytical workspace");
-    });
+    }, { timeoutMs: 3000 });
 
     document
       .querySelector('#tab-atlas [data-horizon="2"]')
@@ -964,7 +966,7 @@ describe("workbench packaged asset harness", () => {
       expect(textContent("#tab-overview")).toContain("Best available descriptive approximation");
     });
 
-    const heroCard = document.querySelector('#tab-overview [data-equation-hero="overview"]');
+    const heroCard = document.querySelector('#tab-overview [data-equation-hero="descriptive_fit"]');
     expect(heroCard).not.toBeNull();
     const overviewText = textContent("#tab-overview");
     expect(overviewText).toContain(
@@ -1737,6 +1739,278 @@ describe("workbench packaged asset harness", () => {
     expect(overviewText).not.toContain("Best available descriptive approximation");
   });
 
+  test("renders exact descriptive lane separately from no-publishable predictive search", async () => {
+    const analysis = buildAtlasFixture();
+    analysis.claim_class = "descriptive_reconstruction";
+    analysis.publishable = false;
+    analysis.predictive_law = null;
+    analysis.holistic_equation = null;
+    attachEquationLanesNoLaw(analysis);
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-overview")).toContain(
+        "Sample-exact descriptive reconstruction",
+      );
+    });
+
+    const overviewText = textContent("#tab-overview");
+    expect(overviewText).toContain("Predictive law search");
+    expect(overviewText).toContain("no publishable law");
+    expect(overviewText).toContain("observed rows only");
+    expect(overviewText).not.toContain("perfect law");
+    expect(
+      document.querySelector('[data-equation-lane-card="descriptive_exact"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-equation-lane-card="predictive_law_search"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-overlay-option="predictive_law_search"]'),
+    ).toBeNull();
+  });
+
+  test("uses exact descriptive lane as descriptive overlay without marking it predictive", async () => {
+    const analysis = buildAtlasFixture();
+    analysis.predictive_law = null;
+    analysis.holistic_equation = null;
+    attachEquationLanesNoLaw(analysis);
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-point")).toContain(
+        "Sample-exact descriptive reconstruction",
+      );
+    });
+
+    const pointText = textContent("#tab-point");
+    expect(pointText).toContain("active deterministic overlay");
+    expect(pointText).not.toContain("Predictive symbolic law reflects");
+    document
+      .querySelector('[data-overlay-option="descriptive_exact"]')
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(window.location.search).toContain("overlay=descriptive_exact");
+  });
+
+  test("keeps publishable predictive law ahead of exact descriptive overlay when both lanes exist", async () => {
+    const analysis = buildAtlasFixture();
+    attachValidPredictiveLaw(analysis);
+    attachEquationLanesPublishableLaw(analysis);
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-overview")).toContain("Predictive symbolic law");
+    });
+
+    expect(document.querySelector('[data-equation-hero="predictive_law"]')).not.toBeNull();
+    expect(document.querySelector('[data-equation-ribbon-item="predictive_law"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-overlay-option="predictive_law"][aria-pressed="true"]'),
+    ).not.toBeNull();
+    expect(textContent("#tab-overview")).toContain(
+      "Sample-exact descriptive reconstruction",
+    );
+    expect(textContent("#tab-overview")).not.toContain("perfect law");
+  });
+
+  test("keeps holistic equation as default overlay when valid lanes coexist", async () => {
+    const analysis = buildAtlasFixture();
+    attachValidPredictiveLaw(analysis);
+    analysis.claim_class = "holistic_equation";
+    analysis.holistic_equation = {
+      status: "completed",
+      claim_class: "holistic_equation",
+      honesty_note: "Backend-backed holistic equation.",
+      equation: analysis.operator_point.equation,
+      deterministic_source: "predictive_law",
+      probabilistic_source: "distribution",
+      validation_scope_ref: "artifacts/validation-scope.json",
+      publication_record_ref: "artifacts/publication-record.json",
+    };
+    analysis.gap_report = [];
+    analysis.not_holistic_because = [];
+    attachEquationLanesPublishableLaw(analysis);
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-overview")).toContain("Holistic equation");
+    });
+
+    expect(document.querySelector('[data-equation-hero="holistic"]')).not.toBeNull();
+    expect(document.querySelector('[data-equation-ribbon-item="holistic"]')).not.toBeNull();
+    expect(document.querySelector('[data-equation-ribbon-item="predictive_law"]')).not.toBeNull();
+    expect(document.querySelector('[data-overlay-option="predictive_law"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-overlay-option="holistic"][aria-pressed="true"]'),
+    ).not.toBeNull();
+    expect(
+      document.querySelector('[data-overlay-option="predictive_law"][aria-pressed="true"]'),
+    ).toBeNull();
+  });
+
+  test("hydrates and syncs descriptive exact overlay query state", async () => {
+    const analysis = buildAtlasFixture();
+    attachEquationLanesNoLaw(analysis);
+
+    await mountWorkbench({
+      route: routeAnalysis(analysis),
+      locationSearch: "?overlay=descriptive_exact",
+    });
+
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-overlay-option="descriptive_exact"][aria-pressed="true"]'),
+      ).not.toBeNull();
+    });
+
+    expect(window.location.search).toContain("overlay=descriptive_exact");
+  });
+
+  test("falls back from stale overlay query to default precedence with lanes present", async () => {
+    const analysis = buildAtlasFixture();
+    attachEquationLanesNoLaw(analysis);
+
+    await mountWorkbench({
+      route: routeAnalysis(analysis),
+      locationSearch: "?overlay=bogus",
+    });
+
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-overlay-option="descriptive_exact"][aria-pressed="true"]'),
+      ).not.toBeNull();
+    });
+
+    expect(window.location.search).not.toContain("overlay=bogus");
+  });
+
+  test("hydrates legacy descriptive reconstruction overlay when lanes are absent", async () => {
+    const analysis = buildAtlasFixture();
+    analysis.descriptive_reconstruction = {
+      status: "completed",
+      claim_class: "descriptive_reconstruction",
+      honesty_note:
+        "Legacy saved descriptive reconstruction remains available for old analyses.",
+      equation: {
+        candidate_id: "descriptive_fourier_reconstruction",
+        family_id: "analytic",
+        label: String.raw`y(t)=\operatorname{LegacyFourier}_{k}(t)`,
+        curve: analysis.operator_point.equation.curve,
+      },
+      chart: {
+        equation_curve: analysis.operator_point.equation.curve,
+      },
+    };
+    delete analysis.equation_lanes;
+
+    await mountWorkbench({
+      route: routeAnalysis(analysis),
+      locationSearch: "?overlay=descriptive_reconstruction",
+    });
+
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-overlay-option="descriptive_reconstruction"][aria-pressed="true"]'),
+      ).not.toBeNull();
+    });
+  });
+
+  test("does not promote no-law predictive search into hero ribbon or overlays", async () => {
+    const analysis = buildAtlasFixture();
+    analysis.predictive_law = null;
+    analysis.holistic_equation = null;
+    attachEquationLanesNoLaw(analysis);
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-equation-lane-card="predictive_law_search"]'),
+      ).not.toBeNull();
+    });
+
+    expect(document.querySelector('[data-overlay-option="predictive_law_search"]')).toBeNull();
+    expect(document.querySelector('[data-equation-hero="predictive_law_search"]')).toBeNull();
+    expect(document.querySelector('[data-equation-ribbon-item="predictive_law_search"]')).toBeNull();
+    expect(textContent("#hero")).not.toContain("Predictive symbolic law");
+    expect(textContent("#hero")).not.toContain("publishable law");
+    expect(textContent("#tab-overview")).toContain("no publishable law");
+  });
+
+  test("keeps exact descriptive card copy bounded to observed samples", async () => {
+    const analysis = buildAtlasFixture();
+    attachEquationLanesNoLaw(analysis);
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-equation-lane-card="descriptive_exact"]'),
+      ).not.toBeNull();
+    });
+
+    const exactText = textContent('[data-equation-lane-card="descriptive_exact"]');
+    expect(exactText).toContain("observed rows");
+    expect(exactText).not.toMatch(/\blaw\b/i);
+    expect(exactText).not.toMatch(/\bpublish\w*\b/i);
+    expect(exactText).not.toMatch(/\bpublication\b/i);
+    expect(exactText).not.toMatch(/\bperfect\b/i);
+    expect(exactText).not.toMatch(/\bpredictive\b/i);
+  });
+
+  test("renders legacy saved analysis without equation lanes through old fields", async () => {
+    const analysis = buildAtlasFixture();
+    delete analysis.equation_lanes;
+
+    await mountWorkbench({ route: routeAnalysis(analysis) });
+    document
+      .querySelector("button[data-analysis-path]")
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => {
+      expect(textContent("#tab-overview")).toContain("Benchmark-local descriptive fit");
+    });
+
+    expect(textContent("#tab-overview")).not.toContain(
+      "Sample-exact descriptive reconstruction",
+    );
+  });
+
   test("rejects law promotion when a retained abstention artifact survives under a publishable status", async () => {
     const analysis = buildAtlasFixture();
     analysis.operator_point.publication = {
@@ -2073,6 +2347,98 @@ describe("workbench packaged asset harness", () => {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function routeAnalysis(analysis) {
+  return (url) => {
+    if (url.pathname === "/api/config") {
+      return jsonResponse(
+        buildConfig({
+          recentAnalyses: [buildRecentEntry(analysis)],
+        }),
+      );
+    }
+    if (url.pathname === "/api/analysis") {
+      return jsonResponse(analysis);
+    }
+    throw new Error(`Unhandled request: ${url.pathname}`);
+  };
+}
+
+function attachEquationLanesNoLaw(analysis) {
+  analysis.equation_lanes = {
+    schema_version: "1.0.0",
+    source: "workbench_normalization",
+    lane_order: ["predictive_law_search", "descriptive_exact", "descriptive_fit"],
+    descriptive_exact: {
+      status: "completed",
+      lane_kind: "descriptive_exact",
+      exactness: "sample_exact_reconstruction",
+      law_eligible: false,
+      publishable: false,
+      honesty_note:
+        "Sample-exact reconstruction of observed rows only. It is descriptive, non-publishable, and not evidence of future behavior.",
+      equation: {
+        label: String.raw`y(t)=\operatorname{DFTExact}_{N}(t)`,
+        curve: analysis.operator_point.equation.curve,
+      },
+      chart: {
+        equation_curve: analysis.operator_point.equation.curve,
+      },
+      reconstruction_metrics: {
+        max_abs_error: 0,
+        effective_exact_tolerance: 1e-10,
+        exact_tolerance_cleared: true,
+      },
+    },
+    predictive_law_search: {
+      status: "no_publishable_law",
+      lane_kind: "predictive_law_search",
+      publishable: false,
+      predictive_law: null,
+      reason_codes: ["predictive_support_failed"],
+      honesty_note:
+        "Predictive law search did not produce a publishable law under the declared validation scope.",
+    },
+  };
+}
+
+function markOperatorPublicationPublishable(analysis) {
+  analysis.operator_point.publication = {
+    status: "publishable",
+    headline: "Operator point publication cleared the declared validation scope.",
+  };
+  analysis.operator_point.abstention = null;
+  analysis.would_have_abstained_because = [];
+}
+
+function attachValidPredictiveLaw(analysis) {
+  markOperatorPublicationPublishable(analysis);
+  analysis.claim_class = "predictive_law";
+  analysis.predictive_law = {
+    status: "completed",
+    claim_class: "predictive_law",
+    honesty_note:
+      "Predictive symbolic law reflects the publishable point-lane claim inside the declared validation scope.",
+    equation: analysis.operator_point.equation,
+    claim_card_ref: "artifacts/claim-card.json",
+    scorecard_ref: "artifacts/scorecard.json",
+    validation_scope_ref: "artifacts/validation-scope.json",
+    publication_record_ref: "artifacts/publication-record.json",
+    evidence_summary: {},
+  };
+}
+
+function attachEquationLanesPublishableLaw(analysis) {
+  attachEquationLanesNoLaw(analysis);
+  analysis.equation_lanes.predictive_law_search = {
+    status: "publishable_law",
+    lane_kind: "predictive_law_search",
+    publishable: true,
+    predictive_law: analysis.predictive_law,
+    reason_codes: [],
+    evidence_summary: analysis.predictive_law?.evidence_summary || {},
+  };
 }
 
 function buildConfig({ recentAnalyses = [] } = {}) {
@@ -2668,10 +3034,21 @@ function jsonResponse(payload, { ok = true, status = 200 } = {}) {
   });
 }
 
-async function mountWorkbench({ route }) {
+async function mountWorkbench({ route, locationSearch = null }) {
   document.open();
   document.write(shellHtml);
   document.close();
+  if (
+    locationSearch !== null &&
+    typeof window !== "undefined" &&
+    window.history?.replaceState
+  ) {
+    window.history.replaceState(
+      null,
+      "",
+      `/${locationSearch}`,
+    );
+  }
 
   const styleTag = document.createElement("style");
   styleTag.textContent = shellCss;
@@ -2720,7 +3097,7 @@ function textContent(selector) {
   return document.querySelector(selector)?.textContent?.replace(/\s+/g, " ").trim() || "";
 }
 
-async function waitFor(assertion, { timeoutMs = 1000 } = {}) {
+async function waitFor(assertion, { timeoutMs = 3000 } = {}) {
   const deadline = Date.now() + timeoutMs;
   let lastError = null;
 

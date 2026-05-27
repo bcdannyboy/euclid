@@ -72,11 +72,16 @@ Certified entrypoints:
 ## Live SPY workbench run
 
 This snapshot shows a real-key Financial Modeling Prep and OpenAI workbench run
-for SPY over the last 30 calendar days available on May 26, 2026. FMP returned
-20 trading-day close observations from April 27, 2026 through May 22, 2026. The
-raw-close surface replayed the operator result, completed the probabilistic
-lanes, selected an algorithmic benchmark-local winner, and still kept the public
-claim ceiling at descriptive structure because publication gates abstained.
+for SPY price close over the requested April 27, 2026 through May 27, 2026
+window. FMP returned 21 trading-day close observations from April 27, 2026
+through May 26, 2026. The exact descriptive lane completed as a sample-exact
+reconstruction over all 21 observed rows, with max absolute replay error
+`2.27e-13` under a `1e-10` tolerance. The predictive-law search produced no
+publishable law (`descriptive_structure`, `predictive_support_failed`,
+`predictive_scorecard_failed`), so the top-level claim remains descriptive
+reconstruction rather than a forecasting law. The benchmark portfolio selected
+`algorithmic_search_backend` / `algorithmic_last_observation`, while the
+benchmark descriptive fit stayed absent because the reconstruction floor failed.
 
 ![SPY price-close overview](docs/assets/readme/workbench/live-spy-30d/price-close-overview.png)
 

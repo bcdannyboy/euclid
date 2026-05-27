@@ -1,0 +1,104 @@
+{
+  "generated_at": "2026-05-27T02:48:44Z",
+  "source": "Fresh live SPY/price_close workbench run captured through Playwright against http://127.0.0.1:8765/",
+  "analysis_path": "build/workbench/readme-live/20260527T023705Z-spy-price-close/analysis.json",
+  "request": {
+    "symbol": "SPY",
+    "target_id": "price_close",
+    "start_date": "2026-04-27",
+    "end_date": "2026-05-27",
+    "include_probabilistic": true,
+    "include_benchmark": true
+  },
+  "dataset": {
+    "rows": 21,
+    "date_range": {
+      "start": "2026-04-27T00:00:00Z",
+      "end": "2026-05-26T00:00:00Z"
+    },
+    "latest_value": 750.59,
+    "latest_event_time": "2026-05-26T00:00:00Z"
+  },
+  "claim_summary": {
+    "claim_class": "descriptive_reconstruction",
+    "publishable": false,
+    "predictive_law": false,
+    "holistic_equation": false,
+    "descriptive_exact_status": "completed",
+    "descriptive_exact_sample_size": 21,
+    "descriptive_exact_max_abs_error": 2.2737367544323206e-13,
+    "descriptive_exact_tolerance": 1e-10,
+    "descriptive_exact_tolerance_cleared": true,
+    "predictive_law_search_status": "no_publishable_law",
+    "predictive_law_reasons": [
+      "descriptive_structure",
+      "predictive_support_failed",
+      "predictive_scorecard_failed"
+    ],
+    "benchmark_winner": "algorithmic_search_backend / algorithmic_last_observation",
+    "benchmark_descriptive_fit_status": "absent_reconstruction_floor_failed",
+    "llm_explanations": "completed"
+  },
+  "screenshots": [
+    {
+      "filename": "price-close-overview.png",
+      "url": "http://127.0.0.1:8765/?tab=overview&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "viewport": {
+        "width": 1200,
+        "height": 835,
+        "mobile": false
+      },
+      "image_size": {
+        "width": 1200,
+        "height": 835
+      },
+      "sha256": "2317bfc71001de8f7552beff26c8c2e1a7c92cb32e129b1b5b7be290e740ee01",
+      "caption": "Fresh SPY price-close overview showing the exact descriptive reconstruction and non-predictive claim ceiling."
+    },
+    {
+      "filename": "price-close-evidence.png",
+      "url": "http://127.0.0.1:8765/?tab=atlas&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "viewport": {
+        "width": 1200,
+        "height": 835,
+        "mobile": false
+      },
+      "image_size": {
+        "width": 1200,
+        "height": 835
+      },
+      "sha256": "2ef144b92736aef84fbdb98fc9193fe5eb25e2fed8111e56cfd5f3eb58bcab0b",
+      "caption": "Evidence atlas tying the observed SPY close path to the descriptive equation and residual evidence."
+    },
+    {
+      "filename": "price-close-calibration.png",
+      "url": "http://127.0.0.1:8765/?tab=probabilistic&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "viewport": {
+        "width": 1200,
+        "height": 835,
+        "mobile": false
+      },
+      "image_size": {
+        "width": 1200,
+        "height": 835
+      },
+      "sha256": "f2f724cd15aec5b2e23c617aedc24420c625d161580f9ca292ec87406c895645",
+      "caption": "Probabilistic calibration tab for the selected horizon and distribution lane."
+    },
+    {
+      "filename": "price-close-artifacts.png",
+      "url": "http://127.0.0.1:8765/?tab=artifacts&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "viewport": {
+        "width": 1200,
+        "height": 835,
+        "mobile": false
+      },
+      "image_size": {
+        "width": 1200,
+        "height": 835
+      },
+      "sha256": "31c4e03d8bc5b7aed7b9cf09361cab2c11ed0725735327b43fd3bad4ca23631d",
+      "caption": "Artifact trail for replaying and auditing the fresh SPY price-close workbench run."
+    }
+  ]
+}

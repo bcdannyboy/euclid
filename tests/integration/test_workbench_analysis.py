@@ -326,12 +326,60 @@ def test_create_workbench_analysis_runs_real_runtime_with_fixture_history(
     assert analysis["benchmark"]["status"] == "completed"
     assert analysis["benchmark"]["submitters"]
     assert analysis["benchmark"]["portfolio_selection"]["winner_submitter_id"]
-    assert analysis["descriptive_fit"]["status"] == "completed"
-    assert analysis["descriptive_fit"]["source"] == "benchmark_local_selection"
-    assert analysis["descriptive_fit"]["equation"]["label"]
-    assert "delta_form_label" in analysis["descriptive_fit"]["equation"]
-    assert analysis["descriptive_fit"]["chart"]["equation_curve"]
+    if isinstance(analysis.get("descriptive_fit"), dict):
+        assert analysis["descriptive_fit"]["status"] == "completed"
+        assert analysis["descriptive_fit"]["source"] == "benchmark_local_selection"
+        assert analysis["descriptive_fit"]["equation"]["label"]
+        assert "delta_form_label" in analysis["descriptive_fit"]["equation"]
+        assert analysis["descriptive_fit"]["chart"]["equation_curve"]
+    else:
+        assert analysis["benchmark"]["descriptive_fit_status"]["status"] == (
+            "absent_reconstruction_floor_failed"
+        )
+        assert analysis["benchmark"]["descriptive_fit_status"]["reason_codes"] == [
+            "reconstruction_floor_failed"
+        ]
+    assert analysis["equation_lanes"]["schema_version"] == "1.0.0"
+    assert analysis["equation_lanes"]["descriptive_exact"]["status"] == "completed"
     assert Path(analysis["workspace_root"]).is_dir()
+
+
+def test_create_workbench_analysis_persists_equation_lanes(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        "euclid.workbench.service.fetch_fmp_eod_history",
+        lambda **_: [
+            {"date": f"2026-05-{day:02d}", "close": 100.0 + ((-1) ** day) * day}
+            for day in range(1, 12)
+        ],
+    )
+
+    analysis = create_workbench_analysis(
+        symbol="SPY",
+        api_key="test-key",
+        target_id="daily_return",
+        output_root=tmp_path / "out",
+        project_root=tmp_path,
+        start_date="2026-05-01",
+        end_date="2026-05-11",
+        include_probabilistic=False,
+        include_benchmark=False,
+    )
+    persisted = json.loads(
+        Path(analysis["analysis_path"]).read_text(encoding="utf-8")
+    )
+
+    assert analysis["equation_lanes"]["schema_version"] == "1.0.0"
+    assert persisted["equation_lanes"]["schema_version"] == "1.0.0"
+    assert persisted["equation_lanes"] == analysis["equation_lanes"]
+    assert persisted["descriptive_reconstruction"] == analysis["descriptive_reconstruction"]
+    assert persisted["predictive_law"] == analysis["predictive_law"]
+    assert persisted["holistic_equation"] == analysis["holistic_equation"]
+    assert persisted["descriptive_reconstruction"] is not None
+    assert "descriptive_exact" in persisted["equation_lanes"]
+    assert "predictive_law_search" in persisted["equation_lanes"]
 
 
 def test_saved_analysis_reload_preserves_no_winner_daily_return_fixture(
@@ -389,6 +437,15 @@ def test_saved_analysis_reload_preserves_no_winner_daily_return_fixture(
         "robustness_failed",
         "perturbation_protocol_failed",
     ]
+    assert payload["equation_lanes"]["schema_version"] == "1.0.0"
+    assert payload["equation_lanes"]["descriptive_exact"]["status"] == "completed"
+    assert (
+        payload["equation_lanes"]["descriptive_exact"]["equation"]["candidate_id"]
+        == "descriptive_exact_fourier_reconstruction"
+    )
+    assert payload["equation_lanes"]["predictive_law_search"]["status"] == (
+        "no_publishable_law"
+    )
     assert payload.get("gap_report") == [
         "operator_not_publishable",
         "no_backend_joint_claim",

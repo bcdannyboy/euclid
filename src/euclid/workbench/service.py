@@ -63,6 +63,9 @@ _DESCRIPTIVE_RECONSTRUCTION_SOURCE = "workbench_descriptive_reconstruction"
 _DESCRIPTIVE_RECONSTRUCTION_REASON_CODE = (
     "explicit_time_reconstruction_descriptive_structure"
 )
+_DESCRIPTIVE_EXACT_CANDIDATE_ID = "descriptive_exact_fourier_reconstruction"
+_DESCRIPTIVE_EXACT_SOURCE = "workbench_descriptive_exact_reconstruction"
+_DESCRIPTIVE_EXACT_REASON_CODE = "sample_exact_reconstruction_descriptive_only"
 _DESCRIPTIVE_RECONSTRUCTION_TARGET_R2 = 0.97
 _DESCRIPTIVE_RECONSTRUCTION_HARMONIC_LADDER = (
     16,
@@ -306,6 +309,169 @@ def build_equation_summary(
         ),
         "curve": curve,
         "render_status": "formula_supported" if label is not None else "structure_only",
+    }
+
+
+def _blocked_descriptive_exact_reconstruction(
+    *,
+    reason_codes: Sequence[str],
+    reconstruction_metrics: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "status": "blocked",
+        "claim_class": "descriptive_reconstruction",
+        "lane_kind": "descriptive_exact",
+        "source": _DESCRIPTIVE_EXACT_SOURCE,
+        "candidate_id": _DESCRIPTIVE_EXACT_CANDIDATE_ID,
+        "family_id": "spectral",
+        "exactness": "sample_exact_reconstruction",
+        "law_eligible": False,
+        "publishable": False,
+        "law_rejection_reason_codes": [_DESCRIPTIVE_EXACT_REASON_CODE],
+        "reason_codes": list(reason_codes),
+        "honesty_note": (
+            "Sample-exact reconstruction is unavailable for these observed rows. "
+            "This lane is descriptive-only and cannot publish a predictive law."
+        ),
+    }
+    if reconstruction_metrics is not None:
+        payload["reconstruction_metrics"] = dict(_jsonable(reconstruction_metrics))
+    return payload
+
+
+def _build_descriptive_exact_reconstruction(
+    *,
+    dataset_rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any] | None:
+    if len(dataset_rows) < 2:
+        return _blocked_descriptive_exact_reconstruction(
+            reason_codes=["insufficient_rows_for_sample_exact_reconstruction"],
+        )
+    observed_values = [
+        _float_or_none(row.get("observed_value"))
+        for row in dataset_rows
+    ]
+    if any(
+        value is None or not math.isfinite(float(value))
+        for value in observed_values
+    ):
+        return _blocked_descriptive_exact_reconstruction(
+            reason_codes=["nonfinite_observed_value"],
+        )
+
+    values = np.asarray([float(value) for value in observed_values], dtype=float)
+    sample_size = int(values.size)
+    spectrum = np.fft.rfft(values)
+    reconstructed = np.fft.irfft(spectrum, n=sample_size)
+    errors = reconstructed - values
+    max_abs_error = float(np.max(np.abs(errors))) if sample_size else 0.0
+    mae = float(np.mean(np.abs(errors))) if sample_size else 0.0
+    exact_scale = float(max(1.0, np.max(np.abs(values))))
+    exact_abs_floor = 1e-10
+    exact_relative_factor = float(
+        np.finfo(float).eps * max(64.0, 8.0 * sample_size)
+    )
+    effective_exact_tolerance = max(
+        exact_abs_floor,
+        exact_scale * exact_relative_factor,
+    )
+    actual_mean = float(np.mean(values)) if sample_size else 0.0
+    mean_baseline_sse = float(np.sum((values - actual_mean) ** 2))
+    fit_squared_error = float(np.sum(errors**2))
+    if mean_baseline_sse > 0.0:
+        r2_vs_mean_baseline: float | None = 1.0 - (
+            fit_squared_error / mean_baseline_sse
+        )
+    elif fit_squared_error == 0.0:
+        r2_vs_mean_baseline = 1.0
+    else:
+        r2_vs_mean_baseline = None
+    normalized_mae = mae / exact_scale
+    normalized_max_abs_error = max_abs_error / exact_scale
+    metrics = {
+        "sample_size": sample_size,
+        "max_abs_error": max_abs_error,
+        "mae": mae,
+        "fit_mae": mae,
+        "normalized_mae": normalized_mae,
+        "normalized_max_abs_error": normalized_max_abs_error,
+        "r2_vs_mean_baseline": r2_vs_mean_baseline,
+        "exact_abs_floor": exact_abs_floor,
+        "exact_relative_factor": exact_relative_factor,
+        "exact_scale": exact_scale,
+        "effective_exact_tolerance": effective_exact_tolerance,
+        "exact_tolerance_cleared": max_abs_error <= effective_exact_tolerance,
+    }
+    if not metrics["exact_tolerance_cleared"]:
+        return _blocked_descriptive_exact_reconstruction(
+            reason_codes=["sample_exact_tolerance_not_cleared"],
+            reconstruction_metrics=metrics,
+        )
+
+    actual_series = _actual_series(dataset_rows)
+    equation_curve = [
+        {
+            "event_time": str(row["event_time"]),
+            "fitted_value": float(fitted_value),
+        }
+        for row, fitted_value in zip(dataset_rows, reconstructed, strict=True)
+    ]
+    nyquist_bin_index = sample_size // 2 if sample_size % 2 == 0 else None
+    literals = {
+        "basis": "rfft_full_sample",
+        "fft_library": "numpy.fft",
+        "transform": "rfft",
+        "inverse_transform": "irfft",
+        "normalization": "numpy_default_backward",
+        "coefficient_order": "rfft_frequency_bin_order",
+        "sample_size": sample_size,
+        "rfft_real": [float(value) for value in spectrum.real],
+        "rfft_imag": [float(value) for value in spectrum.imag],
+        "nyquist_bin_index": nyquist_bin_index,
+        "nyquist_imag_abs": (
+            abs(float(spectrum[nyquist_bin_index].imag))
+            if nyquist_bin_index is not None
+            else None
+        ),
+        "row_index_semantics": "observed_row_order_no_calendar_interpolation",
+    }
+    equation = {
+        "candidate_id": _DESCRIPTIVE_EXACT_CANDIDATE_ID,
+        "family_id": "spectral",
+        "parameter_summary": {},
+        "structure_signature": (
+            "workbench_descriptive_exact_rfft"
+            f"@sample_size={sample_size}"
+        ),
+        "literals": literals,
+        "label": "y(t)=mean+full DFT reconstruction over observed row index",
+        "curve": equation_curve,
+        "render_status": "formula_supported",
+    }
+    return {
+        "status": "completed",
+        "claim_class": "descriptive_reconstruction",
+        "lane_kind": "descriptive_exact",
+        "source": _DESCRIPTIVE_EXACT_SOURCE,
+        "candidate_id": _DESCRIPTIVE_EXACT_CANDIDATE_ID,
+        "family_id": "spectral",
+        "exactness": "sample_exact_reconstruction",
+        "access_scope": "full_sample",
+        "time_basis": "observed_row_index",
+        "is_law_claim": False,
+        "law_eligible": False,
+        "publishable": False,
+        "law_rejection_reason_codes": [_DESCRIPTIVE_EXACT_REASON_CODE],
+        "honesty_note": (
+            "Sample-exact reconstruction of observed rows only. It is "
+            "descriptive, non-publishable, and not evidence of future behavior."
+        ),
+        "equation": equation,
+        "chart": {
+            "actual_series": actual_series,
+            "equation_curve": equation_curve,
+        },
+        "reconstruction_metrics": metrics,
     }
 
 
@@ -642,11 +808,13 @@ def create_workbench_analysis(
 
     analysis_path = workspace_root / "analysis.json"
     analysis["analysis_path"] = str(analysis_path)
+    normalized_analysis = normalize_analysis_payload(analysis)
+    normalized_analysis["analysis_path"] = str(analysis_path)
     analysis_path.write_text(
-        json.dumps(analysis, indent=2, sort_keys=True),
+        json.dumps(normalized_analysis, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    return analysis
+    return normalized_analysis
 
 
 def list_recent_analyses(*, output_root: Path, limit: int = 8) -> list[dict[str, Any]]:
@@ -672,6 +840,7 @@ def list_recent_analyses(*, output_root: Path, limit: int = 8) -> list[dict[str,
 
 def normalize_analysis_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
     analysis = dict(_jsonable(payload))
+    analysis.pop("equation_lanes", None)
     dataset_rows = _load_dataset_rows_from_analysis(analysis)
     raw_holistic_equation = analysis.get("holistic_equation")
     raw_residual_law_present, raw_residual_law = _workflow_native_surface_lookup(
@@ -803,6 +972,10 @@ def normalize_analysis_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
         analysis=analysis,
         raw_holistic_equation=raw_holistic_equation,
     )
+    analysis["equation_lanes"] = _build_equation_lanes(
+        analysis=analysis,
+        dataset_rows=dataset_rows,
+    )
     analysis["evidence_studio"] = _build_evidence_studio(analysis=analysis)
 
     change_atlas = _build_change_atlas(
@@ -932,6 +1105,8 @@ def _build_holistic_equation(
     if not _raw_holistic_equation_has_backend_joint_claim_gate(raw_payload):
         return None
     if raw_payload.get("exactness") == "sample_exact_closure":
+        return None
+    if _predictive_law_uses_banned_symbolic_path(raw_payload):
         return None
     if raw_payload.get("status") != "completed":
         return None
@@ -1159,6 +1334,191 @@ def _build_predictive_law(
     }
 
 
+def _build_equation_lanes(
+    *,
+    analysis: Mapping[str, Any],
+    dataset_rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    target_id = _string_or_none(
+        analysis.get("dataset", {}).get("target", {}).get("id")
+    )
+    if not dataset_rows:
+        descriptive_exact = _blocked_descriptive_exact_reconstruction(
+            reason_codes=["dataset_rows_unavailable"],
+        )
+    elif target_id not in {"price_close", "daily_return", "log_return"}:
+        descriptive_exact = _blocked_descriptive_exact_reconstruction(
+            reason_codes=["target_not_numeric_path"],
+        )
+    else:
+        descriptive_exact = _build_descriptive_exact_reconstruction(
+            dataset_rows=dataset_rows,
+        ) or _blocked_descriptive_exact_reconstruction(
+            reason_codes=["dataset_rows_unavailable"],
+        )
+
+    descriptive_fit = analysis.get("descriptive_fit")
+    return {
+        "schema_version": "1.0.0",
+        "source": "workbench_normalization",
+        "lane_order": [
+            "predictive_law_search",
+            "descriptive_exact",
+            "descriptive_fit",
+        ],
+        "descriptive_exact": descriptive_exact,
+        "predictive_law_search": _build_predictive_law_search_lane(
+            analysis=analysis,
+        ),
+        "descriptive_fit": (
+            dict(_jsonable(descriptive_fit))
+            if isinstance(descriptive_fit, Mapping)
+            else None
+        ),
+    }
+
+
+def _build_predictive_law_search_lane(
+    *,
+    analysis: Mapping[str, Any],
+) -> dict[str, Any]:
+    predictive_law = analysis.get("predictive_law")
+    if isinstance(predictive_law, Mapping):
+        return {
+            "status": "publishable_law",
+            "lane_kind": "predictive_law_search",
+            "source": "operator_point_publication_gate",
+            "publishable": True,
+            "predictive_law": dict(_jsonable(predictive_law)),
+            "candidate_id": _string_or_none(
+                predictive_law.get("equation", {}).get("candidate_id")
+            ),
+            "reason_codes": [],
+            "evidence_summary": dict(_jsonable(predictive_law.get("evidence_summary")))
+            if isinstance(predictive_law.get("evidence_summary"), Mapping)
+            else None,
+            "honesty_note": (
+                "Predictive law search produced a publishable law under the "
+                "declared validation scope."
+            ),
+        }
+
+    operator_point = analysis.get("operator_point")
+    if not isinstance(operator_point, Mapping):
+        return _blocked_predictive_law_search_lane(
+            reason_codes=["operator_point_missing"],
+        )
+
+    operator_status = _string_or_none(operator_point.get("status"))
+    if operator_status is None:
+        return _blocked_predictive_law_search_lane(
+            reason_codes=["operator_point_status_missing"],
+        )
+    if operator_status == "failed":
+        return _blocked_predictive_law_search_lane(
+            reason_codes=["operator_point_failed"],
+        )
+    if operator_status != "completed":
+        return _blocked_predictive_law_search_lane(
+            reason_codes=["operator_point_not_completed"],
+        )
+    if _string_or_none(operator_point.get("result_mode")) is None:
+        return _blocked_predictive_law_search_lane(
+            reason_codes=["operator_point_result_mode_missing"],
+        )
+
+    return {
+        "status": "no_publishable_law",
+        "lane_kind": "predictive_law_search",
+        "source": "operator_point_publication_gate",
+        "publishable": False,
+        "predictive_law": None,
+        "candidate_id": None,
+        "reason_codes": _predictive_law_search_reason_codes(analysis=analysis),
+        "evidence_summary": None,
+        "honesty_note": (
+            "Predictive law search did not produce a publishable law under the "
+            "declared validation scope."
+        ),
+    }
+
+
+def _blocked_predictive_law_search_lane(
+    *,
+    reason_codes: Sequence[str],
+) -> dict[str, Any]:
+    return {
+        "status": "blocked",
+        "lane_kind": "predictive_law_search",
+        "source": "operator_point_publication_gate",
+        "publishable": False,
+        "predictive_law": None,
+        "candidate_id": None,
+        "reason_codes": list(reason_codes),
+        "evidence_summary": None,
+        "honesty_note": (
+            "Predictive law search could not be resolved because required "
+            "operator artifacts are missing, malformed, or failed."
+        ),
+    }
+
+
+def _predictive_law_search_reason_codes(
+    *,
+    analysis: Mapping[str, Any],
+) -> list[str]:
+    reason_codes: list[str] = []
+
+    def add(code: str | None) -> None:
+        if code and code != "no_backend_joint_claim" and code not in reason_codes:
+            reason_codes.append(code)
+
+    for code in _operator_abstention_reason_codes(analysis):
+        add(code)
+
+    operator_point = analysis.get("operator_point")
+    if isinstance(operator_point, Mapping):
+        equation_payload = operator_point.get("equation")
+        if isinstance(equation_payload, Mapping):
+            for code in _predictive_law_gap_reason_codes(equation_payload):
+                add(code)
+
+        publication = operator_point.get("publication")
+        publication_status = (
+            _string_or_none(publication.get("status"))
+            if isinstance(publication, Mapping)
+            else None
+        )
+        if publication_status not in {None, "publishable"}:
+            add("operator_not_publishable")
+
+        claim_card = operator_point.get("claim_card")
+        if isinstance(claim_card, Mapping):
+            allowed_codes = {
+                str(code)
+                for code in claim_card.get("allowed_interpretation_codes", []) or []
+                if code is not None
+            }
+            if (
+                not _claim_card_is_predictive_capable(claim_card)
+                or claim_card.get("predictive_support_status")
+                != "confirmatory_supported"
+                or _PREDICTIVE_ALLOWED_INTERPRETATION not in allowed_codes
+            ):
+                add("predictive_support_failed")
+
+        scorecard = operator_point.get("scorecard")
+        if isinstance(scorecard, Mapping):
+            if scorecard.get("predictive_status") != "passed":
+                add("predictive_scorecard_failed")
+            if scorecard.get("descriptive_status") != "passed":
+                add("descriptive_scorecard_failed")
+
+    if not reason_codes:
+        reason_codes.append("no_publishable_predictive_law")
+    return reason_codes
+
+
 def _build_predictive_law_evidence_summary(
     *,
     operator_point: Mapping[str, Any],
@@ -1337,6 +1697,8 @@ def _predictive_law_gap_reason_codes(equation_payload: Mapping[str, Any]) -> lis
     reason_codes: list[str] = []
     if equation_payload.get("exactness") == "sample_exact_closure":
         reason_codes.append("requires_exact_sample_closure")
+    if equation_payload.get("exactness") == "sample_exact_reconstruction":
+        reason_codes.append("requires_exact_sample_reconstruction")
     composition_operator = _string_or_none(
         equation_payload.get("composition_operator")
     ) or _string_or_none(
@@ -1349,6 +1711,8 @@ def _predictive_law_gap_reason_codes(equation_payload: Mapping[str, Any]) -> lis
         _string_or_none(equation_payload.get("source_candidate_id")),
         _string_or_none(equation_payload.get("selected_candidate_id")),
     )
+    if any(marker == _DESCRIPTIVE_EXACT_CANDIDATE_ID for marker in candidate_markers):
+        reason_codes.append("requires_exact_sample_reconstruction")
     if any(
         marker is not None
         and any(
@@ -1358,7 +1722,15 @@ def _predictive_law_gap_reason_codes(equation_payload: Mapping[str, Any]) -> lis
         for marker in candidate_markers
     ):
         reason_codes.append("requires_posthoc_symbolic_synthesis")
-    return reason_codes
+    source_markers = (
+        _string_or_none(equation_payload.get("source")),
+        _string_or_none(equation_payload.get("equation_source")),
+        _string_or_none(equation_payload.get("source_name")),
+        _string_or_none(equation_payload.get("deterministic_source")),
+    )
+    if any(marker == _DESCRIPTIVE_EXACT_SOURCE for marker in source_markers):
+        reason_codes.append("requires_exact_sample_reconstruction")
+    return list(dict.fromkeys(reason_codes))
 
 
 def _predictive_law_uses_banned_symbolic_path(
@@ -1881,35 +2253,55 @@ def _build_gap_report(
     claim_ceiling_blocker = _claim_ceiling_blocker_code(analysis)
     if claim_ceiling_blocker is not None and claim_ceiling_blocker not in gaps:
         gaps.append(claim_ceiling_blocker)
-    if (
-        not isinstance(analysis.get("holistic_equation"), Mapping)
-        and "no_backend_joint_claim" not in gaps
-    ):
-        gaps.append("no_backend_joint_claim")
-    if (
-        _has_thin_probabilistic_evidence(analysis)
-        and "probabilistic_evidence_thin" not in gaps
-    ):
-        gaps.append("probabilistic_evidence_thin")
     if isinstance(operator_point, Mapping):
         equation_payload = operator_point.get("equation")
         if isinstance(equation_payload, Mapping):
             for code in _predictive_law_gap_reason_codes(equation_payload):
                 if code not in gaps:
                     gaps.append(code)
+    raw_holistic_gap_codes: list[str] = []
     if (
         isinstance(raw_holistic_equation, Mapping)
     ):
+        for code in _predictive_law_gap_reason_codes(raw_holistic_equation):
+            if code not in raw_holistic_gap_codes:
+                raw_holistic_gap_codes.append(code)
+        raw_equation_payload = raw_holistic_equation.get("equation")
+        if isinstance(raw_equation_payload, Mapping):
+            for code in _predictive_law_gap_reason_codes(raw_equation_payload):
+                if code not in raw_holistic_gap_codes:
+                    raw_holistic_gap_codes.append(code)
         if (
             raw_holistic_equation.get("exactness") == "sample_exact_closure"
-            and "requires_exact_sample_closure" not in gaps
+            and "requires_exact_sample_closure" not in raw_holistic_gap_codes
         ):
-            gaps.append("requires_exact_sample_closure")
+            raw_holistic_gap_codes.append("requires_exact_sample_closure")
         if (
             _raw_holistic_equation_is_posthoc_synthetic(raw_holistic_equation)
-            and "requires_posthoc_symbolic_synthesis" not in gaps
+            and "requires_posthoc_symbolic_synthesis" not in raw_holistic_gap_codes
         ):
-            gaps.append("requires_posthoc_symbolic_synthesis")
+            raw_holistic_gap_codes.append("requires_posthoc_symbolic_synthesis")
+    isolated_raw_exact_reconstruction_blocker = (
+        not isinstance(analysis.get("holistic_equation"), Mapping)
+        and isinstance(raw_holistic_equation, Mapping)
+        and _raw_holistic_equation_has_backend_joint_claim_gate(raw_holistic_equation)
+        and raw_holistic_gap_codes == ["requires_exact_sample_reconstruction"]
+    )
+    if (
+        not isinstance(analysis.get("holistic_equation"), Mapping)
+        and not isolated_raw_exact_reconstruction_blocker
+        and "no_backend_joint_claim" not in gaps
+    ):
+        gaps.append("no_backend_joint_claim")
+    for code in raw_holistic_gap_codes:
+        if code not in gaps:
+            gaps.append(code)
+    if (
+        _has_thin_probabilistic_evidence(analysis)
+        and not isolated_raw_exact_reconstruction_blocker
+        and "probabilistic_evidence_thin" not in gaps
+    ):
+        gaps.append("probabilistic_evidence_thin")
     return gaps
 
 

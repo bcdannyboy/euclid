@@ -17,6 +17,10 @@ TRUTHFULNESS_DOCS = (
     REPO_ROOT / "docs" / "testing-truthfulness.md",
     REPO_ROOT / "docs" / "reference" / "testing-truthfulness.md",
 )
+WORKBENCH_DOCS = (
+    REPO_ROOT / "docs" / "workbench.md",
+    REPO_ROOT / "docs" / "reference" / "workbench.md",
+)
 
 
 def _text(path: Path) -> str:
@@ -203,3 +207,26 @@ def test_workbench_truthfulness_docs_reference_existing_tests() -> None:
             f"{doc_path.relative_to(REPO_ROOT).as_posix()} references missing tests: "
             + ", ".join(missing)
         )
+
+
+def test_workbench_docs_define_equation_lanes_without_predictive_promotion() -> None:
+    combined = "\n".join(_text(path) for path in WORKBENCH_DOCS)
+
+    for required in (
+        "equation_lanes",
+        "descriptive_exact",
+        "predictive_law_search",
+        "sample-exact",
+        "observed rows",
+        "not a predictive law",
+        "no publishable law",
+    ):
+        assert required in combined
+
+    unsafe_fragments = (
+        "perfect law",
+        "sample-exact predictive",
+        "descriptive_exact publishable",
+    )
+    for fragment in unsafe_fragments:
+        assert fragment not in combined

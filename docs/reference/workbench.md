@@ -60,8 +60,13 @@ Routes:
 - `predictive_law`: a point-lane symbolic law only when the operator publication path is complete, publishable, non-abstaining, predictive-capable, and backed by a curve-bearing equation plus complete evidence refs
 - `holistic_equation`: a backend-authored joint deterministic-plus-stochastic claim only when the deterministic side is the surviving `predictive_law`, the probabilistic side is publishable, and both sides share the same validation scope and publication record
 - `uncertainty_attachment`: the retained probabilistic companion only when it matches that same publishable joint claim
+- `equation_lanes`: an additive display contract that keeps exact descriptive reconstruction separate from predictive law search while preserving the legacy top-level fields
 - `gap_report`, `not_holistic_because`, and `would_have_abstained_because`: explicit reason-code summaries for why the run stopped short of a stronger claim
 - benchmark summaries and change-atlas views for comparative and local-shape inspection
+
+`equation_lanes.descriptive_exact` is the sample-exact reconstruction lane. It can replay the finite observed rows through a full-sample Fourier representation, but it is not a predictive law and must not change `claim_class`, `predictive_law`, `holistic_equation`, or `uncertainty_attachment`. Unsupported targets, missing rows, one-row datasets, nonfinite observations, or failed round-trip tolerance checks are shown as blocked exact-lane states instead of stronger claims.
+
+`equation_lanes.predictive_law_search` is a wrapper around the existing operator publication gate. It reports `publishable_law` only when the normalized `predictive_law` object survived. Otherwise it reports `no publishable law` or a blocked artifact state with reason codes. It never contains `descriptive_exact`, and exact reconstruction cannot satisfy predictive search evidence.
 
 `predictive_law` is therefore already a gated object, not a raw symbolic fit. It survives only when the point lane finished as `candidate_publication`, the publication status is `publishable`, no abstention artifact is present, the claim card remains predictive-capable and `confirmatory_supported`, both descriptive and predictive scorecard states passed, the allowed interpretation codes include predictive publication, and the equation does not depend on banned paths such as exact sample closure, residual wrappers, or posthoc symbolic synthesis.
 
@@ -113,6 +118,8 @@ The UI is a single packaged app shell with tabs for:
 The internal key for the Workspace tab is `atlas`.
 
 The overview intentionally starts from the strongest surviving mathematical object and then fans out into operator, probabilistic, benchmark, and artifact detail. If no publishable law survives, the interface falls back to descriptive reconstruction or benchmark-local context instead of implying a predictive result.
+
+When `equation_lanes` is present, the frontend renders the predictive search lane and exact descriptive lane as separate cards. The exact lane may be selectable as a deterministic overlay using `overlay=descriptive_exact`, but its copy stays bounded to sample-exact fit over observed rows. The predictive search lane is not a standalone overlay; if it contains a surviving predictive law, that curve continues to use the existing `predictive_law` overlay id. Saved analyses without `equation_lanes` continue through the legacy `descriptive_reconstruction` and `descriptive_fit` paths.
 
 The app synchronizes URL state for:
 

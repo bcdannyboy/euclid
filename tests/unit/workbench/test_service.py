@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import json
 import math
 from datetime import date
 from pathlib import Path
@@ -8,6 +9,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+import numpy as np
 
 from euclid.benchmarks.submitters import (
     BenchmarkSubmitterResult,
@@ -39,6 +41,7 @@ from euclid.reducers.models import (
 )
 from euclid.workbench.service import (
     TARGET_SPECS,
+    _build_descriptive_exact_reconstruction,
     _build_descriptive_reconstruction,
     _build_descriptive_fit_from_submitter_results,
     _build_equation_curve,
@@ -394,6 +397,178 @@ def test_build_descriptive_reconstruction_is_descriptive_structure_and_non_exact
         reconstruction["reconstruction_metrics"]["r2_vs_mean_baseline"]
         > 0.999
     )
+
+
+def test_build_descriptive_exact_reconstruction_matches_jagged_odd_rows() -> None:
+    values = [
+        0.20,
+        1.10,
+        0.72,
+        0.28,
+        -0.08,
+        0.55,
+        0.95,
+        1.05,
+        -1.45,
+        -0.52,
+        -0.10,
+        -0.72,
+        1.35,
+        0.30,
+        0.46,
+        0.62,
+        -0.18,
+        -0.35,
+        0.08,
+    ]
+    dataset_rows = _workbench_dataset_rows(values)
+
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=dataset_rows,
+    )
+
+    assert reconstruction is not None
+    assert reconstruction["status"] == "completed"
+    assert reconstruction["exactness"] == "sample_exact_reconstruction"
+    assert reconstruction["law_eligible"] is False
+    assert reconstruction["publishable"] is False
+    assert reconstruction["reconstruction_metrics"]["sample_size"] == 19
+    assert reconstruction["reconstruction_metrics"]["exact_tolerance_cleared"] is True
+    metrics = reconstruction["reconstruction_metrics"]
+    assert metrics["max_abs_error"] <= metrics["effective_exact_tolerance"]
+    fitted = [
+        point["fitted_value"]
+        for point in reconstruction["chart"]["equation_curve"]
+    ]
+    assert fitted == pytest.approx(
+        values,
+        abs=metrics["effective_exact_tolerance"],
+    )
+
+
+def test_build_descriptive_exact_reconstruction_records_even_sample_rfft_metadata() -> None:
+    values = [
+        math.sin((2.0 * math.pi * index) / 20.0) + (0.1 * index)
+        for index in range(20)
+    ]
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows(values),
+    )
+
+    literals = reconstruction["equation"]["literals"]
+
+    assert literals["sample_size"] == 20
+    assert literals["basis"] == "rfft_full_sample"
+    assert literals["fft_library"] == "numpy.fft"
+    assert literals["transform"] == "rfft"
+    assert literals["inverse_transform"] == "irfft"
+    assert literals["normalization"] == "numpy_default_backward"
+    assert literals["coefficient_order"] == "rfft_frequency_bin_order"
+    assert len(literals["rfft_real"]) == 11
+    assert len(literals["rfft_imag"]) == 11
+    assert literals["nyquist_bin_index"] == 10
+    assert (
+        literals["nyquist_imag_abs"]
+        <= reconstruction["reconstruction_metrics"]["effective_exact_tolerance"]
+    )
+    assert (
+        reconstruction["reconstruction_metrics"]["max_abs_error"]
+        <= reconstruction["reconstruction_metrics"]["effective_exact_tolerance"]
+    )
+
+
+def test_build_descriptive_exact_reconstruction_supports_minimum_two_rows() -> None:
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows([2.0, -3.0]),
+    )
+
+    assert reconstruction["status"] == "completed"
+    assert reconstruction["reconstruction_metrics"]["sample_size"] == 2
+    assert (
+        reconstruction["reconstruction_metrics"]["max_abs_error"]
+        <= reconstruction["reconstruction_metrics"]["effective_exact_tolerance"]
+    )
+
+
+def test_build_descriptive_exact_reconstruction_handles_constant_rows() -> None:
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows([4.25] * 12),
+    )
+
+    assert reconstruction["status"] == "completed"
+    assert reconstruction["reconstruction_metrics"]["r2_vs_mean_baseline"] == 1.0
+    assert (
+        reconstruction["reconstruction_metrics"]["max_abs_error"]
+        <= reconstruction["reconstruction_metrics"]["effective_exact_tolerance"]
+    )
+
+
+def test_build_descriptive_exact_reconstruction_uses_scaled_tolerance_for_large_values() -> None:
+    values = [1.0e12 + ((-1) ** index) * (index * 123.0) for index in range(19)]
+
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows(values),
+    )
+
+    metrics = reconstruction["reconstruction_metrics"]
+    assert metrics["max_abs_error"] > 1e-10
+    assert metrics["max_abs_error"] <= metrics["effective_exact_tolerance"]
+
+
+@pytest.mark.parametrize("bad_value", [None, float("nan"), float("inf"), float("-inf")])
+def test_build_descriptive_exact_reconstruction_blocks_nonfinite_rows(
+    bad_value: float | None,
+) -> None:
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows([1.0, bad_value, 3.0]),
+    )
+
+    assert reconstruction["status"] == "blocked"
+    assert "nonfinite_observed_value" in reconstruction["reason_codes"]
+    assert reconstruction["law_eligible"] is False
+    assert reconstruction["publishable"] is False
+
+
+def test_build_descriptive_exact_reconstruction_preserves_irregular_row_times() -> None:
+    rows = _workbench_dataset_rows([1.0, -0.5, 2.25, 0.0])
+    rows[1]["event_time"] = "2026-05-03T00:00:00Z"
+    rows[2]["event_time"] = "2026-05-20T00:00:00Z"
+
+    reconstruction = _build_descriptive_exact_reconstruction(dataset_rows=rows)
+
+    assert [
+        point["event_time"]
+        for point in reconstruction["chart"]["equation_curve"]
+    ] == [
+        point["event_time"]
+        for point in reconstruction["chart"]["actual_series"]
+    ]
+
+
+def test_descriptive_exact_reconstruction_literals_replay_curve() -> None:
+    values = [0.2, -1.0, 0.4, 1.5, -0.7, 0.3, 0.0]
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows(values),
+    )
+    literals = json.loads(json.dumps(reconstruction["equation"]["literals"]))
+
+    spectrum = np.asarray(literals["rfft_real"]) + (
+        1j * np.asarray(literals["rfft_imag"])
+    )
+    replayed = np.fft.irfft(spectrum, n=literals["sample_size"])
+
+    tolerance = reconstruction["reconstruction_metrics"]["effective_exact_tolerance"]
+    curve_values = [
+        point["fitted_value"]
+        for point in reconstruction["chart"]["equation_curve"]
+    ]
+    observed_values = [
+        point["observed_value"]
+        for point in reconstruction["chart"]["actual_series"]
+    ]
+
+    assert replayed.tolist() == pytest.approx(curve_values, abs=tolerance)
+    assert replayed.tolist() == pytest.approx(observed_values, abs=tolerance)
 
 
 def test_resolve_structure_signature_falls_back_to_reducer_signature() -> None:
@@ -1193,6 +1368,75 @@ def test_build_equation_summary_preserves_composition_metadata() -> None:
     assert summary["state"]["running_mean__seasonal_component"] == 0.0
 
 
+def test_normalize_analysis_payload_adds_equation_lanes_with_exact_descriptive_and_no_law(
+    tmp_path: Path,
+) -> None:
+    values = [
+        0.20,
+        1.10,
+        0.72,
+        0.28,
+        -0.08,
+        0.55,
+        0.95,
+        1.05,
+        -1.45,
+        -0.52,
+        -0.10,
+        -0.72,
+        1.35,
+        0.30,
+        0.46,
+        0.62,
+        -0.18,
+        -0.35,
+        0.08,
+    ]
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "jagged-descriptive-exact.csv",
+        _workbench_dataset_rows(values),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {
+            "status": "completed",
+            "result_mode": "abstained",
+            "abstention": {"reason_codes": ["predictive_support_failed"]},
+        },
+    }
+
+    normalized = normalize_analysis_payload(payload)
+    lanes = normalized["equation_lanes"]
+
+    assert lanes["schema_version"] == "1.0.0"
+    assert lanes["source"] == "workbench_normalization"
+    assert lanes["lane_order"] == [
+        "predictive_law_search",
+        "descriptive_exact",
+        "descriptive_fit",
+    ]
+    assert lanes["descriptive_exact"]["lane_kind"] == "descriptive_exact"
+    assert lanes["predictive_law_search"]["lane_kind"] == "predictive_law_search"
+    assert lanes["descriptive_exact"]["status"] == "completed"
+    assert lanes["descriptive_exact"]["law_eligible"] is False
+    assert lanes["descriptive_exact"]["publishable"] is False
+    assert (
+        lanes["descriptive_exact"]["reconstruction_metrics"]["max_abs_error"]
+        <= lanes["descriptive_exact"]["reconstruction_metrics"][
+            "effective_exact_tolerance"
+        ]
+    )
+    assert lanes["predictive_law_search"]["status"] == "no_publishable_law"
+    assert lanes["predictive_law_search"]["publishable"] is False
+    assert lanes["predictive_law_search"]["predictive_law"] is None
+    assert normalized["predictive_law"] is None
+    assert normalized["publishable"] is False
+
+
 def _predictive_law_candidate_publication_payload(
     tmp_path: Path,
     *,
@@ -1336,6 +1580,512 @@ def _predictive_law_candidate_publication_payload(
             },
         },
     }
+
+
+def test_equation_lanes_wrap_publishable_predictive_law_without_replacing_legacy_fields(
+    tmp_path: Path,
+) -> None:
+    payload = _predictive_law_candidate_publication_payload(
+        tmp_path=tmp_path,
+        operator_equation={
+            "candidate_id": "analytic_lag1_affine",
+            "label": "y(t) = 1.8 + 0.92*y(t-1)",
+            "curve": [
+                {"event_time": "2026-04-16T00:00:00Z", "fitted_value": 10.2},
+                {"event_time": "2026-04-17T00:00:00Z", "fitted_value": 10.4},
+            ],
+        },
+    )
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "spy-price-close-long-history.csv",
+        _workbench_dataset_rows(
+            [10.0, 11.2, 10.7, 11.4, 11.9, 12.2, 11.8, 12.6, 12.1]
+        ),
+    )
+    payload["dataset"]["dataset_csv"] = str(dataset_csv)
+
+    normalized = normalize_analysis_payload(payload)
+    lanes = normalized["equation_lanes"]
+
+    assert normalized["predictive_law"] is not None
+    assert lanes["source"] == "workbench_normalization"
+    assert lanes["predictive_law_search"]["status"] == "publishable_law"
+    assert lanes["predictive_law_search"]["publishable"] is True
+    assert lanes["predictive_law_search"]["lane_kind"] == "predictive_law_search"
+    assert lanes["predictive_law_search"]["predictive_law"] == normalized["predictive_law"]
+    assert lanes["descriptive_exact"]["law_eligible"] is False
+    assert lanes["descriptive_exact"]["lane_kind"] == "descriptive_exact"
+    assert (
+        normalized["descriptive_reconstruction"]["equation"]["candidate_id"]
+        == "descriptive_fourier_reconstruction"
+    )
+    assert (
+        lanes["descriptive_exact"]["equation"]["candidate_id"]
+        == "descriptive_exact_fourier_reconstruction"
+    )
+    assert normalized["claim_class"] == "predictive_law"
+
+
+def test_normalize_analysis_payload_rebuilds_stale_incoming_equation_lanes(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "stale-lanes.csv",
+        _workbench_dataset_rows([1.0, -0.5, 0.25, 0.75]),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {"status": "failed", "error": "fixture"},
+        "predictive_law": None,
+        "equation_lanes": {
+            "descriptive_exact": {
+                "status": "completed",
+                "candidate_id": "stale_exact_publishable",
+                "publishable": True,
+                "law_eligible": True,
+                "honesty_note": "stale malicious exact lane",
+            },
+            "predictive_law_search": {
+                "status": "publishable_law",
+                "publishable": True,
+                "predictive_law": {"claim_class": "predictive_law"},
+            },
+        },
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["predictive_law"] is None
+    assert normalized["equation_lanes"]["predictive_law_search"]["status"] == "blocked"
+    assert normalized["equation_lanes"]["predictive_law_search"]["publishable"] is False
+    assert (
+        normalized["equation_lanes"]["descriptive_exact"]["equation"]["candidate_id"]
+        == "descriptive_exact_fourier_reconstruction"
+    )
+    assert "stale_exact_publishable" not in str(normalized["equation_lanes"])
+    assert "stale malicious exact lane" not in str(normalized["equation_lanes"])
+    assert normalized["equation_lanes"]["descriptive_exact"]["law_eligible"] is False
+    assert normalized["equation_lanes"]["descriptive_exact"]["publishable"] is False
+
+
+def test_equation_lanes_mark_predictive_search_blocked_when_operator_point_missing(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "missing-operator.csv",
+        _workbench_dataset_rows([1.0, 2.0, 3.0]),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["equation_lanes"]["predictive_law_search"]["status"] == "blocked"
+    assert (
+        "operator_point_missing"
+        in normalized["equation_lanes"]["predictive_law_search"]["reason_codes"]
+    )
+
+
+def test_equation_lanes_mark_predictive_search_blocked_for_malformed_operator_point(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "malformed-operator.csv",
+        _workbench_dataset_rows([1.0, 2.0, 3.0]),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {"status": "completed"},
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["equation_lanes"]["predictive_law_search"]["status"] == "blocked"
+    assert (
+        "operator_point_result_mode_missing"
+        in normalized["equation_lanes"]["predictive_law_search"]["reason_codes"]
+    )
+
+
+def test_equation_lanes_mark_predictive_search_blocked_for_failed_operator_even_with_result_mode(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "failed-operator-with-result-mode.csv",
+        _workbench_dataset_rows([1.0, 2.0, 3.0]),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {
+            "status": "failed",
+            "result_mode": "candidate_publication",
+            "error": "fixture failure after partial metadata",
+        },
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["equation_lanes"]["predictive_law_search"]["status"] == "blocked"
+    assert (
+        "operator_point_failed"
+        in normalized["equation_lanes"]["predictive_law_search"]["reason_codes"]
+    )
+
+
+def test_saved_analysis_without_equation_lanes_rebuilds_lanes_from_legacy_fields(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "legacy.csv",
+        _workbench_dataset_rows([1.0, -0.5, 0.25, 0.75, 1.25, -0.25, 0.5, 1.5]),
+    )
+    legacy_payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {"status": "failed", "error": "legacy"},
+        "descriptive_reconstruction": {"status": "completed"},
+    }
+
+    normalized = normalize_analysis_payload(legacy_payload)
+
+    assert normalized["equation_lanes"]["schema_version"] == "1.0.0"
+    assert normalized["equation_lanes"]["descriptive_exact"]["status"] == "completed"
+    assert normalized["descriptive_reconstruction"]["status"] == "completed"
+    assert (
+        normalized["descriptive_reconstruction"]["equation"]["candidate_id"]
+        == "descriptive_fourier_reconstruction"
+    )
+    assert (
+        normalized["equation_lanes"]["descriptive_exact"]["equation"]["candidate_id"]
+        == "descriptive_exact_fourier_reconstruction"
+    )
+    assert normalized["predictive_law"] is None
+
+
+def test_descriptive_exact_does_not_change_claim_surface_or_joint_artifacts(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "descriptive-only.csv",
+        _workbench_dataset_rows(
+            [1.0, 0.5, -0.25, 0.75, 1.25, 0.0, -0.5, 0.4, 0.9]
+        ),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {"status": "failed", "error": "fixture"},
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["publishable"] is False
+    assert normalized["holistic_equation"] is None
+    assert normalized.get("uncertainty_attachment") is None
+    assert normalized["evidence_studio"]["claim_surface"]["claim_lane"] == "descriptive"
+    assert (
+        normalized["descriptive_reconstruction"]["equation"]["candidate_id"]
+        == "descriptive_fourier_reconstruction"
+    )
+    assert (
+        normalized["equation_lanes"]["descriptive_exact"]["equation"]["candidate_id"]
+        == "descriptive_exact_fourier_reconstruction"
+    )
+    assert normalized["equation_lanes"]["descriptive_exact"]["publishable"] is False
+
+
+def test_predictive_law_search_reasons_exclude_holistic_only_gap_codes(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "holistic-gap.csv",
+        _workbench_dataset_rows([1.0, -0.5, 0.25, 0.75]),
+    )
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "daily_return"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {
+            "status": "completed",
+            "result_mode": "abstained",
+            "abstention": {"reason_codes": ["predictive_support_failed"]},
+        },
+        "gap_report": ["no_backend_joint_claim", "predictive_support_failed"],
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    reasons = normalized["equation_lanes"]["predictive_law_search"]["reason_codes"]
+    assert "predictive_support_failed" in reasons
+    assert "no_backend_joint_claim" not in reasons
+
+
+def test_equation_lanes_mark_exact_reconstruction_not_applicable_for_next_day_up(
+    tmp_path: Path,
+) -> None:
+    rows = _workbench_dataset_rows([0.0, 1.0, 0.0, 1.0])
+    dataset_csv = _write_dataset_csv(tmp_path / "next-day-up.csv", rows)
+    payload = {
+        "dataset": {
+            "symbol": "SPY",
+            "target": {"id": "next_day_up"},
+            "dataset_csv": str(dataset_csv),
+        },
+        "operator_point": {"status": "failed", "error": "fixture"},
+    }
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["equation_lanes"]["descriptive_exact"]["status"] == "blocked"
+    assert (
+        "target_not_numeric_path"
+        in normalized["equation_lanes"]["descriptive_exact"]["reason_codes"]
+    )
+    assert normalized["equation_lanes"]["descriptive_exact"]["law_eligible"] is False
+    assert normalized["equation_lanes"]["descriptive_exact"]["publishable"] is False
+
+
+def test_equation_lanes_mark_exact_reconstruction_blocked_without_dataset_rows() -> None:
+    normalized = normalize_analysis_payload(
+        {
+            "dataset": {
+                "symbol": "SPY",
+                "target": {"id": "daily_return"},
+            },
+            "operator_point": {"status": "failed", "error": "fixture"},
+        }
+    )
+
+    assert normalized["equation_lanes"]["descriptive_exact"]["status"] == "blocked"
+    assert (
+        "dataset_rows_unavailable"
+        in normalized["equation_lanes"]["descriptive_exact"]["reason_codes"]
+    )
+    assert normalized["equation_lanes"]["descriptive_exact"]["law_eligible"] is False
+    assert normalized["equation_lanes"]["descriptive_exact"]["publishable"] is False
+
+
+def test_equation_lanes_mark_exact_reconstruction_blocked_for_single_row(
+    tmp_path: Path,
+) -> None:
+    dataset_csv = _write_dataset_csv(
+        tmp_path / "single-row.csv",
+        _workbench_dataset_rows([1.0]),
+    )
+    normalized = normalize_analysis_payload(
+        {
+            "dataset": {
+                "symbol": "SPY",
+                "target": {"id": "daily_return"},
+                "dataset_csv": str(dataset_csv),
+            },
+            "operator_point": {"status": "failed", "error": "fixture"},
+        }
+    )
+
+    assert normalized["equation_lanes"]["descriptive_exact"]["status"] == "blocked"
+    assert (
+        "insufficient_rows_for_sample_exact_reconstruction"
+        in normalized["equation_lanes"]["descriptive_exact"]["reason_codes"]
+    )
+    assert normalized["equation_lanes"]["descriptive_exact"]["law_eligible"] is False
+    assert normalized["equation_lanes"]["descriptive_exact"]["publishable"] is False
+
+
+def test_equation_lanes_do_not_turn_exact_descriptive_lane_into_predictive_law(
+    tmp_path: Path,
+) -> None:
+    payload = _predictive_law_candidate_publication_payload(
+        tmp_path=tmp_path,
+        operator_equation={
+            "candidate_id": "analytic_exact_closure_surface",
+            "exactness": "sample_exact_closure",
+            "label": "y(t) = exact_closure(sample)",
+            "curve": [{"event_time": "2025-01-01T00:00:00Z", "fitted_value": 1.0}],
+        },
+    )
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["predictive_law"] is None
+    assert normalized["equation_lanes"]["predictive_law_search"]["status"] != "publishable_law"
+    assert normalized["equation_lanes"]["descriptive_exact"]["law_eligible"] is False
+
+
+@pytest.mark.parametrize(
+    "marker_patch",
+    [
+        {"exactness": "sample_exact_reconstruction"},
+        {"candidate_id": "descriptive_exact_fourier_reconstruction"},
+        {"source": "workbench_descriptive_exact_reconstruction"},
+    ],
+)
+def test_normalize_analysis_payload_rejects_publishable_exact_descriptive_operator_point_for_predictive_law(
+    tmp_path: Path,
+    marker_patch: dict[str, Any],
+) -> None:
+    operator_equation = {
+        "candidate_id": "analytic_lag1_affine",
+        "family_id": "analytic",
+        "label": "y(t) = 1.8 + 0.92*y(t-1)",
+        "curve": [
+            {"event_time": "2026-04-14T00:00:00Z", "fitted_value": 10.0},
+            {"event_time": "2026-04-15T00:00:00Z", "fitted_value": 11.0},
+            {"event_time": "2026-04-16T00:00:00Z", "fitted_value": 10.8},
+            {"event_time": "2026-04-17T00:00:00Z", "fitted_value": 11.3},
+        ],
+    }
+    operator_equation.update(marker_patch)
+    payload = _predictive_law_candidate_publication_payload(
+        tmp_path=tmp_path,
+        operator_equation=operator_equation,
+    )
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["operator_point"]["publication"]["status"] == "publishable"
+    assert normalized["predictive_law"] is None
+    assert normalized["equation_lanes"]["predictive_law_search"]["status"] != "publishable_law"
+    assert "requires_exact_sample_reconstruction" in normalized["gap_report"]
+    assert (
+        "requires_exact_sample_reconstruction"
+        in normalized["equation_lanes"]["predictive_law_search"]["reason_codes"]
+    )
+
+
+@pytest.mark.parametrize(
+    "marker_patch",
+    [
+        {"exactness": "sample_exact_reconstruction"},
+        {"candidate_id": "descriptive_exact_fourier_reconstruction"},
+        {"source": "workbench_descriptive_exact_reconstruction"},
+    ],
+)
+@pytest.mark.parametrize("marker_location", ["equation", "top_level"])
+def test_normalize_analysis_payload_rejects_exact_descriptive_holistic_equation(
+    tmp_path: Path,
+    marker_patch: dict[str, Any],
+    marker_location: str,
+) -> None:
+    payload = _predictive_law_candidate_publication_payload(
+        tmp_path=tmp_path,
+        operator_equation={
+            "candidate_id": "analytic_lag1_affine",
+            "label": "y(t) = 1.8 + 0.92*y(t-1)",
+            "curve": [
+                {"event_time": "2026-04-14T00:00:00Z", "fitted_value": 10.0},
+                {"event_time": "2026-04-15T00:00:00Z", "fitted_value": 11.0},
+                {"event_time": "2026-04-16T00:00:00Z", "fitted_value": 10.8},
+                {"event_time": "2026-04-17T00:00:00Z", "fitted_value": 11.3},
+            ],
+        },
+    )
+    payload["probabilistic"] = {
+        "distribution": {
+            "status": "completed",
+            "selected_family": "analytic",
+            "validation_scope_ref": "validation_scope_manifest@1.0.0:scope-1",
+            "publication_record_ref": "publication_record_manifest@1.1.0:publication-1",
+            "rows": [
+                {
+                    "origin_time": "2026-04-16T00:00:00Z",
+                    "available_at": "2026-04-17T21:00:00Z",
+                    "horizon": 1,
+                    "location": 11.3,
+                    "scale": 0.4,
+                    "realized_observation": 11.4,
+                }
+            ],
+            "latest_row": {
+                "origin_time": "2026-04-16T00:00:00Z",
+                "available_at": "2026-04-17T21:00:00Z",
+                "horizon": 1,
+                "location": 11.3,
+                "scale": 0.4,
+                "realized_observation": 11.4,
+            },
+            "calibration": {
+                "status": "passed",
+                "passed": True,
+                "gate_effect": "publishable",
+                "diagnostics": [
+                    {
+                        "diagnostic_id": "pit_or_randomized_pit_uniformity",
+                        "sample_size": 1,
+                        "status": "passed",
+                    }
+                ],
+            },
+            "chart": {"forecast_bands": []},
+        }
+    }
+    holistic_equation_payload = {
+        "candidate_id": "analytic_lag1_affine",
+        "family_id": "analytic",
+        "label": "y(t)=otherwise_valid_backend_joint_claim",
+        "curve": [
+            {"event_time": "2026-04-14T00:00:00Z", "fitted_value": 10.0},
+            {"event_time": "2026-04-15T00:00:00Z", "fitted_value": 11.0},
+            {"event_time": "2026-04-16T00:00:00Z", "fitted_value": 10.8},
+            {"event_time": "2026-04-17T00:00:00Z", "fitted_value": 11.3},
+        ],
+    }
+    if marker_location == "equation":
+        holistic_equation_payload.update(marker_patch)
+    holistic_payload = {
+        "status": "completed",
+        "claim_class": "holistic_equation",
+        "joint_claim_gate": {
+            "backend_authored": True,
+            "status": "accepted",
+        },
+        "deterministic_source": "predictive_law",
+        "probabilistic_source": "distribution",
+        "validation_scope_ref": "validation_scope_manifest@1.0.0:scope-1",
+        "publication_record_ref": "publication_record_manifest@1.1.0:publication-1",
+        "honesty_note": "Exact descriptive reconstruction must not become a holistic law.",
+        "equation": holistic_equation_payload,
+    }
+    if marker_location == "top_level":
+        holistic_payload.update(marker_patch)
+    payload["holistic_equation"] = holistic_payload
+
+    normalized = normalize_analysis_payload(payload)
+
+    assert normalized["predictive_law"] is not None
+    assert normalized["holistic_equation"] is None
+    assert "requires_exact_sample_reconstruction" in normalized["gap_report"]
+    assert normalized["not_holistic_because"] == [
+        "requires_exact_sample_reconstruction"
+    ]
+    assert "no_backend_joint_claim" not in normalized["gap_report"]
+    assert "probabilistic_evidence_thin" not in normalized["gap_report"]
 
 
 @pytest.mark.parametrize(

@@ -23,6 +23,8 @@ const state = {
 const HOLISTIC_EQUATION_LABEL = "Holistic equation";
 const PREDICTIVE_SYMBOLIC_LAW_LABEL = "Predictive symbolic law";
 const DESCRIPTIVE_RECONSTRUCTION_LABEL = "Descriptive reconstruction equation";
+const SAMPLE_EXACT_DESCRIPTIVE_LABEL =
+  "Sample-exact descriptive reconstruction";
 const DESCRIPTIVE_APPROXIMATION_LABEL =
   "Best available descriptive approximation";
 const BENCHMARK_DESCRIPTIVE_FIT_LABEL = "Benchmark-local descriptive fit";
@@ -1540,6 +1542,33 @@ function hasHonestyNote(payload) {
   return Boolean(String(payload?.honesty_note || "").trim());
 }
 
+function equationLanes(analysis) {
+  return analysis?.equation_lanes && typeof analysis.equation_lanes === "object"
+    ? analysis.equation_lanes
+    : null;
+}
+
+function descriptiveExactLane(analysis) {
+  const lane = equationLanes(analysis)?.descriptive_exact;
+  return lane &&
+    lane.status === "completed" &&
+    hasNormalizedEquationPayload(lane.equation)
+    ? lane
+    : null;
+}
+
+function predictiveLawSearchLane(analysis) {
+  const lane = equationLanes(analysis)?.predictive_law_search;
+  return lane && typeof lane === "object" ? lane : null;
+}
+
+function descriptiveExactDisplayNote() {
+  return (
+    "Sample-exact reconstruction over observed rows only. It is descriptive "
+    + "and does not describe future behavior."
+  );
+}
+
 function hasLegacyHolisticMetadata(holisticEquation) {
   return ["mode", "composition_operator", "selected_probabilistic_lane"].some(
     (key) => Boolean(String(holisticEquation?.[key] || "").trim()),
@@ -1604,16 +1633,41 @@ function hasHolisticClaim(analysis) {
       holisticEquation?.exactness !== "sample_exact_closure" &&
       !notHolisticBecause.length &&
       !gapReport.includes("requires_exact_sample_closure") &&
+      !gapReport.includes("requires_exact_sample_reconstruction") &&
       !gapReport.includes("requires_posthoc_symbolic_synthesis") &&
       !gapReport.includes("no_backend_joint_claim"),
   );
 }
 
 function hasPredictiveLaw(analysis) {
+  return Boolean(
+    hasPredictiveLawSurface(analysis) &&
+      hasAuthoritativeLawState(analysis, "predictive_law")
+  );
+}
+
+function hasPredictiveLawSurface(analysis) {
   const predictiveLaw = analysis?.predictive_law;
+  const publicationStatus = String(
+    analysis?.operator_point?.publication?.status || "",
+  )
+    .trim()
+    .toLowerCase();
+  const hasAbstentionArtifact =
+    analysis?.operator_point?.abstention !== null &&
+    analysis?.operator_point?.abstention !== undefined;
+  const wouldHaveAbstainedBecause = Array.isArray(
+    analysis?.would_have_abstained_because,
+  )
+    ? analysis.would_have_abstained_because.filter((reason) =>
+        String(reason || "").trim(),
+      )
+    : [];
   return Boolean(
     hasCompletedClaim(predictiveLaw, "predictive_law") &&
-      hasAuthoritativeLawState(analysis, "predictive_law") &&
+      publicationStatus === "publishable" &&
+      !hasAbstentionArtifact &&
+      !wouldHaveAbstainedBecause.length &&
       hasNormalizedEquationPayload(predictiveLaw?.equation) &&
       hasHonestyNote(predictiveLaw) &&
       hasRequiredRefs([
@@ -1644,11 +1698,13 @@ function strongestEquationCard(analysis) {
   if (!analysis) return null;
   const holisticEquation = analysis.holistic_equation;
   const predictiveLaw = analysis.predictive_law;
+  const exactLane = descriptiveExactLane(analysis);
   const descriptiveReconstruction = analysis.descriptive_reconstruction;
   const descriptiveFit = analysis.descriptive_fit;
 
   if (hasHolisticClaim(analysis)) {
     return {
+      sourceId: "holistic",
       title: HOLISTIC_EQUATION_LABEL,
       kicker: "Hero output",
       equation: holisticEquation.equation,
@@ -1700,6 +1756,7 @@ function strongestEquationCard(analysis) {
       });
     }
     return {
+      sourceId: "predictive_law",
       title: PREDICTIVE_SYMBOLIC_LAW_LABEL,
       kicker: "Hero output",
       equation: predictiveLaw.equation,
@@ -1717,8 +1774,39 @@ function strongestEquationCard(analysis) {
     };
   }
 
+  if (exactLane) {
+    return {
+      sourceId: "descriptive_exact",
+      title: SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+      kicker: "Hero output",
+      equation: exactLane.equation,
+      badges: [
+        {
+          label: "Descriptive",
+          tone: "ok",
+        },
+        {
+          label: "Observed rows only",
+          tone: "",
+        },
+      ],
+      honesty: descriptiveExactDisplayNote(),
+      note: "",
+      tone: "accent",
+      summaryRows: [
+        ["Source", humanizePhrase(exactLane.source || "workbench exact reconstruction")],
+        ["Rows", String(exactLane.reconstruction_metrics?.sample_size || "n/a")],
+        [
+          "Max absolute error",
+          formatCell(exactLane.reconstruction_metrics?.max_abs_error),
+        ],
+      ],
+    };
+  }
+
   if (hasDescriptiveReconstruction(analysis)) {
     return {
+      sourceId: "descriptive_reconstruction",
       title: DESCRIPTIVE_RECONSTRUCTION_LABEL,
       kicker: "Hero output",
       equation: descriptiveReconstruction.equation,
@@ -1755,6 +1843,7 @@ function strongestEquationCard(analysis) {
 
   if (descriptiveFit?.status === "completed") {
     return {
+      sourceId: "descriptive_fit",
       title: DESCRIPTIVE_APPROXIMATION_LABEL,
       kicker: "Hero output",
       equation: descriptiveFit.equation,
@@ -1813,6 +1902,7 @@ function availableDeterministicOverlays(analysis) {
   const overlays = [];
   const holisticEquation = analysis.holistic_equation;
   const predictiveLaw = analysis.predictive_law;
+  const exactLane = descriptiveExactLane(analysis);
   const descriptiveReconstruction = analysis.descriptive_reconstruction;
   const descriptiveFit = analysis.descriptive_fit;
   const point = analysis.operator_point;
@@ -1837,7 +1927,7 @@ function availableDeterministicOverlays(analysis) {
   }
 
   if (
-    hasPredictiveLaw(analysis) &&
+    hasPredictiveLawSurface(analysis) &&
     Array.isArray(predictiveLaw.equation?.curve) &&
     predictiveLaw.equation.curve.length
   ) {
@@ -1851,6 +1941,22 @@ function availableDeterministicOverlays(analysis) {
       honesty:
         predictiveLaw.honesty_note ||
         "Predictive symbolic law reflects the backend-backed point-lane publication path.",
+    });
+  }
+
+  if (exactLane) {
+    overlays.push({
+      id: "descriptive_exact",
+      label: SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+      shortLabel: SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+      tone: "accent",
+      equation: exactLane.equation || {},
+      series:
+        exactLane.chart?.equation_curve ||
+        exactLane.equation?.curve ||
+        [],
+      honesty:
+        descriptiveExactDisplayNote(),
     });
   }
 
@@ -2260,15 +2366,21 @@ function renderSegmentedControls({ label, items, activeValue, dataAttribute }) {
       <div class="detail-label">${escapeHtml(label)}</div>
       <div class="segmented-controls">
         ${items
-          .map((item) => `
+          .map((item) => {
+            const isActive = item.value === activeValue;
+            const value = escapeHtml(String(item.value));
+            return `
             <button
               type="button"
-              class="segmented-button${item.value === activeValue ? " active" : ""}"
-              ${dataAttribute}="${escapeHtml(String(item.value))}"
+              class="segmented-button${isActive ? " active" : ""}"
+              ${dataAttribute}="${value}"
+              ${dataAttribute === "data-overlay" ? `data-overlay-option="${value}"` : ""}
+              aria-pressed="${isActive ? "true" : "false"}"
             >
               ${escapeHtml(item.label)}
             </button>
-          `)
+          `;
+          })
           .join("")}
       </div>
     </div>
@@ -2308,8 +2420,10 @@ function renderSharedControls({ analysis, showOverlay = true, showHorizon = true
 
 function renderEquationRibbon(analysis) {
   const entries = [];
+  const exactLane = descriptiveExactLane(analysis);
   if (hasHolisticClaim(analysis)) {
     entries.push({
+      sourceId: "holistic",
       kicker: "Holistic",
       label: HOLISTIC_EQUATION_LABEL,
       note: holisticClaimDescriptor(analysis.holistic_equation),
@@ -2317,8 +2431,9 @@ function renderEquationRibbon(analysis) {
       jump: "atlas-equation-stack",
     });
   }
-  if (hasPredictiveLaw(analysis)) {
+  if (hasPredictiveLawSurface(analysis)) {
     entries.push({
+      sourceId: "predictive_law",
       kicker: PREDICTIVE_SYMBOLIC_LAW_LABEL,
       label:
         analysis.predictive_law.equation?.label ||
@@ -2331,8 +2446,19 @@ function renderEquationRibbon(analysis) {
       jump: "atlas-equation-stack",
     });
   }
+  if (exactLane) {
+    entries.push({
+      sourceId: "descriptive_exact",
+      kicker: SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+      label: exactLane.equation?.label || SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+      note: "observed rows only",
+      tone: "accent",
+      jump: "atlas-equation-stack",
+    });
+  }
   if (hasDescriptiveReconstruction(analysis)) {
     entries.push({
+      sourceId: "descriptive_reconstruction",
       kicker: DESCRIPTIVE_RECONSTRUCTION_LABEL,
       label: analysis.descriptive_reconstruction.equation?.label || "n/a",
       note:
@@ -2345,6 +2471,7 @@ function renderEquationRibbon(analysis) {
   }
   if (analysis.descriptive_fit?.status === "completed") {
     entries.push({
+      sourceId: "descriptive_fit",
       kicker: BENCHMARK_DESCRIPTIVE_FIT_LABEL,
       label: analysis.descriptive_fit.equation?.label || "n/a",
       note:
@@ -2357,6 +2484,7 @@ function renderEquationRibbon(analysis) {
   }
   if (analysis.operator_point?.status === "completed") {
     entries.push({
+      sourceId: "point",
       kicker: "Point lane",
       label: analysis.operator_point.equation?.label || "n/a",
       note:
@@ -2370,6 +2498,7 @@ function renderEquationRibbon(analysis) {
   if (selectedLaneEntry) {
     const [mode, payload] = selectedLaneEntry;
     entries.push({
+      sourceId: `probabilistic_${mode}`,
       kicker: humanizeKey(mode),
       label: payload.equation?.label || "n/a",
       note: payload.evidence?.headline || payload.equation?.delta_form_label || "",
@@ -2381,7 +2510,7 @@ function renderEquationRibbon(analysis) {
     <div class="equation-ribbon">
       ${entries
         .map((entry) => `
-          <button type="button" class="equation-chip tone-${escapeHtml(entry.tone)}" data-atlas-jump="${escapeHtml(entry.jump)}">
+          <button type="button" class="equation-chip tone-${escapeHtml(entry.tone)}" data-atlas-jump="${escapeHtml(entry.jump)}" data-equation-ribbon-item="${escapeHtml(entry.sourceId || "")}">
             <span class="mini-kicker">${escapeHtml(entry.kicker)}</span>
             <strong>${escapeHtml(entry.label)}</strong>
             <span>${escapeHtml(entry.note)}</span>
@@ -2475,7 +2604,7 @@ function renderOverviewEquationHero(analysis) {
     actionValue: "atlas",
     actionAttribute: "data-open-tab",
     sectionClassName: "overview-equation-hero",
-    dataEquationHero: "overview",
+    dataEquationHero: card.sourceId || "overview",
   });
 }
 
@@ -2523,6 +2652,73 @@ function renderWhyNotStrongerPanel(analysis) {
       ${renderExplanationList("Holistic claim gaps", holisticReasons, "warn")}
     </section>
   `;
+}
+
+function renderEquationLaneCards(analysis) {
+  const lanes = equationLanes(analysis);
+  if (!lanes) return "";
+  const exactLane = descriptiveExactLane(analysis);
+  const predictiveLane = predictiveLawSearchLane(analysis);
+  const cards = [];
+  if (predictiveLane) {
+    const statusLabel =
+      predictiveLane.status === "publishable_law"
+        ? "publishable law"
+        : predictiveLane.status === "blocked"
+          ? "blocked"
+          : "no publishable law";
+    cards.push(`
+      <section class="panel equation-card equation-lane-card tone-sea" data-equation-lane-card="predictive_law_search">
+        <div class="panel-head">
+          <div>
+            <p class="mini-kicker">Predictive search lane</p>
+            <h3>Predictive law search</h3>
+          </div>
+          <div class="pill-row">
+            ${pill(statusLabel, predictiveLane.status === "publishable_law" ? "ok" : "warn")}
+          </div>
+        </div>
+        <p>${escapeHtml(predictiveLane.honesty_note || "Predictive law search did not produce a publishable law under the declared validation scope.")}</p>
+        <div class="detail-grid">
+          ${detail("Status", statusLabel)}
+          ${detail("Reasons", summarizeReasonCodes(predictiveLane.reason_codes || []))}
+        </div>
+      </section>
+    `);
+  }
+  if (exactLane) {
+    cards.push(`
+      <section class="panel equation-card equation-lane-card tone-accent" data-equation-lane-card="descriptive_exact">
+        <div class="panel-head">
+          <div>
+            <p class="mini-kicker">Observed rows only</p>
+            <h3>${SAMPLE_EXACT_DESCRIPTIVE_LABEL}</h3>
+          </div>
+          <div class="pill-row">
+            ${pill("Descriptive", "ok")}
+            ${pill("sample-exact", "")}
+          </div>
+        </div>
+        <p>${escapeHtml(descriptiveExactDisplayNote())}</p>
+        <div class="equation-copy">
+          ${renderEquationMarkup(
+            exactLane.equation?.label ||
+              exactLane.equation?.structure_signature ||
+              SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+            { className: "equation-formula", displayMode: true },
+          )}
+        </div>
+        <div class="detail-grid">
+          ${detail("Scope", "observed rows")}
+          ${detail("Status", humanizePhrase(exactLane.status || "completed"))}
+          ${detail("Max absolute error", formatCell(exactLane.reconstruction_metrics?.max_abs_error))}
+          ${detail("Tolerance", formatCell(exactLane.reconstruction_metrics?.effective_exact_tolerance))}
+        </div>
+      </section>
+    `);
+  }
+  if (!cards.length) return "";
+  return `<div class="equation-lane-grid">${cards.join("")}</div>`;
 }
 
 function renderAnalyticalCanvasPanel({ analysis, activeOverlay, selectedLaneEntry }) {
@@ -2828,6 +3024,7 @@ function renderOverview() {
         </div>
         <p>The overview starts from the strongest available mathematical object, then shows the operator publication path and follow-up views needed to judge whether the result is descriptive, publishable, or still evidence-limited.</p>
         ${renderStatusMatrix(state.analysis)}
+        ${renderEquationLaneCards(state.analysis)}
         ${renderEquationRibbon(state.analysis)}
         ${renderWhyNotStrongerPanel(state.analysis)}
         <div class="atlas-jump-grid">
@@ -2886,6 +3083,7 @@ function renderAtlas() {
     descriptive_reconstruction: descriptiveReconstruction,
   } = state.analysis;
   const holisticEquation = state.analysis.holistic_equation;
+  const exactLane = descriptiveExactLane(state.analysis);
   const probabilisticLanes = completedProbabilisticLaneEntries(state.analysis);
   const activeOverlay = currentDeterministicOverlay(state.analysis);
   const selectedLaneEntry = selectedProbabilisticLane(state.analysis);
@@ -2936,6 +3134,33 @@ function renderAtlas() {
           ["Validation scope", holisticEquation.validation_scope_ref || "n/a"],
           ["Publication record", holisticEquation.publication_record_ref || "n/a"],
           ["Rows", String(holisticEquation.row_count || dataset.rows || "n/a")],
+        ],
+      }),
+    );
+  }
+  if (exactLane) {
+    equationCards.push(
+      renderEquationCard({
+        title: SAMPLE_EXACT_DESCRIPTIVE_LABEL,
+        kicker: "Observed rows only",
+        equation: exactLane.equation,
+        badges: [
+          { label: "Descriptive", tone: "ok" },
+          { label: "sample-exact", tone: "" },
+        ],
+        honesty: descriptiveExactDisplayNote(),
+        note: "",
+        tone: "accent",
+        summaryRows: [
+          ["Scope", "observed rows"],
+          [
+            "Max absolute error",
+            formatCell(exactLane.reconstruction_metrics?.max_abs_error),
+          ],
+          [
+            "Tolerance",
+            formatCell(exactLane.reconstruction_metrics?.effective_exact_tolerance),
+          ],
         ],
       }),
     );
@@ -4673,6 +4898,9 @@ function buildHeroSummary(analysis) {
     }
     if (strongestCard.title === PREDICTIVE_SYMBOLIC_LAW_LABEL) {
       return "Predictive symbolic law cleared the point-lane publication gate.";
+    }
+    if (strongestCard.title === SAMPLE_EXACT_DESCRIPTIVE_LABEL) {
+      return "Sample-exact descriptive reconstruction covers observed rows only.";
     }
     if (strongestCard.title === DESCRIPTIVE_RECONSTRUCTION_LABEL) {
       return "Descriptive reconstruction is shown because no publishable law survived and the workbench generated a descriptive-only explicit-time path fit.";

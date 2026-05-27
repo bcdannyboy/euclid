@@ -420,9 +420,9 @@ Run a focused **Claim Truth + Verdict-First Workbench Wave**:
 Final live run:
 
 - Request: SPY `price_close`, `2026-04-27` through `2026-05-27`, probabilistic lanes enabled, benchmark enabled.
-- Analysis path: `build/workbench/readme-live/20260527T023705Z-spy-price-close/analysis.json`.
+- Analysis path: `build/workbench/readme-live/20260527T040846Z-spy-price-close/analysis.json`.
 - Returned data: 21 trading-day close observations from `2026-04-27T00:00:00Z` through `2026-05-26T00:00:00Z`.
-- Exact descriptive lane: `completed`, sample size 21, max absolute error `2.2737367544323206e-13`, effective exact tolerance `1e-10`, exact tolerance cleared.
+- Exact descriptive lane: `completed` as an expanded real inverse-DFT equation over row index `n`, sample size 21, max absolute error `2.2737367544323206e-13`, effective exact tolerance `1e-10`, exact tolerance cleared.
 - Predictive law search: `no_publishable_law` with `descriptive_structure`, `predictive_support_failed`, and `predictive_scorecard_failed`.
 - Benchmark-local winner: `algorithmic_search_backend / algorithmic_last_observation`.
 - Benchmark descriptive fit status: `absent_reconstruction_floor_failed`.
@@ -430,8 +430,8 @@ Final live run:
 
 README evidence updated:
 
-- `README.md` now documents the May 27 SPY price-close run and keeps sample-exact descriptive reconstruction separate from predictive-law search.
-- Fresh README screenshots captured at 1200 x 835:
+- `README.md` now documents the May 27 SPY price-close run and keeps the expanded exact descriptive equation separate from predictive-law search.
+- Fresh README screenshots captured through Playwright from the new analysis artifact:
   - `docs/assets/readme/workbench/live-spy-30d/price-close-overview.png`
   - `docs/assets/readme/workbench/live-spy-30d/price-close-evidence.png`
   - `docs/assets/readme/workbench/live-spy-30d/price-close-calibration.png`
@@ -442,16 +442,28 @@ Verification after the final pass:
 
 ```bash
 PYTHONPATH=src python3.11 -m pytest -q tests/unit/workbench/test_service.py tests/integration/test_workbench_analysis.py
-# 112 passed in 39.59s
+# 114 passed in 18.39s
 
 PYTHONPATH=src python3.11 -m pytest -q tests/spec_compiler/test_math_documentation_truthfulness.py
-# 8 passed in 0.92s
+# 8 passed in 0.63s
 
 npm run test:frontend -- --run tests/frontend/workbench/app.test.js tests/frontend/workbench-ui.test.js
-# 48 passed in 394.81s
+# 48 passed in 454.39s
+
+jq . docs/assets/readme/workbench/live-spy-30d/manifest.json
+# pass
 
 git diff --check
 # pass
+
+rg -n "<forbidden exact-lane shorthand patterns>" .
+# only negative assertions in regression tests
+
+shasum -a 256 docs/assets/readme/workbench/live-spy-30d/price-close-overview.png docs/assets/readme/workbench/live-spy-30d/price-close-evidence.png docs/assets/readme/workbench/live-spy-30d/price-close-calibration.png docs/assets/readme/workbench/live-spy-30d/price-close-artifacts.png
+# all four hashes match docs/assets/readme/workbench/live-spy-30d/manifest.json
+
+PYTHONPATH=src python3.11 -c '<normalize saved SPY analysis and check the descriptive exact label against the forbidden shorthand set>'
+# normalized saved analysis begins with \hat{y}(t_n)=... expanded inverse-DFT coefficients; has_old=False; has_formula_latex=True; predictive_status=no_publishable_law
 ```
 
 Frontend note: the full jsdom frontend harness initially exposed saved-analysis load waits that were too short under full-suite load. The app behavior was not changed for that failure; `tests/frontend/workbench/app.test.js` now uses a 15s Vitest timeout for the integration-style file and a 3s default polling window for async load assertions.

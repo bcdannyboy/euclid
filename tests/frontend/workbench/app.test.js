@@ -1991,6 +1991,7 @@ describe("workbench packaged asset harness", () => {
     expect(exactText).not.toMatch(/\bpublication\b/i);
     expect(exactText).not.toMatch(/\bperfect\b/i);
     expect(exactText).not.toMatch(/\bpredictive\b/i);
+    expect(exactText).not.toContain("DFTExact");
   });
 
   test("renders legacy saved analysis without equation lanes through old fields", async () => {
@@ -2379,7 +2380,8 @@ function attachEquationLanesNoLaw(analysis) {
       honesty_note:
         "Sample-exact reconstruction of observed rows only. It is descriptive, non-publishable, and not evidence of future behavior.",
       equation: {
-        label: String.raw`y(t)=\operatorname{DFTExact}_{N}(t)`,
+        label:
+          String.raw`\hat{y}(t_n)=0.5 + 0.2\cdot \cos\left(\frac{2\pi \cdot 1 \cdot n}{5}\right) - 0.1\cdot \sin\left(\frac{2\pi \cdot 1 \cdot n}{5}\right),\quad n=0,\ldots,4`,
         curve: analysis.operator_point.equation.curve,
       },
       chart: {

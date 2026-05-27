@@ -339,6 +339,66 @@ def _blocked_descriptive_exact_reconstruction(
     return payload
 
 
+def _latex_float(value: float) -> str:
+    numeric = float(value)
+    if numeric == 0.0:
+        return "0"
+    text = f"{numeric:.17g}"
+    if "e" not in text.lower():
+        return text
+    mantissa, exponent = text.lower().split("e", maxsplit=1)
+    return f"{mantissa}\\times 10^{{{int(exponent)}}}"
+
+
+def _append_signed_latex_term(
+    parts: list[str],
+    *,
+    coefficient: float,
+    basis: str,
+) -> None:
+    if coefficient == 0.0:
+        return
+    sign = "+" if coefficient > 0.0 else "-"
+    parts.append(f" {sign} {_latex_float(abs(coefficient))}\\cdot {basis}")
+
+
+def _expanded_real_inverse_dft_formula(
+    *,
+    spectrum: np.ndarray,
+    sample_size: int,
+) -> str:
+    mean = float(spectrum.real[0] / sample_size)
+    parts = [f"\\hat{{y}}(t_n)={_latex_float(mean)}"]
+    final_harmonic = (
+        (sample_size // 2) - 1
+        if sample_size % 2 == 0
+        else sample_size // 2
+    )
+    for harmonic in range(1, final_harmonic + 1):
+        angle = (
+            "\\left(\\frac{2\\pi \\cdot "
+            f"{harmonic} \\cdot n}}{{{sample_size}}}\\right)"
+        )
+        _append_signed_latex_term(
+            parts,
+            coefficient=float((2.0 * spectrum.real[harmonic]) / sample_size),
+            basis=f"\\cos{angle}",
+        )
+        _append_signed_latex_term(
+            parts,
+            coefficient=float((-2.0 * spectrum.imag[harmonic]) / sample_size),
+            basis=f"\\sin{angle}",
+        )
+    if sample_size % 2 == 0:
+        _append_signed_latex_term(
+            parts,
+            coefficient=float(spectrum.real[sample_size // 2] / sample_size),
+            basis="(-1)^n",
+        )
+    parts.append(f",\\quad n=0,\\ldots,{sample_size - 1}")
+    return "".join(parts)
+
+
 def _build_descriptive_exact_reconstruction(
     *,
     dataset_rows: Sequence[Mapping[str, Any]],
@@ -417,6 +477,10 @@ def _build_descriptive_exact_reconstruction(
         for row, fitted_value in zip(dataset_rows, reconstructed, strict=True)
     ]
     nyquist_bin_index = sample_size // 2 if sample_size % 2 == 0 else None
+    formula_latex = _expanded_real_inverse_dft_formula(
+        spectrum=spectrum,
+        sample_size=sample_size,
+    )
     literals = {
         "basis": "rfft_full_sample",
         "fft_library": "numpy.fft",
@@ -434,6 +498,10 @@ def _build_descriptive_exact_reconstruction(
             else None
         ),
         "row_index_semantics": "observed_row_order_no_calendar_interpolation",
+        "formula_kind": "expanded_real_inverse_dft",
+        "formula_index_symbol": "n",
+        "formula_time_symbol": "t_n",
+        "formula_coefficient_scale": "numpy_irfft_backward_normalization",
     }
     equation = {
         "candidate_id": _DESCRIPTIVE_EXACT_CANDIDATE_ID,
@@ -444,7 +512,12 @@ def _build_descriptive_exact_reconstruction(
             f"@sample_size={sample_size}"
         ),
         "literals": literals,
-        "label": "y(t)=mean+full DFT reconstruction over observed row index",
+        "label": formula_latex,
+        "formula_latex": formula_latex,
+        "formula_note": (
+            "Expanded real inverse DFT over the zero-indexed observed rows. "
+            "It reconstructs only the finite sample."
+        ),
         "curve": equation_curve,
         "render_status": "formula_supported",
     }

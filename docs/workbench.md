@@ -55,7 +55,7 @@ Routes:
 - `gap_report`, `not_holistic_because`, and `would_have_abstained_because`: explicit reason-code summaries for why the run stopped short of a stronger claim
 - benchmark summaries and change-atlas views for comparative and local-shape inspection
 
-`equation_lanes.descriptive_exact` is the sample-exact reconstruction lane. It can replay the finite observed rows through a full-sample Fourier representation, but it is not a predictive law and must not change `claim_class`, `predictive_law`, `holistic_equation`, or `uncertainty_attachment`. Unsupported targets, missing rows, one-row datasets, nonfinite observations, or failed round-trip tolerance checks are shown as blocked exact-lane states instead of stronger claims.
+`equation_lanes.descriptive_exact` is the sample-exact reconstruction lane. It can replay the finite observed rows through an expanded real inverse-DFT equation with numeric coefficients over the observed row index, but it is not a predictive law and must not change `claim_class`, `predictive_law`, `holistic_equation`, or `uncertainty_attachment`. Unsupported targets, missing rows, one-row datasets, nonfinite observations, or failed round-trip tolerance checks are shown as blocked exact-lane states instead of stronger claims.
 
 `equation_lanes.predictive_law_search` is a wrapper around the existing operator publication gate. It reports `publishable_law` only when the normalized `predictive_law` object survived. Otherwise it reports `no publishable law` or a blocked artifact state with reason codes. It never contains `descriptive_exact`, and exact reconstruction cannot satisfy predictive search evidence.
 

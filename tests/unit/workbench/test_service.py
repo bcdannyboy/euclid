@@ -446,6 +446,34 @@ def test_build_descriptive_exact_reconstruction_matches_jagged_odd_rows() -> Non
     )
 
 
+def test_build_descriptive_exact_reconstruction_exposes_expanded_inverse_dft_formula() -> None:
+    values = [0.2, -1.0, 0.4, 1.5, -0.7, 0.3, 0.0]
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows(values),
+    )
+    formula = reconstruction["equation"]["label"]
+    literals = reconstruction["equation"]["literals"]
+    spectrum = np.fft.rfft(np.asarray(values, dtype=float))
+    mean = float(spectrum.real[0] / len(values))
+    cos_1 = float((2.0 * spectrum.real[1]) / len(values))
+    sin_1 = float((-2.0 * spectrum.imag[1]) / len(values))
+
+    assert reconstruction["equation"]["formula_latex"] == formula
+    assert formula.startswith(r"\hat{y}(t_n)=")
+    assert "full DFT reconstruction" not in formula
+    assert "fullDFT" not in formula
+    assert r"\sum" not in formula
+    assert f"{mean:.17g}" in formula
+    assert f"{abs(cos_1):.17g}" in formula
+    assert f"{abs(sin_1):.17g}" in formula
+    assert r"\cos\left(\frac{2\pi \cdot 1 \cdot n}{7}\right)" in formula
+    assert r"\sin\left(\frac{2\pi \cdot 1 \cdot n}{7}\right)" in formula
+    assert r"n=0,\ldots,6" in formula
+    assert literals["formula_index_symbol"] == "n"
+    assert literals["formula_time_symbol"] == "t_n"
+    assert literals["formula_kind"] == "expanded_real_inverse_dft"
+
+
 def test_build_descriptive_exact_reconstruction_records_even_sample_rfft_metadata() -> None:
     values = [
         math.sin((2.0 * math.pi * index) / 20.0) + (0.1 * index)
@@ -475,6 +503,20 @@ def test_build_descriptive_exact_reconstruction_records_even_sample_rfft_metadat
         reconstruction["reconstruction_metrics"]["max_abs_error"]
         <= reconstruction["reconstruction_metrics"]["effective_exact_tolerance"]
     )
+
+
+def test_build_descriptive_exact_reconstruction_exposes_even_nyquist_term() -> None:
+    values = [1.0, 2.0, -1.0, 0.5]
+    reconstruction = _build_descriptive_exact_reconstruction(
+        dataset_rows=_workbench_dataset_rows(values),
+    )
+    formula = reconstruction["equation"]["label"]
+
+    assert r"\cos\left(\frac{2\pi \cdot 1 \cdot n}{4}\right)" in formula
+    assert r"\sin\left(\frac{2\pi \cdot 1 \cdot n}{4}\right)" in formula
+    assert r"(-1)^n" in formula
+    assert r"\sum" not in formula
+    assert "full DFT reconstruction" not in formula
 
 
 def test_build_descriptive_exact_reconstruction_supports_minimum_two_rows() -> None:

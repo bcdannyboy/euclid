@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-05-27T02:48:44Z",
-  "source": "Fresh live SPY/price_close workbench run captured through Playwright against http://127.0.0.1:8765/",
-  "analysis_path": "build/workbench/readme-live/20260527T023705Z-spy-price-close/analysis.json",
+  "generated_at": "2026-05-27T04:13:07Z",
+  "source": "Fresh live SPY/price_close workbench run captured through Playwright against http://127.0.0.1:8765/; overview captured as viewport, deeper workspaces captured as active tab panels.",
+  "analysis_path": "build/workbench/readme-live/20260527T040846Z-spy-price-close/analysis.json",
   "request": {
     "symbol": "SPY",
     "target_id": "price_close",
@@ -42,7 +42,7 @@
   "screenshots": [
     {
       "filename": "price-close-overview.png",
-      "url": "http://127.0.0.1:8765/?tab=overview&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "url": "http://127.0.0.1:8765/?tab=overview&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T040846Z-spy-price-close%2Fanalysis.json",
       "viewport": {
         "width": 1200,
         "height": 835,
@@ -52,52 +52,52 @@
         "width": 1200,
         "height": 835
       },
-      "sha256": "2317bfc71001de8f7552beff26c8c2e1a7c92cb32e129b1b5b7be290e740ee01",
-      "caption": "Fresh SPY price-close overview showing the exact descriptive reconstruction and non-predictive claim ceiling."
+      "sha256": "4d89b1a30edd85143c33f99dd8734b4540cef779ae6202302e3e26c248e8bbc6",
+      "caption": "Fresh SPY price-close overview showing the expanded exact descriptive equation and non-predictive claim ceiling."
     },
     {
       "filename": "price-close-evidence.png",
-      "url": "http://127.0.0.1:8765/?tab=atlas&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "url": "http://127.0.0.1:8765/?tab=atlas&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T040846Z-spy-price-close%2Fanalysis.json",
       "viewport": {
         "width": 1200,
         "height": 835,
         "mobile": false
       },
       "image_size": {
-        "width": 1200,
-        "height": 835
+        "width": 1176,
+        "height": 5620
       },
-      "sha256": "2ef144b92736aef84fbdb98fc9193fe5eb25e2fed8111e56cfd5f3eb58bcab0b",
+      "sha256": "d27c4dc87906a105ca0f3937197c4de5fc19763a895ed89cd895267d72e91b09",
       "caption": "Evidence atlas tying the observed SPY close path to the descriptive equation and residual evidence."
     },
     {
       "filename": "price-close-calibration.png",
-      "url": "http://127.0.0.1:8765/?tab=probabilistic&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "url": "http://127.0.0.1:8765/?tab=probabilistic&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T040846Z-spy-price-close%2Fanalysis.json",
       "viewport": {
         "width": 1200,
         "height": 835,
         "mobile": false
       },
       "image_size": {
-        "width": 1200,
-        "height": 835
+        "width": 1176,
+        "height": 5191
       },
-      "sha256": "f2f724cd15aec5b2e23c617aedc24420c625d161580f9ca292ec87406c895645",
+      "sha256": "2a4ece5f3070175511f4594c2d857c645e4cdb48d9f17122f037d5fb21724fe6",
       "caption": "Probabilistic calibration tab for the selected horizon and distribution lane."
     },
     {
       "filename": "price-close-artifacts.png",
-      "url": "http://127.0.0.1:8765/?tab=artifacts&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T023705Z-spy-price-close%2Fanalysis.json",
+      "url": "http://127.0.0.1:8765/?tab=artifacts&rail=compact&horizon=1&overlay=descriptive_exact&lane=distribution&analysis_path=build%2Fworkbench%2Freadme-live%2F20260527T040846Z-spy-price-close%2Fanalysis.json",
       "viewport": {
         "width": 1200,
         "height": 835,
         "mobile": false
       },
       "image_size": {
-        "width": 1200,
-        "height": 835
+        "width": 1176,
+        "height": 2571
       },
-      "sha256": "31c4e03d8bc5b7aed7b9cf09361cab2c11ed0725735327b43fd3bad4ca23631d",
+      "sha256": "740853a335d0a0180dcffba2c64bef5954f7bc6580835984b1b0aeabe106d3ef",
       "caption": "Artifact trail for replaying and auditing the fresh SPY price-close workbench run."
     }
   ]
